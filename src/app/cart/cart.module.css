@@ -1,0 +1,816 @@
+.page {
+  padding: 2rem 1rem 5rem;
+  background: #f4f4f4;
+  min-height: calc(100vh - 160px);
+}
+
+.pageInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  gap: 2rem;
+}
+
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.breadcrumbs a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  color: #00ac11;
+}
+
+.cartLayout {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr 360px;
+  align-items: start;
+}
+
+.cartBoard {
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 12px 32px rgba(0, 83, 36, 0.12);
+  padding: 2.5rem 2.75rem;
+  display: grid;
+  gap: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.cartBoard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 172, 17, 0.06) 0%, rgba(255, 91, 0, 0.05) 55%, transparent 80%);
+  pointer-events: none;
+}
+
+.cartBoard > * {
+  position: relative;
+  z-index: 1;
+}
+
+.cartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cartTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cartTitle {
+  margin: 0;
+  font-size: 2rem;
+  color: #0f301c;
+}
+
+.cartSubtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.98rem;
+}
+
+.cartTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(0, 172, 17, 0.18);
+  color: #0f766e;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.cartMain {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.cartLine {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.35rem 1.6rem;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 10px rgba(0, 172, 17, 0.08);
+}
+
+.cartThumbnail {
+  width: 96px;
+  height: 96px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #f7fff9 0%, #eef8f1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.cartThumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cartInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cartInfo h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #0f172a;
+}
+
+.cartMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.cartPrice {
+  font-weight: 700;
+  color: #0f766e;
+  font-size: 1.1rem;
+}
+
+.cartControls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.qtyControl {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #f8fafc;
+  border-radius: 999px;
+  padding: 0.35rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.qtyButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: none;
+  background: #00ac11;
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qtyValue {
+  min-width: 72px;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.qtyNumber {
+  font-size: 1.1rem;
+}
+
+.qtyUnit {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: lowercase;
+}
+
+body[data-theme="dark"] .qtyValue {
+  color: var(--mk-text, #f1f5f9);
+}
+
+body[data-theme="dark"] .qtyUnit {
+  color: var(--mk-text-subtle, #94a3b8);
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.highlights {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(0, 172, 17, 0.12) 0%, rgba(255, 91, 0, 0.12) 100%);
+  border: 1px solid rgba(0, 172, 17, 0.15);
+}
+
+.highlightItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #0f301c;
+  font-weight: 600;
+}
+
+.highlightItem i {
+  color: #00ac11;
+}
+
+.recommendation {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 2rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 10px rgba(0, 172, 17, 0.08);
+  display: grid;
+  gap: 1rem;
+}
+
+.recommendation h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.45rem;
+}
+
+.recommendationGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.recoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
+}
+
+.recoCard figure {
+  margin: 0;
+  width: 100%;
+  height: 140px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recoCard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recoCard h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.recoPrice {
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.recoButton {
+  align-self: flex-start;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: none;
+  background: #00ac11;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.recoButton:hover {
+  background: #008f0e;
+  transform: translateY(-1px);
+}
+
+.summaryCard {
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 12px 32px rgba(0, 83, 36, 0.12);
+  padding: 2rem 2.25rem;
+  display: grid;
+  gap: 1.25rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.summaryHeader h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #0f172a;
+}
+
+.summaryRows {
+  display: grid;
+  gap: 1rem;
+  font-size: 0.98rem;
+  color: #475569;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summaryRowStrong {
+  font-weight: 700;
+  color: #0f301c;
+}
+
+.checkoutButton {
+  padding: 0.85rem 1.2rem;
+  border-radius: 999px;
+  border: none;
+  background: #00ac11;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.checkoutButton:hover {
+  background: #008f0e;
+  transform: translateY(-1px);
+}
+
+.summaryHint {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.summarySupport {
+  background: rgba(0, 172, 17, 0.12);
+  border-radius: 18px;
+  padding: 1.1rem 1.2rem;
+  color: #0f301c;
+  font-size: 0.95rem;
+}
+
+.summarySupport a {
+  color: inherit;
+  font-weight: 600;
+}
+
+.summarySupport a:hover {
+  color: #008f0e;
+}
+
+.discountBanner {
+  background: linear-gradient(135deg, #22c55e 0%, #f97316 100%);
+  border-radius: 24px;
+  padding: 1.2rem 1.4rem;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.98rem;
+}
+
+.discountBanner i {
+  font-size: 1.4rem;
+}
+
+.discountBanner strong {
+  font-weight: 700;
+}
+
+.recentlySection,
+.popularSection {
+  padding: 3rem 1rem;
+  background: #ffffff;
+}
+
+.sectionInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #0f172a;
+}
+
+.sectionButton {
+  border: none;
+  background: none;
+  color: #00ac11;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.cardGridPlaceholder {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.placeholderCard {
+  border-radius: 18px;
+  border: 1px dashed rgba(15, 23, 42, 0.18);
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(15, 23, 42, 0.5);
+}
+
+.benefitsSection {
+  padding: 4rem 1rem;
+  background: #f8fafc;
+}
+
+.benefitsGrid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.benefitCard {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 10px rgba(0, 172, 17, 0.08);
+  padding: 2rem 1.75rem;
+  display: grid;
+  gap: 0.75rem;
+  text-align: center;
+  color: #0f172a;
+}
+
+.benefitCard i {
+  font-size: 1.8rem;
+  color: #00ac11;
+}
+
+.benefitCard p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+@media (max-width: 1024px) {
+  .cartLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryCard {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .cartBoard {
+    padding: 2rem 1.75rem;
+  }
+
+  .cartLine {
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+  }
+
+  .cartControls {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 1.5rem 0.75rem 4rem;
+  }
+
+  .cartTitle {
+    font-size: 1.65rem;
+  }
+}
+.cartFooterActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.cartLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.cartLinkMuted {
+  color: #64748b;
+}
+
+.cartLinkMuted:hover,
+.cartLink:hover {
+  color: #008f0e;
+}
+
+.summaryBlock {
+  display: grid;
+  gap: 1rem;
+}
+
+.promoGroup {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.promoInput {
+  flex: 1;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.95rem;
+}
+
+.promoApply {
+  padding: 0.7rem 1.1rem;
+  border-radius: 12px;
+  border: none;
+  background: #0f766e;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.promoApply:hover {
+  background: #0c594f;
+}
+
+.promoMessage {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.promoMessageSuccess {
+  color: #15803d;
+}
+
+.promoMessageError {
+  color: #dc2626;
+}
+
+.promoMessageNeutral {
+  color: #475569;
+}
+
+.recentlySection,
+.popularSection {
+  padding: 3rem 1rem;
+  background: #ffffff;
+}
+
+.sectionInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #0f172a;
+}
+
+.sectionButton {
+  border: none;
+  background: none;
+  color: #00ac11;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.cardGridPlaceholder {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.placeholderCard {
+  border-radius: 18px;
+  border: 1px dashed rgba(15, 23, 42, 0.18);
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(15, 23, 42, 0.5);
+}
+
+.benefitsSection {
+  padding: 4rem 1rem;
+  background: #f8fafc;
+}
+
+.benefitsGrid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.benefitCard {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 10px rgba(0, 172, 17, 0.08);
+  padding: 2rem 1.75rem;
+  display: grid;
+  gap: 0.75rem;
+  text-align: center;
+  color: #0f172a;
+}
+
+.benefitCard i {
+  font-size: 1.8rem;
+  color: #00ac11;
+}
+
+.benefitCard p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
+}
+.summaryHeader {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.summaryBlock {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.summaryHint {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.summarySupport {
+  background: rgba(0, 172, 17, 0.12);
+  border-radius: 18px;
+  padding: 1.1rem 1.2rem;
+  color: #0f301c;
+  font-size: 0.95rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.summarySupportTitle {
+  margin: 0;
+  font-weight: 600;
+}
+
+.summarySupportContact {
+  margin: 0;
+}
+
+.summarySupportContact a {
+  color: inherit;
+  font-weight: 600;
+}
+
+.summarySupportContact a:hover {
+  color: #008f0e;
+}
+:global(body[data-theme="dark"]) .page {
+  background: var(--mk-body-bg);
+  color: var(--mk-text);
+}
+
+:global(body[data-theme="dark"]) .breadcrumbs {
+  color: var(--mk-text-subtle);
+}
+
+:global(body[data-theme="dark"]) .cartBoard,
+:global(body[data-theme="dark"]) .cartLine,
+:global(body[data-theme="dark"]) .recommendation,
+:global(body[data-theme="dark"]) .recoCard,
+:global(body[data-theme="dark"]) .summaryCard,
+:global(body[data-theme="dark"]) .sectionInner,
+:global(body[data-theme="dark"]) .cardGrid,
+:global(body[data-theme="dark"]) .cardGridPlaceholder,
+:global(body[data-theme="dark"]) .promoGroup,
+:global(body[data-theme="dark"]) .benefitCard {
+  background: var(--mk-surface);
+  color: var(--mk-text);
+  box-shadow: 0 18px 36px var(--mk-card-shadow);
+}
+
+:global(body[data-theme="dark"]) .cartLine {
+  border-color: var(--mk-border);
+}
+
+:global(body[data-theme="dark"]) .promoInput,
+:global(body[data-theme="dark"]) .qtyControl,
+:global(body[data-theme="dark"]) .placeholderCard {
+  background: var(--mk-surface);
+  border-color: var(--mk-border);
+  color: var(--mk-text);
+}
+
+:global(body[data-theme="dark"]) .cartSubtitle,
+:global(body[data-theme="dark"]) .cartMeta,
+:global(body[data-theme="dark"]) .summaryHint,
+:global(body[data-theme="dark"]) .summarySupport,
+:global(body[data-theme="dark"]) .cartLinkMuted,
+:global(body[data-theme="dark"]) .cartLink {
+  color: var(--mk-text-subtle);
+}
+
+:global(body[data-theme="dark"]) .cartTag,
+:global(body[data-theme="dark"]) .summarySupport,
+:global(body[data-theme="dark"]) .highlights {
+  background: rgba(0, 172, 17, 0.2);
+  border-color: rgba(0, 172, 17, 0.25);
+}
+
+:global(body[data-theme="dark"]) .summarySupportContact a,
+:global(body[data-theme="dark"]) .cartLink:hover,
+:global(body[data-theme="dark"]) .cartLinkMuted:hover {
+  color: #84f1a2;
+}
+
+:global(body[data-theme="dark"]) .cartBoard::before {
+  opacity: 0.35;
+}
