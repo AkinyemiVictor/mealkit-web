@@ -1,5 +1,36 @@
 .pageWrapper {
-  background: #f4f4f4;
+  --help-hero-bg-start: #00fb2a;
+  --help-hero-bg-end: #00ac11;
+  --help-body-bg: var(--mk-body-bg);
+  --help-surface: var(--mk-surface);
+  --help-surface-soft: var(--mk-surface-muted);
+  --help-card-border: rgba(0, 172, 17, 0.12);
+  --help-card-shadow: rgba(0, 83, 36, 0.12);
+  --help-card-shadow-hover: rgba(0, 172, 17, 0.12);
+  --help-muted-text: var(--mk-text-subtle);
+  --help-subtle-text: rgba(79, 99, 90, 0.85);
+  --help-divider: #e2e8f0;
+  --help-sidebar-bg: rgba(0, 172, 17, 0.05);
+  --help-card-gradient-start: #f7fff9;
+  --help-card-gradient-end: #eef8f1;
+  background: var(--help-body-bg);
+  color: var(--mk-text);
+}
+body[data-theme="dark"] .pageWrapper {
+  --help-hero-bg-start: rgba(0, 172, 17, 0.24);
+  --help-hero-bg-end: rgba(0, 120, 38, 0.52);
+  --help-body-bg: #050b08;
+  --help-surface: rgba(16, 27, 22, 0.96);
+  --help-surface-soft: rgba(22, 35, 29, 0.72);
+  --help-card-border: rgba(0, 172, 17, 0.32);
+  --help-card-shadow: rgba(0, 0, 0, 0.55);
+  --help-card-shadow-hover: rgba(0, 172, 17, 0.35);
+  --help-muted-text: #c4d7cd;
+  --help-subtle-text: #9fb7ab;
+  --help-divider: rgba(132, 200, 158, 0.28);
+  --help-sidebar-bg: rgba(17, 29, 24, 0.85);
+  --help-card-gradient-start: rgba(17, 30, 24, 0.92);
+  --help-card-gradient-end: rgba(13, 24, 20, 0.88);
 }
 
 .heroHelpCenter {
@@ -7,17 +38,17 @@
   padding: 8rem 0;
   display: flex;
   justify-content: center;
-  background: #00fb2a;
+  background: linear-gradient(120deg, var(--help-hero-bg-start), var(--help-hero-bg-end));
 }
 
 .heroBoard {
   position: relative;
   max-width: 1100px;
   width: 100%;
-  background: #ffffff;
+  background: var(--help-surface);
   border-radius: 28px;
-  border: 1px solid rgba(0, 172, 17, 0.12);
-  box-shadow: 0 18px 48px rgba(0, 83, 36, 0.12);
+  border: 1px solid var(--help-card-border);
+  box-shadow: 0 18px 48px var(--help-card-shadow);
   padding: 2.5rem 2.75rem;
   display: grid;
   grid-template-columns: minmax(0, 320px) 1fr;
@@ -58,13 +89,13 @@
   margin: 0;
   font-size: 2.25rem;
   font-weight: 700;
-  color: #0f301c;
+  color: var(--mk-text);
   line-height: 1.15;
 }
 
 .heroSubtitle {
   margin: 0;
-  color: #374151;
+  color: var(--help-muted-text);
   font-size: 0.97rem;
   max-width: 400px;
   line-height: 1.55;
@@ -89,20 +120,20 @@
   color: inherit;
   transition: transform 0.22s ease, box-shadow 0.22s ease;
   border: 1px solid transparent;
-  box-shadow: 0 4px 10px rgba(0, 172, 17, 0.08);
-  background: linear-gradient(180deg, #f7fff9 0%, #eef8f1 100%);
-  border-color: rgba(0, 172, 17, 0.45);
+  box-shadow: 0 4px 10px var(--help-card-shadow);
+  background: linear-gradient(180deg, var(--help-card-gradient-start) 0%, var(--help-card-gradient-end) 100%);
+  border-color: var(--help-focus-border);
 }
 
 .heroCard:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 18px rgba(0, 172, 17, 0.12);
+  box-shadow: 0 8px 18px var(--help-card-shadow-hover);
 }
 
 .heroCardText {
   font-size: 1rem;
   font-weight: 600;
-  color: #0f301c;
+  color: var(--mk-text);
   line-height: 1.3;
 }
 
@@ -142,10 +173,10 @@
 .searchQnAAgentInner {
   max-width: 1100px;
   width: 100%;
-  background: #ffffff;
+  background: var(--help-surface);
   border-radius: 28px;
   padding: 2.5rem;
-  box-shadow: 0 4px 10px rgba(0, 172, 17, 0.08);
+  box-shadow: 0 4px 10px var(--help-card-shadow);
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
@@ -155,7 +186,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: #f4f7f9;
+  background: var(--help-surface-soft);
   border-radius: 18px;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
   border: 1px solid transparent;
@@ -163,9 +194,9 @@
 }
 
 .searchBarShell:focus-within {
-  background: #ffffff;
-  border-color: rgba(0, 172, 17, 0.45);
-  box-shadow: 0 0 0 6px rgba(0, 172, 17, 0.12);
+  background: var(--help-surface);
+  border-color: var(--help-focus-border);
+  box-shadow: 0 0 0 6px var(--help-focus-ring);
 }
 
 .searchInput {
@@ -174,12 +205,12 @@
   outline: none;
   background: transparent;
   font-size: 1rem;
-  color: #1f2937;
+  color: var(--mk-text);
   padding: 0.75rem 0;
 }
 
 .searchInput::placeholder {
-  color: #94a3b8;
+  color: var(--help-subtle-text);
 }
 
 .searchButton {
@@ -187,8 +218,8 @@
   height: 52px;
   border-radius: 16px;
   border: none;
-  background: #00ac11;
-  color: #ffffff;
+  background: var(--mk-accent);
+  color: var(--mk-accent-contrast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -209,10 +240,10 @@
 }
 
 .sidebar {
-  background: linear-gradient(180deg, #f7fff9 0%, #eef8f1 100%);
+  background: linear-gradient(180deg, var(--help-card-gradient-start) 0%, var(--help-card-gradient-end) 100%);
   border-radius: 24px;
   padding: 1.75rem 1.5rem;
-  border: 1px solid rgba(0, 172, 17, 0.15);
+  border: 1px solid var(--help-sidebar-border);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
   display: flex;
   flex-direction: column;
@@ -223,7 +254,7 @@
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #047857;
+  color: var(--mk-accent);
   margin: 0;
 }
 
@@ -243,10 +274,10 @@
   gap: 0.85rem;
   padding: 0.85rem 1rem;
   border-radius: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #ffffff;
+  border: 1px solid var(--help-item-border);
+  background: var(--help-surface);
   font-weight: 600;
-  color: #1f2937;
+  color: var(--mk-text);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -259,35 +290,35 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #047857;
+  color: var(--mk-accent);
   font-size: 1.1rem;
 }
 
 .sidebarArrow {
-  color: #9ca3af;
+  color: var(--help-subtle-text);
   font-size: 0.9rem;
 }
 
 .sidebarItem:hover {
-  border-color: rgba(0, 172, 17, 0.4);
+  border-color: var(--help-focus-border);
   transform: translateX(4px);
-  box-shadow: 0 16px 28px rgba(0, 172, 17, 0.1);
+  box-shadow: 0 16px 28px var(--help-item-hover-shadow);
 }
 
 .sidebarItemActive,
 .sidebarItem:hover {
-  border-color: rgba(0, 172, 17, 0.45);
-  box-shadow: 0 4px 10px rgba(0, 172, 17, 0.08);
+  border-color: var(--help-focus-border);
+  box-shadow: 0 4px 10px var(--help-card-shadow);
 }
 
 .sidebarItemActive .sidebarIcon,
 .sidebarItem:hover .sidebarIcon {
-  background: #00ac11;
-  color: #ffffff;
+  background: var(--mk-accent);
+  color: var(--mk-accent-contrast);
 }
 
 .sidebarItemActive .sidebarArrow {
-  color: #00ac11;
+  color: var(--mk-accent);
 }
 
 .qnaContent {
@@ -299,13 +330,13 @@
 .qnaContentHeader h3 {
   margin: 0;
   font-size: 1.9rem;
-  color: #0f172a;
+  color: var(--mk-text);
 }
 
 .qnaContentHeader p {
   margin: 0;
   max-width: 520px;
-  color: #475569;
+  color: var(--help-muted-text);
   line-height: 1.6;
 }
 
@@ -316,9 +347,9 @@
 
 .qnaItem {
   border-radius: 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--help-divider);
   padding: 1.35rem 1.75rem;
-  background: #ffffff;
+  background: var(--help-surface);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -337,11 +368,11 @@
 }
 
 .qnaItem summary::after {
-  content: "\\f054";
+  content: "\f054";
   font-family: "Font Awesome 6 Free";
   font-weight: 900;
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: var(--help-subtle-text);
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
@@ -350,7 +381,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #0f766e;
+  color: var(--mk-accent);
   background: rgba(15, 118, 110, 0.12);
   padding: 0.35rem 0.65rem;
   border-radius: 999px;
@@ -359,29 +390,29 @@
 .questionText {
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--mk-text);
   margin: 0;
 }
 
 .qnaItem[open] {
   border-color: rgba(0, 172, 17, 0.5);
-  box-shadow: 0 4px 10px rgba(0, 172, 17, 0.08);
+  box-shadow: 0 4px 10px var(--help-card-shadow);
 }
 
 .qnaItem[open] summary::after {
   transform: rotate(90deg);
-  color: #00ac11;
+  color: var(--mk-accent);
 }
 
 .qnaItem[open] .questionText {
-  color: #008f0e;
+  color: var(--mk-accent);
 }
 
 .answer {
   margin-top: 1.1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
-  color: #475569;
+  border-top: 1px solid var(--help-divider);
+  color: var(--help-muted-text);
   line-height: 1.65;
   font-size: 0.97rem;
 }
@@ -423,13 +454,13 @@
 .talkToAgentHeader h2 {
   margin: 0;
   font-size: 2.2rem;
-  color: #0f172a;
+  color: var(--mk-text);
 }
 
 .talkToAgentSubtitle {
   margin: 0 auto;
   max-width: 560px;
-  color: #475569;
+  color: var(--help-muted-text);
   line-height: 1.65;
 }
 
@@ -440,16 +471,16 @@
 }
 
 .agentCard {
-  background: #ffffff;
+  background: var(--help-surface);
   border-radius: 24px;
-  border: 1px solid rgba(0, 172, 17, 0.15);
+  border: 1px solid var(--help-sidebar-border);
   padding: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 172, 17, 0.08);
+  box-shadow: 0 4px 10px var(--help-card-shadow);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -466,8 +497,8 @@
   align-items: center;
   justify-content: center;
   font-size: 1.4rem;
-  color: #ffffff;
-  background: #00ac11;
+  color: var(--mk-accent-contrast);
+  background: var(--mk-accent);
   box-shadow: 0 16px 28px rgba(0, 172, 17, 0.2);
 }
 
@@ -479,12 +510,12 @@
 .agentCard h3 {
   margin: 0;
   font-size: 1.4rem;
-  color: #0f172a;
+  color: var(--mk-text);
 }
 
 .agentCard p {
   margin: 0;
-  color: #475569;
+  color: var(--help-muted-text);
   line-height: 1.6;
 }
 
@@ -494,12 +525,12 @@
   margin: 0;
   display: grid;
   gap: 0.55rem;
-  color: #334155;
+  color: var(--help-muted-text);
   font-size: 0.98rem;
 }
 
 .agentList li a {
-  color: #0f766e;
+  color: var(--mk-accent);
   text-decoration: none;
   font-weight: 600;
 }
@@ -508,7 +539,7 @@
   display: block;
   margin-top: auto;
   font-size: 0.88rem;
-  color: #1e293b;
+  color: var(--mk-text);
   background: rgba(37, 99, 235, 0.08);
   border-radius: 14px;
   padding: 0.75rem 1rem;
@@ -520,8 +551,8 @@
   padding: 0.65rem 1.4rem;
   border-radius: 999px;
   font-weight: 600;
-  color: #ffffff;
-  background: #00ac11;
+  color: var(--mk-accent-contrast);
+  background: var(--mk-accent);
   text-decoration: none;
   transition: background 0.2s ease, transform 0.2s ease;
 }
@@ -586,4 +617,22 @@
 }
 .agentCardCall {
 }
+
+body[data-theme="dark"] .sidebar {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+body[data-theme="dark"] .searchButton:hover {
+  background: #00943b;
+}
+
+body[data-theme="dark"] .heroBoard::before {
+  background: linear-gradient(135deg, rgba(0, 172, 17, 0.12) 0%, rgba(255, 91, 0, 0.08) 45%, transparent 80%);
+}
+
+
+
+
+
+
 

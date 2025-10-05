@@ -80,7 +80,7 @@ export default function Footer() {
             <h3>Customer Services</h3>
             <ul>
               <li>
-                <Link href="/sign-in">My Account</Link>
+                <Link href="/sign-in?tab=login#loginForm">My Account</Link>
               </li>
               <li>
                 <Link href="#">Track Your Order</Link>

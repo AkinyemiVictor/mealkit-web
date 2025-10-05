@@ -19,18 +19,30 @@ const heroSlides = [
   {
     heading: ["Fresh From the Farm,", "Delivered to Your Doorstep"],
     tag: "#Market On The Go!",
+    description: "Shop same-day harvests, pantry staples, and ready-to-cook bundles in one basket.",
+    accent: "#FF7A59",
+    accentSoft: "rgba(255, 122, 89, 0.25)",
   },
   {
     heading: ["Quality Produce,", "Trusted Farmers"],
     tag: "#EatFreshLiveWell",
+    description: "We team up with local growers to keep your weekly staples nutrient-packed and traceable.",
+    accent: "#8E7CFF",
+    accentSoft: "rgba(142, 124, 255, 0.22)",
   },
   {
     heading: ["From Soil to Shelf,", "With Love"],
     tag: "#SupportLocal",
+    description: "Seasonal fruits, organic veggies, and artisanal pantry picks�curated for busy home cooks.",
+    accent: "#00C9A7",
+    accentSoft: "rgba(0, 201, 167, 0.25)",
   },
   {
     heading: ["Freshness That", "Speaks for Itself"],
     tag: "#FarmFresh",
+    description: "Plan meals faster with chef-tested bundles and handy serving guides built into every order.",
+    accent: "#FFB74D",
+    accentSoft: "rgba(255, 183, 77, 0.28)",
   },
 ];
 
@@ -84,16 +96,24 @@ function ProductCard({ product }) {
   );
 }
 
-function ProductSection({ sectionClass, containerClass, headerClass, gridId, title, products }) {
+function ProductSection({ title, products, gridId, variant = "plain", eyebrow, ctaLabel = "See all" }) {
+  const sectionClasses = ["home-section"];
+  if (variant && variant !== "plain") {
+    sectionClasses.push(`home-section--${variant}`);
+  }
+
   return (
-    <section className={sectionClass}>
-      <div className={containerClass}>
-        <div className={headerClass}>
-          <p>{title}</p>
-          <button type="button" className="section-view-button">
-            See all
+    <section className={sectionClasses.join(" ")}>
+      <div className="home-section__inner">
+        <header className="home-section__header">
+          <div className="home-section__titles">
+            {eyebrow ? <span className="home-section__eyebrow">{eyebrow}</span> : null}
+            <h2 className="home-section__title">{title}</h2>
+          </div>
+          <button type="button" className="home-section__cta">
+            {ctaLabel}
           </button>
-        </div>
+        </header>
 
         <div className="product-card-grid" id={gridId}>
           {products.map((product) => (
@@ -174,97 +194,141 @@ export default function HomePage() {
 
   return (
     <main>
-      <section id="heroSec" className="heroSec">
-        <div id="boardShape" className="boardShape">
-          <div className="slider" style={heroTransform}>
-            {heroSlides.map((slide, index) => (
-              <div
-                key={slide.tag}
-                className={`slide${currentSlide === index ? " active" : ""}`}
-              >
-                <div className="heroCon">
-                  <h1>
-                    {slide.heading[0]}
-                    <br />
-                    {slide.heading[1]}
-                  </h1>
-                  <p>{slide.tag}</p>
-                </div>
-              </div>
-            ))}
+      <section className="home-hero" aria-labelledby="home-hero-heading">
+        <div className="home-hero__inner">
+          <div className="home-hero__viewport" aria-live="polite">
+            <div className="home-hero__track" style={heroTransform}>
+              {heroSlides.map((slide, index) => {
+                const isActive = currentSlide === index;
+                const slideStyles = {
+                  "--hero-accent": slide.accent,
+                  "--hero-accent-soft": slide.accentSoft,
+                };
+
+                return (
+                  <article
+                    key={slide.tag}
+                    className={`home-hero__slide${isActive ? " is-active" : ""}`}
+                    style={slideStyles}
+                    aria-hidden={!isActive}
+                  >
+                    <div className="home-hero__content">
+                      <h1
+                        id={isActive ? "home-hero-heading" : undefined}
+                        className="home-hero__title"
+                      >
+                        <span>{slide.heading[0]}</span>
+                        <span>{slide.heading[1]}</span>
+                      </h1>
+                      {slide.description ? (
+                        <p className="home-hero__description">{slide.description}</p>
+                      ) : null}
+                      <p className="home-hero__tag">{slide.tag}</p>
+                    </div>
+
+                    <div className="home-hero__visual" aria-hidden="true">
+                      <span className="home-hero__bubble home-hero__bubble--primary" />
+                      <span className="home-hero__bubble home-hero__bubble--secondary" />
+                      <span className="home-hero__badge">Fresh Today</span>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </div>
 
-          <button className="nav prev" type="button" onClick={handlePrev} aria-label="Previous slide">
-            <svg viewBox="0 0 24 24" className="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 18l-6-6 6-6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <button className="nav next" type="button" onClick={handleNext} aria-label="Next slide">
-            <svg viewBox="0 0 24 24" className="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 6l6 6-6 6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+          <div className="home-hero__controls">
+            <div className="home-hero__arrows">
+              <button
+                className="home-hero__arrow home-hero__arrow--prev"
+                type="button"
+                onClick={handlePrev}
+                aria-label="Previous slide"
+              >
+                <svg viewBox="0 0 24 24" className="home-hero__arrow-icon" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 18l-6-6 6-6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button
+                className="home-hero__arrow home-hero__arrow--next"
+                type="button"
+                onClick={handleNext}
+                aria-label="Next slide"
+              >
+                <svg viewBox="0 0 24 24" className="home-hero__arrow-icon" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 6l6 6-6 6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
 
-          <div className="dots">
-            {heroSlides.map((slide, index) => (
-              <span
-                key={slide.tag}
-                className={`dot${currentSlide === index ? " active" : ""}`}
-                onClick={() => goToSlide(index)}
-              />
-            ))}
+            <ol className="home-hero__dots" role="list">
+              {heroSlides.map((slide, index) => {
+                const isActive = currentSlide === index;
+                return (
+                  <li key={slide.tag}>
+                    <button
+                      type="button"
+                      className={`home-hero__dot${isActive ? " is-active" : ""}`}
+                      onClick={() => goToSlide(index)}
+                      aria-label={`Go to slide ${index + 1}`}
+                      aria-pressed={isActive}
+                    />
+                  </li>
+                );
+              })}
+            </ol>
           </div>
         </div>
       </section>
 
-      <section id="categoriesSec" className="categoriesSec">
-        <div id="cartTextandIcon" className="cartTextandIcon">
-          <p>Categories</p>
-          <div id="categoryNav" className="categoryNav">
+      <section className="category-carousel" aria-labelledby="category-carousel-heading">
+        <div className="category-carousel__header">
+          <h2 id="category-carousel-heading">Categories</h2>
+          <div className="category-carousel__actions">
             <button
               type="button"
-              className="arrow-btn left"
-              onClick={() => scrollCategories(-250)}
+              className="category-carousel__arrow category-carousel__arrow--prev"
+              onClick={() => scrollCategories(-280)}
               aria-label="Scroll categories left"
             >
-              <svg viewBox="0 0 24 24" className="arrow-icon" xmlns="http://www.w3.org/2000/svg">
+              <svg viewBox="0 0 24 24" className="category-carousel__arrow-icon" xmlns="http://www.w3.org/2000/svg">
                 <path d="M15 18l-6-6 6-6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
             <button
               type="button"
-              className="arrow-btn right"
-              onClick={() => scrollCategories(250)}
+              className="category-carousel__arrow category-carousel__arrow--next"
+              onClick={() => scrollCategories(280)}
               aria-label="Scroll categories right"
             >
-              <svg viewBox="0 0 24 24" className="arrow-icon" xmlns="http://www.w3.org/2000/svg">
+              <svg viewBox="0 0 24 24" className="category-carousel__arrow-icon" xmlns="http://www.w3.org/2000/svg">
                 <path d="M9 6l6 6-6 6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
           </div>
         </div>
 
-        <div id="categoryCont" className="categoryCont" ref={categoryRef}>
-          <div className="categoryTrack">
+        <div className="category-carousel__viewport" ref={categoryRef} role="presentation">
+          <ul className="category-carousel__track" role="list">
             {categoryCards.map((category) => (
-              <Link key={category.id} id={category.id} className="categoryCard" href={category.href}>
-                <span className="categoryCard__icon">
-                  <i className={`fa-solid ${category.icon}`} aria-hidden="true" />
-                </span>
-                <span className="categoryCard__label">{category.label}</span>
-              </Link>
+              <li key={category.id} className="category-carousel__item">
+                <Link id={category.id} className="category-carousel__card" href={category.href}>
+                  <span className="category-carousel__card-icon" aria-hidden="true">
+                    <i className={`fa-solid ${category.icon}`} aria-hidden="true" />
+                  </span>
+                  <span className="category-carousel__card-label">{category.label}</span>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
-
       <ProductSection
-        sectionClass="popular-section"
-        containerClass="popular-section-content"
-        headerClass="popular-section-header"
-        gridId="homepagePopularGrid"
         title="Popular Combo Packs"
+        eyebrow="Top Picks"
         products={popularProducts}
+        gridId="homepagePopularGrid"
+        variant="emphasis"
       />
 
       <section className="advert-section">
@@ -272,23 +336,19 @@ export default function HomePage() {
           <img src="/assets/ads/01.jpg" alt="Promotional banner" />
         </div>
       </section>
-
       <ProductSection
-        sectionClass="new-stock-section"
-        containerClass="new-stock-content"
-        headerClass="new-stock-header"
-        gridId="homepageNewStockGrid"
-        title="New Stocks"
+        title="Fresh In Stock"
+        eyebrow="Just Arrived"
         products={newestProducts}
+        gridId="homepageNewStockGrid"
+        variant="emphasis"
       />
-
       <ProductSection
-        sectionClass="inSeasonSec"
-        containerClass="inSeasonFlex"
-        headerClass="inSeason"
-        gridId="homepageInSeasonGrid"
         title="In Season"
+        eyebrow="Peak Harvest"
         products={inSeasonProducts}
+        gridId="homepageInSeasonGrid"
+        variant="emphasis"
       />
 
       <section className="downloadAppSec">
@@ -315,10 +375,4 @@ export default function HomePage() {
     </main>
   );
 }
-
-
-
-
-
-
 

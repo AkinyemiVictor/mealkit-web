@@ -1,9 +1,8 @@
-export const formatProductPrice = (value, unit) => {
-  const formattedPrice = `?${Number(value || 0).toLocaleString()}`;
+﻿export const formatProductPrice = (value, unit) => {
+  const formattedPrice = `₦${Number(value || 0).toLocaleString()}`;
   const normalisedUnit = typeof unit === "string" ? unit.trim() : "";
   return normalisedUnit ? `${formattedPrice}/${normalisedUnit}` : formattedPrice;
 };
-
 export const resolveStockClass = (stockText) => {
   if (!stockText) return "";
   const lowered = stockText.toLowerCase();
@@ -114,3 +113,6 @@ export default {
   pickNewestProducts,
   pickInSeasonProducts,
 };
+
+
+

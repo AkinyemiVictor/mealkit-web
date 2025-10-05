@@ -6,6 +6,12 @@ const CART_STORAGE_KEY = "mealkit_cart";
 const RECENTLY_VIEWED_STORAGE_KEY = "mealkit_recently_viewed";
 const MIN_QUANTITY = 0.01;
 
+const roundTo = (value, precision = 2) => {
+  if (!Number.isFinite(value)) return 0;
+  const multiplier = 10 ** precision;
+  return Math.round(value * multiplier) / multiplier;
+};
+
 const formatUnitLabel = (unit) => {
   if (!unit) return "unit";
   return unit;
@@ -19,6 +25,33 @@ const clampQuantity = (value) => {
   return Math.round(parsed * 100) / 100;
 };
 
+const normaliseOrderSize = (value) => {
+  const size = clampQuantity(value);
+  return Number.isFinite(size) ? size : MIN_QUANTITY;
+};
+
+const normaliseOrderCount = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return 1;
+  }
+  return Math.max(1, Math.round(numeric));
+};
+
+const normaliseStoredItem = (item) => {
+  if (!item || typeof item !== "object") return null;
+  const orderSize = normaliseOrderSize(item.orderSize ?? item.quantity);
+  const orderCount = normaliseOrderCount(
+    item.orderCount ?? Math.round((clampQuantity(item.quantity) || orderSize) / orderSize)
+  );
+  return {
+    ...item,
+    orderSize,
+    orderCount,
+    quantity: roundTo(orderSize * orderCount),
+  };
+};
+
 const formatQuantityLabel = (value) => {
   const numeric = clampQuantity(value);
   if (!Number.isFinite(numeric)) return "0";
@@ -30,7 +63,7 @@ const readCartFromStorage = () => {
   try {
     const raw = window.localStorage.getItem(CART_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.map(normaliseStoredItem).filter(Boolean) : [];
   } catch (error) {
     console.warn("Could not read cart from storage", error);
     return [];
@@ -40,7 +73,8 @@ const readCartFromStorage = () => {
 const persistCartToStorage = (items) => {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    const normalised = Array.isArray(items) ? items.map(normaliseStoredItem).filter(Boolean) : [];
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(normalised));
   } catch (error) {
     console.warn("Could not persist cart", error);
   }
@@ -60,16 +94,22 @@ const updateRecentlyViewed = (id) => {
   }
 };
 
-const defaultCartItem = (product, quantity, fallbackImage) => ({
-  id: product.id,
-  name: product.name,
-  unit: product.unit || "Per pack",
-  price: product.price,
-  quantity,
-  stock: product.stock || "In Stock",
-  note: product.note || "Added from product page",
-  image: product.image || fallbackImage,
-});
+const buildCartItem = (product, orderSize, orderCount, fallbackImage) => {
+  const size = normaliseOrderSize(orderSize);
+  const count = normaliseOrderCount(orderCount);
+  return {
+    id: product.id,
+    name: product.name,
+    unit: product.unit || "Per pack",
+    price: product.price,
+    orderSize: size,
+    orderCount: count,
+    quantity: roundTo(size * count),
+    stock: product.stock || "In Stock",
+    note: product.note || "Added from product page",
+    image: product.image || fallbackImage,
+  };
+};
 
 export default function AddToCartForm({ product, fallbackImage }) {
   const [quantityInput, setQuantityInput] = useState("1");
@@ -101,15 +141,20 @@ export default function AddToCartForm({ product, fallbackImage }) {
 
     if (index >= 0) {
       const existing = items[index];
-      const currentQuantity = clampQuantity(existing.quantity) || 0;
-      const nextQuantity = Math.round((currentQuantity + parsedQuantity) * 100) / 100;
+      const existingSize = normaliseOrderSize(existing.orderSize ?? existing.quantity);
+      const existingCount = normaliseOrderCount(
+        existing.orderCount ?? Math.round((clampQuantity(existing.quantity) || existingSize) / existingSize)
+      );
+      const addedOrders = Math.max(1, Math.round(parsedQuantity / existingSize));
+      const nextCount = existingCount + addedOrders;
+      const updatedItem = buildCartItem(product, existingSize, nextCount, fallbackImage);
       items[index] = {
         ...existing,
-        ...defaultCartItem(product, nextQuantity, fallbackImage),
-        quantity: nextQuantity,
+        ...updatedItem,
+        note: existing.note ?? updatedItem.note,
       };
     } else {
-      items.push(defaultCartItem(product, parsedQuantity, fallbackImage));
+      items.push(buildCartItem(product, parsedQuantity, 1, fallbackImage));
     }
 
     persistCartToStorage(items);
@@ -165,3 +210,11 @@ export default function AddToCartForm({ product, fallbackImage }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+

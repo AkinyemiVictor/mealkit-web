@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import categories from "@/data/categories";
+import CategoryCarousel from "@/components/category-carousel";
+import categories, { getCategoryHref } from "@/data/categories";
 import productsData, { products as rawProducts } from "@/data/products";
 import { formatProductPrice, normaliseProductCatalogue, resolveStockClass } from "@/lib/catalogue";
 import { getProductHref } from "@/lib/products";
@@ -35,6 +36,12 @@ const mapCategorySlug = (value) => aliasMap.get(toSlug(value)) || toSlug(value);
 
 const DEFAULT_PAGE_SIZE = 20;
 
+const CATEGORY_CARDS = categories.map((entry) => ({
+  slug: entry.slug,
+  label: entry.label,
+  icon: entry.icon,
+  href: getCategoryHref(entry),
+}));
 const getCategory = (slug) => categories.find((entry) => entry.slug === slug);
 
 const getCollectionByKey = (key) => {
@@ -224,6 +231,13 @@ export default function CategoryPage({ category: incomingCategory, pageSize = DE
         </div>
       </div>
 
+      <CategoryCarousel
+        cards={CATEGORY_CARDS}
+        heading="Explore more categories"
+        eyebrow="Shop by aisle"
+        activeSlug={category.slug}
+      />
+
       <section className="category-products" aria-live="polite">
         {categoryProducts.length ? (
           <div className="product-card-grid">
@@ -241,6 +255,9 @@ export default function CategoryPage({ category: incomingCategory, pageSize = DE
     </main>
   );
 }
+
+
+
 
 
 

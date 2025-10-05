@@ -40,41 +40,111 @@ function GoogleIcon() {
 }
 
 export default function SignInPage() {
-  const [activeTab, setActiveTab] = useState("login");
-
-  const hashLookup = useMemo(() => ({
-    login: "#loginForm",
-    signup: "#signupForm",
-  }), []);
-
-  const deriveTabFromHash = useCallback(() => {
+  const [activeTab, setActiveTab] = useState(() => {
     if (typeof window === "undefined") {
       return "login";
     }
-    return window.location.hash === "#signupForm" ? "signup" : "login";
-  }, []);
 
-  const syncFromHash = useCallback(() => {
-    setActiveTab(deriveTabFromHash());
-  }, [deriveTabFromHash]);
+    const { hash, search } = window.location;
+    const hashMatch = TAB_OPTIONS.find((tab) => tab.hash === hash);
+    if (hashMatch) {
+      return hashMatch.key;
+    }
+
+    if (search) {
+      const params = new URLSearchParams(search);
+      const tabParam = params.get("tab");
+      if (tabParam) {
+        const tabMatch = TAB_OPTIONS.find((tab) => tab.key === tabParam);
+        if (tabMatch) {
+          return tabMatch.key;
+        }
+      }
+    }
+
+    return "login";
+  });
+
+  const hashLookup = useMemo(() => TAB_OPTIONS.reduce((acc, tab) => {
+    acc[tab.key] = tab.hash;
+    return acc;
+  }, {}), []);
+
+  const hashToTab = useMemo(() => TAB_OPTIONS.reduce((acc, tab) => {
+    acc[tab.hash] = tab.key;
+    return acc;
+  }, {}), []);
+
+  const deriveTabFromLocation = useCallback(() => {
+    if (typeof window === "undefined") {
+      return "login";
+    }
+
+    const { hash, search } = window.location;
+    if (hash && hashToTab[hash]) {
+      return hashToTab[hash];
+    }
+
+    if (search) {
+      const params = new URLSearchParams(search);
+      const tabParam = params.get("tab");
+      if (tabParam && hashLookup[tabParam]) {
+        return tabParam;
+      }
+    }
+
+    return "login";
+  }, [hashLookup, hashToTab]);
+
+  const syncFromLocation = useCallback(() => {
+    setActiveTab(deriveTabFromLocation());
+  }, [deriveTabFromLocation]);
 
   useEffect(() => {
-    syncFromHash();
-    window.addEventListener("hashchange", syncFromHash);
+    syncFromLocation();
+    window.addEventListener("hashchange", syncFromLocation);
+    window.addEventListener("popstate", syncFromLocation);
     return () => {
-      window.removeEventListener("hashchange", syncFromHash);
+      window.removeEventListener("hashchange", syncFromLocation);
+      window.removeEventListener("popstate", syncFromLocation);
     };
-  }, [syncFromHash]);
+  }, [syncFromLocation]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
+
     const desiredHash = hashLookup[activeTab];
-    if (window.location.hash !== desiredHash) {
-      window.history.replaceState(null, "", desiredHash);
+    if (!desiredHash) {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    let shouldUpdate = false;
+
+    if (url.hash !== desiredHash) {
+      url.hash = desiredHash;
+      shouldUpdate = true;
+    }
+
+    if (url.searchParams.get("tab") !== activeTab) {
+      url.searchParams.set("tab", activeTab);
+      shouldUpdate = true;
+    }
+
+    if (shouldUpdate) {
+      window.history.replaceState(null, "", url);
     }
   }, [activeTab, hashLookup]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [activeTab]);
 
   const handleTabChange = useCallback((tabKey) => {
     setActiveTab(tabKey);
@@ -85,121 +155,201 @@ export default function SignInPage() {
   }, []);
 
   const isLoginActive = activeTab === "login";
+  const panelHeading = isLoginActive ? "Welcome back" : "Create your MealKit account";
+  const panelSubheading = isLoginActive
+    ? "Sign in to manage deliveries, track orders, and repeat your favourite baskets."
+    : "Set up your account to schedule deliveries, save baskets, and earn loyalty rewards.";
 
   return (
-    <div className="auth-page">
-      <div className="auth-logo">
-        <img src="/assets/logo/LOGO NO BACKGROUND.png" alt="Mealkit logo" />
-      </div>
+    <main className="auth-page">
+      <div className="auth-shell">
+        <aside className="auth-aside" aria-label="MealKit membership highlights">
+          <div className="auth-aside-inner">
+            <div>
+              <span className="auth-aside-badge">MealKit community</span>
+              <h1 className="auth-aside-title">Groceries done in minutes</h1>
+              <p className="auth-aside-text">
+                Stay on top of your pantry with real-time delivery tracking and curated recommendations tailored to
+                your household.
+              </p>
+              <ul className="auth-aside-list">
+                <li>
+                  <i className="fa-solid fa-bolt" aria-hidden="true" />
+                  <span>Same-day delivery across Lagos</span>
+                </li>
+                <li>
+                  <i className="fa-solid fa-seedling" aria-hidden="true" />
+                  <span>Chef-picked seasonal bundles</span>
+                </li>
+                <li>
+                  <i className="fa-solid fa-shield-heart" aria-hidden="true" />
+                  <span>Secure payments & dedicated support</span>
+                </li>
+              </ul>
+            </div>
+            <p className="auth-aside-footer">
+              Need help logging in?{' '}
+              <Link href="/help-center">Talk to our concierge</Link>
+            </p>
+          </div>
+        </aside>
 
-      <div className="auth-container">
-        <div className="auth-tabs" role="tablist" aria-label="Authentication tabs">
-          {TAB_OPTIONS.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              id={`${tab.key}-tab`}
-              aria-controls={tab.hash.substring(1)}
-              aria-selected={activeTab === tab.key}
-              className={`auth-tab${activeTab === tab.key ? " is-active" : ""}`}
-              onClick={() => handleTabChange(tab.key)}
+        <section className="auth-panel" aria-label="MealKit authentication">
+          <div className="auth-panel-header">
+            <div>
+              <span className="auth-panel-eyebrow">MealKit account</span>
+              <h2 className="auth-panel-title">{panelHeading}</h2>
+              <p className="auth-panel-subtitle">{panelSubheading}</p>
+            </div>
+            <button type="button" className="auth-help-link">
+              <i className="fa-regular fa-circle-question" aria-hidden="true" />
+              Contact support
+            </button>
+          </div>
+
+          <div className="auth-tabs" role="tablist" aria-label="Authentication tabs">
+            {TAB_OPTIONS.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                role="tab"
+                id={`${tab.key}-tab`}
+                aria-controls={tab.hash.substring(1)}
+                aria-selected={activeTab === tab.key}
+                className={`auth-tab${activeTab === tab.key ? " is-active" : ""}`}
+                onClick={() => handleTabChange(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="auth-forms">
+            <form
+              id="loginForm"
+              className={`auth-form${isLoginActive ? " is-active" : ""}`}
+              aria-hidden={!isLoginActive}
+              aria-labelledby="login-tab"
+              onSubmit={handleSubmit}
             >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+              <div className="auth-field">
+                <label className="sr-only" htmlFor="login-email">
+                  Email
+                </label>
+                <input id="login-email" type="email" name="login-email" placeholder="Email" required autoComplete="email" />
+              </div>
+              <div className="auth-field">
+                <label className="sr-only" htmlFor="login-password">
+                  Password
+                </label>
+                <input
+                  id="login-password"
+                  type="password"
+                  name="login-password"
+                  placeholder="Password"
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+              <div className="auth-forgot">
+                <Link href="#">Forgot password?</Link>
+              </div>
+              <button type="submit" className="auth-primary-btn">
+                Login
+              </button>
 
-        <form
-          id="loginForm"
-          className={`auth-form${isLoginActive ? " is-active" : ""}`}
-          aria-hidden={!isLoginActive}
-          aria-labelledby="login-tab"
-          onSubmit={handleSubmit}
-        >
-          <input type="email" name="login-email" placeholder="Email" required autoComplete="email" />
-          <input
-            type="password"
-            name="login-password"
-            placeholder="Password"
-            required
-            autoComplete="current-password"
-          />
-          <div className="auth-forgot">
-            <Link href="#">Forgot password?</Link>
+              <div className="auth-divider">
+                <span>or</span>
+              </div>
+
+              <button type="button" className="auth-google-btn">
+                <GoogleIcon />
+                Login with Google
+              </button>
+
+              <p className="auth-switch">
+                Don&apos;t have an account?{' '}
+                <button type="button" onClick={() => handleTabChange('signup')}>
+                  Sign Up
+                </button>
+              </p>
+            </form>
+
+            <form
+              id="signupForm"
+              className={`auth-form${!isLoginActive ? " is-active" : ""}`}
+              aria-hidden={isLoginActive}
+              aria-labelledby="signup-tab"
+              onSubmit={handleSubmit}
+            >
+              <div className="auth-field">
+                <label className="sr-only" htmlFor="signup-name">
+                  Full name
+                </label>
+                <input id="signup-name" type="text" name="signup-name" placeholder="Full Name" required autoComplete="name" />
+              </div>
+              <div className="auth-field">
+                <label className="sr-only" htmlFor="signup-email">
+                  Email
+                </label>
+                <input id="signup-email" type="email" name="signup-email" placeholder="Email" required autoComplete="email" />
+              </div>
+              <div className="auth-field">
+                <label className="sr-only" htmlFor="signup-password">
+                  Password
+                </label>
+                <input
+                  id="signup-password"
+                  type="password"
+                  name="signup-password"
+                  placeholder="Password"
+                  required
+                  autoComplete="new-password"
+                />
+              </div>
+              <div className="auth-field">
+                <label className="sr-only" htmlFor="signup-confirm-password">
+                  Confirm password
+                </label>
+                <input
+                  id="signup-confirm-password"
+                  type="password"
+                  name="signup-confirm-password"
+                  placeholder="Confirm Password"
+                  required
+                  autoComplete="new-password"
+                />
+              </div>
+              <button type="submit" className="auth-primary-btn">
+                Sign Up
+              </button>
+
+              <div className="auth-divider">
+                <span>or</span>
+              </div>
+
+              <button type="button" className="auth-google-btn">
+                <GoogleIcon />
+                Sign up with Google
+              </button>
+
+              <p className="auth-switch">
+                Already have an account?{' '}
+                <button type="button" onClick={() => handleTabChange('login')}>
+                  Login
+                </button>
+              </p>
+            </form>
           </div>
-          <button type="submit" className="auth-primary-btn">
-            Login
-          </button>
 
-          <div className="auth-divider">
-            <span>or</span>
-          </div>
-
-          <button type="button" className="auth-google-btn">
-            <GoogleIcon />
-            Login with Google
-          </button>
-
-          <p className="auth-switch">
-            Don&apos;t have an account? {" "}
-            <button type="button" onClick={() => handleTabChange("signup")}>
-              Sign Up
-            </button>
+          <p className="auth-disclaimer">
+            By using MealKit you agree to our{' '}
+            <Link href="#">Terms and Conditions</Link>
+            {' '}and{' '}
+            <Link href="#">Privacy Policy</Link>.
           </p>
-        </form>
-
-        <form
-          id="signupForm"
-          className={`auth-form${!isLoginActive ? " is-active" : ""}`}
-          aria-hidden={isLoginActive}
-          aria-labelledby="signup-tab"
-          onSubmit={handleSubmit}
-        >
-          <input type="text" name="signup-name" placeholder="Full Name" required autoComplete="name" />
-          <input type="email" name="signup-email" placeholder="Email" required autoComplete="email" />
-          <input
-            type="password"
-            name="signup-password"
-            placeholder="Password"
-            required
-            autoComplete="new-password"
-          />
-          <input
-            type="password"
-            name="signup-confirm-password"
-            placeholder="Confirm Password"
-            required
-            autoComplete="new-password"
-          />
-          <button type="submit" className="auth-primary-btn">
-            Sign Up
-          </button>
-
-          <div className="auth-divider">
-            <span>or</span>
-          </div>
-
-          <button type="button" className="auth-google-btn">
-            <GoogleIcon />
-            Sign up with Google
-          </button>
-
-          <p className="auth-switch">
-            Already have an account? {" "}
-            <button type="button" onClick={() => handleTabChange("login")}>
-              Login
-            </button>
-          </p>
-        </form>
+        </section>
       </div>
-
-      <p className="auth-disclaimer">
-        By using this, you agree to our {" "}
-        <Link href="#">Terms and Conditions</Link>
-        {" "}and{" "}
-        <Link href="#">Privacy Policy</Link>.
-      </p>
-    </div>
+    </main>
   );
 }

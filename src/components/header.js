@@ -4,33 +4,59 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 const CART_STORAGE_KEY = "mealkit_cart";
-const MIN_CART_QUANTITY = 0.01;
+const MIN_ORDER_SIZE = 0.01;
 
-const normaliseCartQuantity = (value, fallback = MIN_CART_QUANTITY) => {
+const roundTo = (value, precision = 2) => {
+  if (!Number.isFinite(value)) return 0;
+  const multiplier = 10 ** precision;
+  return Math.round(value * multiplier) / multiplier;
+};
+
+const normaliseOrderSize = (value, fallback = MIN_ORDER_SIZE) => {
   const numeric = Number.parseFloat(value);
   if (!Number.isFinite(numeric) || numeric <= 0) {
     return fallback;
   }
-  return Math.round(numeric * 100) / 100;
+  return roundTo(numeric);
 };
 
-const formatCartQuantity = (value) => {
-  const numeric = normaliseCartQuantity(value, 0);
-  if (!numeric) return "0";
-  const isWhole = Math.abs(Math.round(numeric) - numeric) < 0.005;
-  return numeric.toLocaleString(undefined, {
-    minimumFractionDigits: isWhole ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
+const normaliseOrderCount = (value, fallback = 0) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return fallback;
+  }
+  return Math.max(1, Math.round(numeric));
 };
 
-const countStoredCartUnits = () => {
+const deriveCartMetrics = (entry) => {
+  if (!entry || typeof entry !== "object") {
+    return { orderCount: 0 };
+  }
+  const orderSize = normaliseOrderSize(entry.orderSize ?? entry.quantity ?? MIN_ORDER_SIZE, MIN_ORDER_SIZE);
+  const storedCount = normaliseOrderCount(entry.orderCount ?? 0, 0);
+  const fallbackCount = orderSize > 0
+    ? Math.round((Number.parseFloat(entry.quantity) || orderSize) / orderSize)
+    : 0;
+  const orderCount = storedCount > 0 ? storedCount : Math.max(0, fallbackCount);
+  return {
+    orderCount,
+  };
+};
+
+const formatCartCount = (value) => {
+  const count = normaliseOrderCount(value, 0);
+  return count.toLocaleString();
+};
+
+const countStoredCartItems = () => {
   if (typeof window === "undefined") return 0;
   try {
     const raw = window.localStorage.getItem(CART_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(parsed)) return 0;
-    return parsed.reduce((sum, item) => sum + normaliseCartQuantity(item?.quantity, 0), 0);
+    return parsed
+      .map(deriveCartMetrics)
+      .reduce((sum, entry) => sum + entry.orderCount, 0);
   } catch (error) {
     console.warn("Unable to read stored cart", error);
     return 0;
@@ -103,7 +129,7 @@ export default function Header() {
     }
 
     const updateCartQuantity = () => {
-      setCartQuantity(countStoredCartUnits());
+      setCartQuantity(countStoredCartItems());
     };
 
     updateCartQuantity();
@@ -246,7 +272,7 @@ export default function Header() {
             >
               <Link
                 className="site-header__account-link"
-                href="/sign-in"
+                href="/sign-in?tab=login#loginForm"
                 role="menuitem"
                 onClick={handleNavAction}
               >
@@ -254,7 +280,7 @@ export default function Header() {
               </Link>
               <Link
                 className="site-header__account-link"
-                href="/sign-in#signupForm"
+                href="/sign-in?tab=signup#signupForm"
                 role="menuitem"
                 onClick={handleNavAction}
               >
@@ -317,7 +343,7 @@ export default function Header() {
             </span>
             <span className="site-header__action-label">Cart</span>
             <span className="site-header__cart-count" aria-live="polite">
-              {formatCartQuantity(cartQuantity)}
+              {formatCartCount(cartQuantity)}
             </span>
           </Link>
         </div>
@@ -358,10 +384,10 @@ export default function Header() {
         <div className="site-header__mobile-section">
           <span className="site-header__mobile-heading">Account</span>
           <div className="site-header__mobile-links">
-            <Link href="/sign-in" onClick={handleNavAction}>
+            <Link href="/sign-in?tab=login#loginForm" onClick={handleNavAction}>
               Login
             </Link>
-            <Link href="/sign-in#signupForm" onClick={handleNavAction}>
+            <Link href="/sign-in?tab=signup#signupForm" onClick={handleNavAction}>
               Sign Up
             </Link>
           </div>
@@ -377,7 +403,7 @@ export default function Header() {
           onClick={handleNavAction}
         >
           Cart
-          <span className="site-header__mobile-badge">{formatCartQuantity(cartQuantity)}</span>
+          <span className="site-header__mobile-badge">{formatCartCount(cartQuantity)}</span>
         </Link>
       </div>
     </header>

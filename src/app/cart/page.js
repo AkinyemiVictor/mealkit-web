@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import styles from "./cart.module.css";
 
+import CategoryCarousel from "@/components/category-carousel";
 import products from "@/data/products";
 import categories, { getCategoryHref } from "@/data/categories";
 import {
@@ -14,36 +15,80 @@ import {
   resolveStockClass,
 } from "@/lib/catalogue";
 
+import { getProductHref } from "@/lib/products";
+
 const CART_STORAGE_KEY = "mealkit_cart";
 const RECENTLY_VIEWED_STORAGE_KEY = "mealkit_recently_viewed";
 const DELIVERY_FEE = 1500;
 const RECENTLY_VIEWED_LIMIT = 6;
-const MIN_CART_QUANTITY = 0.01;
-const CART_QUANTITY_STEP = 0.25;
+const MIN_ORDER_SIZE = 0.01;
+const ORDER_COUNT_STEP = 1;
 
-const normaliseCartQuantity = (value, fallback = MIN_CART_QUANTITY) => {
+const roundTo = (value, precision = 2) => {
+  if (!Number.isFinite(value)) return 0;
+  const multiplier = 10 ** precision;
+  return Math.round(value * multiplier) / multiplier;
+};
+
+const normaliseOrderSize = (value, fallback = MIN_ORDER_SIZE) => {
   const numeric = Number.parseFloat(value);
   if (!Number.isFinite(numeric) || numeric <= 0) {
     return fallback;
   }
-  return Math.round(numeric * 100) / 100;
+  return roundTo(numeric);
 };
 
-const formatCartQuantity = (value) => {
-  const numeric = normaliseCartQuantity(value, 0);
-  if (!numeric) return "0";
-  const isWhole = Math.abs(Math.round(numeric) - numeric) < 0.005;
-  return numeric.toLocaleString(undefined, { minimumFractionDigits: isWhole ? 0 : 2, maximumFractionDigits: 2 });
+const normaliseOrderCount = (value, fallback = 1) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return fallback;
+  }
+  return Math.max(1, Math.round(numeric));
+};
+
+const computeQuantity = (orderSize, orderCount) => roundTo(orderSize * orderCount);
+
+const formatOrderSize = (value) => {
+  const size = normaliseOrderSize(value, 0);
+  if (!size) return "0";
+  const hasFraction = Math.abs(Math.round(size) - size) > 0.005;
+  return size.toLocaleString(undefined, {
+    minimumFractionDigits: hasFraction ? 2 : 0,
+    maximumFractionDigits: 2,
+  });
+};
+
+const formatOrderCount = (value) => {
+  const count = normaliseOrderCount(value, 0);
+  return count.toLocaleString();
+};
+
+const hydrateCartItem = (item) => {
+  if (!item || typeof item !== "object") return null;
+  const draft = { ...item };
+  const orderSize = normaliseOrderSize(draft.orderSize ?? draft.quantity ?? MIN_ORDER_SIZE, MIN_ORDER_SIZE);
+  const storedCount = normaliseOrderCount(draft.orderCount ?? 0, 1);
+  const derivedCount = normaliseOrderCount(
+    storedCount > 0
+      ? storedCount
+      : orderSize > 0
+        ? Math.round((Number.parseFloat(draft.quantity) || orderSize) / orderSize)
+        : 1,
+    1
+  );
+  const quantity = computeQuantity(orderSize, derivedCount);
+
+  return {
+    ...draft,
+    orderSize,
+    orderCount: derivedCount,
+    quantity,
+  };
 };
 
 const hydrateCartItems = (items) => {
   if (!Array.isArray(items)) return [];
-  return items
-    .filter((item) => item && typeof item === "object")
-    .map((item) => ({
-      ...item,
-      quantity: normaliseCartQuantity(item.quantity, MIN_CART_QUANTITY),
-    }));
+  return items.map(hydrateCartItem).filter(Boolean);
 };
 
 const readCartFromStorage = () => {
@@ -111,9 +156,10 @@ const formatCurrency = (value) =>
 function ProductHighlightCard({ product }) {
   const stockClass = resolveStockClass(product.stock);
   const hasOldPrice = product.oldPrice && product.oldPrice > product.price;
+  const href = getProductHref(product);
 
   return (
-    <article className="product-card">
+    <Link href={href} className="product-card" aria-label={`View ${product.name}`} prefetch={false}>
       <span className="product-card-badges">
         {product.discount ? (
           <div className="product-card-discount">
@@ -125,7 +171,12 @@ function ProductHighlightCard({ product }) {
         </div>
       </span>
       <div>
-        <img src={product.image} alt={product.name} className="productImg" loading="lazy" />
+        <img
+          src={product.image || "/assets/img/product images/tomato-fruit-isolated-transparent-background.png"}
+          alt={product.name}
+          className="productImg"
+          loading="lazy"
+        />
         <div className="product-card-details">
           <h4>{product.name}</h4>
           <span>
@@ -139,12 +190,35 @@ function ProductHighlightCard({ product }) {
           ) : null}
         </div>
       </div>
-    </article>
+    </Link>
   );
 }
 
-export default function CartPage() {
-  const categoryTrackRef = useRef(null);
+function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, variant = "emphasis", children }) {
+  const sectionClasses = ["home-section"];
+  if (variant && variant !== "plain") {
+    sectionClasses.push(`home-section--${variant}`);
+  }
+
+  return (
+    <section className={sectionClasses.join(" ")} aria-labelledby={headingId}>
+      <div className="home-section__inner">
+        <header className="home-section__header">
+          <div className="home-section__titles">
+            {eyebrow ? <span className="home-section__eyebrow">{eyebrow}</span> : null}
+            <h2 className="home-section__title" id={headingId}>
+              {title}
+            </h2>
+          </div>
+          <button type="button" className="home-section__cta">
+            {ctaLabel}
+          </button>
+        </header>
+        {children}
+      </div>
+    </section>
+  );
+} export default function CartPage() {
   const catalogueLookup = useMemo(() => normaliseProductCatalogue(products), []);
   const catalogueList = catalogueLookup.ordered ?? [];
   const productIndex = catalogueLookup.index ?? new Map();
@@ -247,57 +321,67 @@ export default function CartPage() {
   );
 
   const summary = useMemo(() => {
-    const unitsCount = cartItems.reduce((sum, item) => sum + normaliseCartQuantity(item.quantity, 0), 0);
-    const itemsCount = Math.round(unitsCount * 100) / 100;
-    const subtotal = cartItems.reduce((sum, item) => {
+  const aggregates = cartItems.reduce(
+    (acc, item) => {
+      const orderSize = normaliseOrderSize(item.orderSize, MIN_ORDER_SIZE);
+      const orderCount = normaliseOrderCount(item.orderCount, 0);
       const price = Number(item.price) || 0;
-      const quantity = normaliseCartQuantity(item.quantity, 0);
-      return sum + price * quantity;
-    }, 0);
+      const quantity = computeQuantity(orderSize, orderCount);
 
-    let delivery = itemsCount ? DELIVERY_FEE : 0;
-    let discount = 0;
+      return {
+        itemsCount: acc.itemsCount + orderCount,
+        subtotal: acc.subtotal + price * quantity,
+      };
+    },
+    { itemsCount: 0, subtotal: 0 }
+  );
 
-    if (activePromo) {
-      if (activePromo.type === "percent") {
-        if (!activePromo.minSubtotal || subtotal >= activePromo.minSubtotal) {
-          discount = subtotal * activePromo.value;
-        }
-      }
+  let delivery = aggregates.itemsCount > 0 ? DELIVERY_FEE : 0;
+  let discount = 0;
 
-      if (activePromo.type === "delivery" && itemsCount) {
-        delivery = 0;
+  if (activePromo) {
+    if (activePromo.type === "percent") {
+      if (!activePromo.minSubtotal || aggregates.subtotal >= activePromo.minSubtotal) {
+        discount = aggregates.subtotal * activePromo.value;
       }
     }
 
-    discount = Math.min(discount, subtotal);
-    const total = itemsCount ? Math.max(subtotal - discount, 0) + delivery : 0;
+    if (activePromo.type === "delivery" && aggregates.itemsCount > 0) {
+      delivery = 0;
+    }
+  }
 
-    return {
-      itemsCount,
-      subtotal,
-      discount,
-      delivery,
-      total,
-    };
-  }, [cartItems, activePromo]);
+  discount = Math.min(discount, aggregates.subtotal);
+  const total = aggregates.itemsCount > 0 ? Math.max(aggregates.subtotal - discount, 0) + delivery : 0;
+
+  return {
+    itemsCount: aggregates.itemsCount,
+    subtotal: aggregates.subtotal,
+    discount,
+    delivery,
+    total,
+  };
+}, [cartItems, activePromo]);
 
   const setPromoFeedback = useCallback((text, tone = "neutral") => {
     setPromoMessage({ text, tone });
   }, []);
   const handleQtyChange = useCallback((id, delta) => {
-    setCartItems((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) return item;
-        const current = normaliseCartQuantity(item.quantity, MIN_CART_QUANTITY);
-        const next = Math.max(current + delta, MIN_CART_QUANTITY);
-        return {
-          ...item,
-          quantity: normaliseCartQuantity(next, MIN_CART_QUANTITY),
-        };
-      })
-    );
-  }, []);
+  setCartItems((prev) =>
+    prev.map((item) => {
+      if (item.id !== id) return item;
+      const orderSize = normaliseOrderSize(item.orderSize, MIN_ORDER_SIZE);
+      const currentCount = normaliseOrderCount(item.orderCount, 1);
+      const nextCount = Math.max(currentCount + delta, 1);
+      return {
+        ...item,
+        orderSize,
+        orderCount: nextCount,
+        quantity: computeQuantity(orderSize, nextCount),
+      };
+    })
+  );
+}, []);
 
   const handleRemove = useCallback((id) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
@@ -352,10 +436,6 @@ export default function CartPage() {
     );
   }, [summary.total]);
 
-  const scrollCategories = useCallback((offset) => {
-    categoryTrackRef.current?.scrollBy({ left: offset, behavior: "smooth" });
-  }, []);
-
   const promoToneClass = useMemo(() => {
     switch (promoMessage.tone) {
       case "success":
@@ -367,51 +447,19 @@ export default function CartPage() {
     }
   }, [promoMessage.tone]);
 
-  const formattedItemsCount = formatCartQuantity(summary.itemsCount);
-  const unitLabel = Math.abs(summary.itemsCount - 1) < 0.005 ? "unit" : "units";
+  const totalOrderCount = normaliseOrderCount(summary.itemsCount, 0);
+  const formattedItemsCount = formatOrderCount(totalOrderCount);
+  const itemLabel = totalOrderCount === 1 ? "item" : "items";
   const cartIsEmpty = cartItems.length === 0;
 
   return (
     <div className={styles.page}>
-      <section className="categoriesSec" aria-labelledby="categories-heading">
-        <div id="cartTextandIcon" className="cartTextandIcon">
-          <p id="categories-heading">Categories</p>
-          <div id="categoryNav" className="categoryNav">
-            <button
-              type="button"
-              className="arrow-btn left"
-              onClick={() => scrollCategories(-260)}
-              aria-label="Scroll categories left"
-            >
-              <svg viewBox="0 0 24 24" className="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 18l-6-6 6-6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="arrow-btn right"
-              onClick={() => scrollCategories(260)}
-              aria-label="Scroll categories right"
-            >
-              <svg viewBox="0 0 24 24" className="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 6l6 6-6 6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div id="categoryCont" className="categoryCont" ref={categoryTrackRef}>
-          <div className="categoryTrack">
-            {CATEGORY_CARDS.map((category) => (
-              <Link key={category.slug} id={category.slug} className="categoryCard" href={category.href}>
-                <span className="categoryCard__icon">
-                  <i className={`fa-solid ${category.icon}`} aria-hidden="true"></i>
-                </span>
-                <span className="categoryCard__label">{category.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+            <CategoryCarousel
+        cards={CATEGORY_CARDS}
+        heading="Browse categories"
+        eyebrow="Shop by aisle"
+        className={styles.categorySection}
+      />
 
       <div className={styles.pageInner}>
         <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
@@ -433,7 +481,7 @@ export default function CartPage() {
               </div>
               <span className={styles.cartTag}>
                 <i className="fa-solid fa-basket-shopping" aria-hidden="true"></i>
-                {formattedItemsCount} {unitLabel}
+                {formattedItemsCount} {itemLabel}
               </span>
             </header>
 
@@ -444,9 +492,16 @@ export default function CartPage() {
                 </div>
               ) : (
                 cartItems.map((item) => {
-                  const quantity = normaliseCartQuantity(item.quantity, MIN_CART_QUANTITY);
+                  const orderSize = normaliseOrderSize(item.orderSize, MIN_ORDER_SIZE);
+                  const orderCount = normaliseOrderCount(item.orderCount, 1);
+                  const quantity = computeQuantity(orderSize, orderCount);
                   const price = Number(item.price) || 0;
                   const lineTotal = price * quantity;
+                  const perOrderLabel = item.unit
+                    ? `${formatOrderSize(orderSize)} ${item.unit}`
+                    : formatOrderSize(orderSize);
+                  const orderLabel = orderCount === 1 ? "order" : "orders";
+
                   return (
                     <article key={item.id} className={styles.cartLine}>
                       <div className={styles.cartThumbnail}>
@@ -455,7 +510,7 @@ export default function CartPage() {
                       <div className={styles.cartInfo}>
                         <h3>{item.name}</h3>
                         <div className={styles.cartMeta}>
-                          <span>{item.unit}</span>
+                          <span>{perOrderLabel} per order</span>
                           <span>{item.stock}</span>
                           <span className={styles.cartPrice}>{formatCurrency(price)}</span>
                         </div>
@@ -466,25 +521,30 @@ export default function CartPage() {
                           <button
                             type="button"
                             className={styles.qtyButton}
-                            onClick={() => handleQtyChange(item.id, -CART_QUANTITY_STEP)}
-                            aria-label={`Decrease quantity of ${item.name}`}
+                            onClick={() => handleQtyChange(item.id, -ORDER_COUNT_STEP)}
+                            aria-label={`Decrease order count for ${item.name}`}
                           >
                             -
                           </button>
                           <span className={styles.qtyValue}>
-                            <span className={styles.qtyNumber}>{formatCartQuantity(quantity)}</span>
-                            {item.unit ? <span className={styles.qtyUnit}>{item.unit}</span> : null}
+                            <span className={styles.qtyNumber}>{formatOrderCount(orderCount)}</span>
+                            <span className={styles.qtyUnit}>{orderLabel}</span>
                           </span>
                           <button
                             type="button"
                             className={styles.qtyButton}
-                            onClick={() => handleQtyChange(item.id, CART_QUANTITY_STEP)}
-                            aria-label={`Increase quantity of ${item.name}`}
+                            onClick={() => handleQtyChange(item.id, ORDER_COUNT_STEP)}
+                            aria-label={`Increase order count for ${item.name}`}
                           >
                             +
                           </button>
                         </div>
-                        <div>{formatCurrency(lineTotal)}</div>
+                        <div className={styles.cartLineSummary}>
+                          <span className={styles.cartLineQuantity}>
+                            {formatOrderSize(quantity)}{item.unit ? ` ${item.unit}` : ""}
+                          </span>
+                          <span className={styles.cartLineTotal}>{formatCurrency(lineTotal)}</span>
+                        </div>
                         <button
                           type="button"
                           className={styles.removeButton}
@@ -531,8 +591,8 @@ export default function CartPage() {
             </div>
             <div className={styles.summaryRows}>
               <div className={styles.summaryRow}>
-                <span>Units</span>
-                <span>{formattedItemsCount}</span>
+                <span>Items</span>
+                <span>{formattedItemsCount} {itemLabel}</span>
               </div>
               <div className={styles.summaryRow}>
                 <span>Subtotal</span>
@@ -591,45 +651,29 @@ export default function CartPage() {
         </div>
       </div>
 
-      <section className={styles.recentlySection} aria-labelledby="recently-heading">
-        <div className={styles.sectionInner}>
-          <div className={styles.sectionHeader}>
-            <h2 id="recently-heading">Recently Viewed</h2>
-            <button type="button" className={styles.sectionButton}>
-              See all
-            </button>
-          </div>
-          {recentlyViewed.length ? (
-            <div className="product-card-grid">
-              {recentlyViewed.map((product) => (
-                <ProductHighlightCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <div className={styles.cardGridPlaceholder}>
-              <div className={styles.placeholderCard}>
-                Your browsing history will appear here once you view some items.
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className={styles.popularSection} aria-labelledby="popular-heading">
-        <div className={styles.sectionInner}>
-          <div className={styles.sectionHeader}>
-            <h2 id="popular-heading">Most Popular</h2>
-            <button type="button" className={styles.sectionButton}>
-              See all
-            </button>
-          </div>
-          <div className="product-card-grid">
-            {mostPopular.map((product) => (
+      <CartProductSection title="Recently Viewed" eyebrow="Just For You" headingId="recently-heading">
+        {recentlyViewed.length ? (
+          <div className="product-card-grid" id="cartRecentlyViewedGrid">
+            {recentlyViewed.map((product) => (
               <ProductHighlightCard key={product.id} product={product} />
             ))}
           </div>
+        ) : (
+          <div className={styles.cardGridPlaceholder} role="presentation">
+            <div className={styles.placeholderCard}>
+              Your browsing history will appear here once you view some items.
+            </div>
+          </div>
+        )}
+      </CartProductSection>
+
+      <CartProductSection title="Most Popular" eyebrow="Top Picks" headingId="popular-heading">
+        <div className="product-card-grid" id="cartPopularGrid">
+          {mostPopular.map((product) => (
+            <ProductHighlightCard key={product.id} product={product} />
+          ))}
         </div>
-      </section>
+      </CartProductSection>
 
       <section className={styles.benefitsSection} aria-label="Why shop with MealKit">
         <div className={styles.benefitsGrid}>

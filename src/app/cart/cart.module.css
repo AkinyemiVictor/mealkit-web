@@ -165,12 +165,34 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  background: #f8fafc;
+  background: transparent;
   border-radius: 999px;
   padding: 0.35rem;
   border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
+.categorySection {
+  width: 100%;
+  margin: 0 auto 3rem;
+}
+
+.cartLineSummary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  min-width: 110px;
+}
+
+.cartLineQuantity {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.cartLineTotal {
+  font-weight: 700;
+  color: #0f172a;
+}
 .qtyButton {
   width: 32px;
   height: 32px;
@@ -275,7 +297,7 @@ body[data-theme="dark"] .qtyUnit {
   padding: 1rem;
   border-radius: 18px;
   border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #f8fafc;
+  background: transparent;
 }
 
 .recoCard figure {
@@ -417,50 +439,11 @@ body[data-theme="dark"] .qtyUnit {
   font-weight: 700;
 }
 
-.recentlySection,
-.popularSection {
-  padding: 3rem 1rem;
-  background: #ffffff;
-}
-
-.sectionInner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: grid;
-  gap: 1.5rem;
-}
-
-.sectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.sectionHeader h2 {
-  margin: 0;
-  font-size: 1.8rem;
-  color: #0f172a;
-}
-
-.sectionButton {
-  border: none;
-  background: none;
-  color: #00ac11;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.cardGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.5rem;
-}
-
 .cardGridPlaceholder {
   display: grid;
   gap: 1.5rem;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  width: 100%;
 }
 
 .placeholderCard {
@@ -475,7 +458,7 @@ body[data-theme="dark"] .qtyUnit {
 
 .benefitsSection {
   padding: 4rem 1rem;
-  background: #f8fafc;
+  background: transparent;
 }
 
 .benefitsGrid {
@@ -533,6 +516,10 @@ body[data-theme="dark"] .qtyUnit {
     grid-column: 1 / -1;
     justify-content: space-between;
   }
+
+  .cartLineSummary {
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 480px) {
@@ -559,6 +546,9 @@ body[data-theme="dark"] .qtyUnit {
   text-decoration: none;
   color: #0f766e;
   font-weight: 600;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 .cartLinkMuted {
@@ -620,50 +610,11 @@ body[data-theme="dark"] .qtyUnit {
   color: #475569;
 }
 
-.recentlySection,
-.popularSection {
-  padding: 3rem 1rem;
-  background: #ffffff;
-}
-
-.sectionInner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: grid;
-  gap: 1.5rem;
-}
-
-.sectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.sectionHeader h2 {
-  margin: 0;
-  font-size: 1.8rem;
-  color: #0f172a;
-}
-
-.sectionButton {
-  border: none;
-  background: none;
-  color: #00ac11;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.cardGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.5rem;
-}
-
 .cardGridPlaceholder {
   display: grid;
   gap: 1.5rem;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  width: 100%;
 }
 
 .placeholderCard {
@@ -678,7 +629,7 @@ body[data-theme="dark"] .qtyUnit {
 
 .benefitsSection {
   padding: 4rem 1rem;
-  background: #f8fafc;
+  background: transparent;
 }
 
 .benefitsGrid {
@@ -767,8 +718,6 @@ body[data-theme="dark"] .qtyUnit {
 :global(body[data-theme="dark"]) .recommendation,
 :global(body[data-theme="dark"]) .recoCard,
 :global(body[data-theme="dark"]) .summaryCard,
-:global(body[data-theme="dark"]) .sectionInner,
-:global(body[data-theme="dark"]) .cardGrid,
 :global(body[data-theme="dark"]) .cardGridPlaceholder,
 :global(body[data-theme="dark"]) .promoGroup,
 :global(body[data-theme="dark"]) .benefitCard {
@@ -814,3 +763,32 @@ body[data-theme="dark"] .qtyUnit {
 :global(body[data-theme="dark"]) .cartBoard::before {
   opacity: 0.35;
 }
+
+body[data-theme="dark"] .cartLineQuantity {
+  color: var(--mk-text-subtle, #94a3b8);
+}
+
+body[data-theme="dark"] .cartLineTotal {
+  color: var(--mk-text, #f1f5f9);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
