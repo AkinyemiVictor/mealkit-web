@@ -1,11 +1,12 @@
-"use client";
+﻿"use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import styles from "./cart.module.css";
 
-import CategoryCarousel from "@/components/category-carousel";
+import CategoryCarouselSkeleton from "@/components/category-carousel-skeleton";
 import products from "@/data/products";
 import categories, { getCategoryHref } from "@/data/categories";
 import {
@@ -16,6 +17,10 @@ import {
 } from "@/lib/catalogue";
 
 import { getProductHref } from "@/lib/products";
+
+const CategoryCarousel = dynamic(() => import("@/components/category-carousel"), {
+  loading: () => <CategoryCarouselSkeleton />,
+});
 
 const CART_STORAGE_KEY = "mealkit_cart";
 const RECENTLY_VIEWED_STORAGE_KEY = "mealkit_recently_viewed";
@@ -711,4 +716,5 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
     </div>
   );
 }
+
 

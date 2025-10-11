@@ -1,13 +1,18 @@
-"use client";
+﻿"use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import CategoryCarousel from "@/components/category-carousel";
 import categories, { getCategoryHref } from "@/data/categories";
+import CategoryCarouselSkeleton from "@/components/category-carousel-skeleton";
 import productsData, { products as rawProducts } from "@/data/products";
 import { formatProductPrice, normaliseProductCatalogue, resolveStockClass } from "@/lib/catalogue";
 import { getProductHref } from "@/lib/products";
+
+const CategoryCarousel = dynamic(() => import("@/components/category-carousel"), {
+  loading: () => <CategoryCarouselSkeleton />,
+});
 
 const catalogueLookup = normaliseProductCatalogue(productsData || rawProducts);
 const catalogueIndex = catalogueLookup.index;
@@ -231,13 +236,6 @@ export default function CategoryPage({ category: incomingCategory, pageSize = DE
         </div>
       </div>
 
-      <CategoryCarousel
-        cards={CATEGORY_CARDS}
-        heading="Explore more categories"
-        eyebrow="Shop by aisle"
-        activeSlug={category.slug}
-      />
-
       <section className="category-products" aria-live="polite">
         {categoryProducts.length ? (
           <div className="product-card-grid">
@@ -252,9 +250,18 @@ export default function CategoryPage({ category: incomingCategory, pageSize = DE
           </div>
         )}
       </section>
+
+      <CategoryCarousel
+        cards={CATEGORY_CARDS}
+        heading="Explore more categories"
+        eyebrow="Shop by aisle"
+        activeSlug={category.slug}
+      />
     </main>
   );
 }
+
+
 
 
 

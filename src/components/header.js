@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { readRecentSearches, storeRecentSearch } from "@/lib/search-history";
+
 const CART_STORAGE_KEY = "mealkit_cart";
 const MIN_ORDER_SIZE = 0.01;
+const RECENT_SEARCHES_LIMIT_DISPLAY = 6;
 
 const roundTo = (value, precision = 2) => {
   if (!Number.isFinite(value)) return 0;
@@ -63,25 +66,99 @@ const countStoredCartItems = () => {
   }
 };
 
-function SearchBar({ idSuffix, className = "" }) {
+function SearchBar({ idSuffix, className = "", defaultValue = "" }) {
+  const formRef = useRef(null);
   const inputId = `site-header-search-${idSuffix}`;
   const classes = ["site-header__search", className].filter(Boolean).join(" ");
+  const [value, setValue] = useState(defaultValue);
+  const [recentTerms, setRecentTerms] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const trimmedLowerValue = value.trim().toLowerCase();
+  const visibleRecentTerms = recentTerms.filter((term) => term.toLowerCase() !== trimmedLowerValue);
+
+  useEffect(() => {
+    setValue(defaultValue);
+  }, [defaultValue]);
+
+  useEffect(() => {
+    const stored = readRecentSearches().slice(0, RECENT_SEARCHES_LIMIT_DISPLAY);
+    setRecentTerms(stored);
+  }, []);
+
+  const refreshRecentTerms = () => {
+    setRecentTerms(readRecentSearches().slice(0, RECENT_SEARCHES_LIMIT_DISPLAY));
+  };
+
+  const handleSubmit = (event) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      event.preventDefault();
+      return;
+    }
+    storeRecentSearch(trimmed);
+    refreshRecentTerms();
+  };
+
+  const handleFocus = () => {
+    refreshRecentTerms();
+    setShowSuggestions(true);
+  };
+
+  const handleBlur = () => {
+    window.setTimeout(() => setShowSuggestions(false), 120);
+  };
+
+  const handleSuggestionSelect = (term) => {
+    setValue(term);
+    window.requestAnimationFrame(() => {
+      if (formRef.current) {
+        formRef.current.requestSubmit();
+      }
+    });
+  };
 
   return (
-    <div className={classes} role="search">
-      <label htmlFor={inputId} className="sr-only">
-        Search MealKit
-      </label>
-      <input
-        id={inputId}
-        type="search"
-        placeholder="Search MealKit..."
-        className="site-header__search-input"
-      />
-      <button type="button" className="site-header__search-button">
-        <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
-        <span className="sr-only">Submit search</span>
-      </button>
+    <div className="site-header__search-wrapper-inner">
+      <form ref={formRef} className={classes} role="search" action="/search" method="get" onSubmit={handleSubmit}>
+        <label htmlFor={inputId} className="sr-only">
+          Search MealKit
+        </label>
+        <input
+          id={inputId}
+          type="search"
+          name="q"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          placeholder="Search for bananas, grains, or meal kits"
+          className="site-header__search-input"
+          autoComplete="off"
+          spellCheck="false"
+        />
+        <button type="submit" className="site-header__search-button">
+          <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
+          <span className="sr-only">Submit search</span>
+        </button>
+      </form>
+      {showSuggestions && visibleRecentTerms.length ? (
+        <div className="site-header__search-suggestions" role="listbox" aria-label="Recent searches">
+          {visibleRecentTerms.map((term) => (
+            <button
+              type="button"
+              key={term}
+              className="site-header__search-suggestion"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                handleSuggestionSelect(term);
+              }}
+            >
+              <i className="fa-solid fa-clock-rotate-left" aria-hidden="true" />
+              <span>{term}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -409,3 +486,6 @@ export default function Header() {
     </header>
   );
 }
+
+
+
