@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { readRecentSearches, storeRecentSearch } from "@/lib/search-history";
+import copy from "@/data/copy";
+import { AUTH_EVENT, clearStoredUser, readStoredUser } from "@/lib/auth";
 
 const CART_STORAGE_KEY = "mealkit_cart";
 const MIN_ORDER_SIZE = 0.01;
@@ -75,6 +77,7 @@ function SearchBar({ idSuffix, className = "", defaultValue = "" }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const trimmedLowerValue = value.trim().toLowerCase();
   const visibleRecentTerms = recentTerms.filter((term) => term.toLowerCase() !== trimmedLowerValue);
+  const listboxId = `search-suggestions-${idSuffix}`;
 
   useEffect(() => {
     setValue(defaultValue);
@@ -131,10 +134,15 @@ function SearchBar({ idSuffix, className = "", defaultValue = "" }) {
           onChange={(event) => setValue(event.target.value)}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          placeholder="Search for bananas, grains, or meal kits"
+          placeholder={copy.search.placeholderHeader}
           className="site-header__search-input"
           autoComplete="off"
           spellCheck="false"
+          aria-controls={showSuggestions && visibleRecentTerms.length ? listboxId : undefined}
+          aria-expanded={showSuggestions && visibleRecentTerms.length ? "true" : "false"}
+          role="combobox"
+          aria-haspopup="listbox"
+          aria-autocomplete="list"
         />
         <button type="submit" className="site-header__search-button">
           <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
@@ -142,12 +150,19 @@ function SearchBar({ idSuffix, className = "", defaultValue = "" }) {
         </button>
       </form>
       {showSuggestions && visibleRecentTerms.length ? (
-        <div className="site-header__search-suggestions" role="listbox" aria-label="Recent searches">
+        <div
+          className="site-header__search-suggestions"
+          role="listbox"
+          aria-label={copy.search.suggestionsLabel}
+          id={listboxId}
+        >
           {visibleRecentTerms.map((term) => (
             <button
               type="button"
               key={term}
               className="site-header__search-suggestion"
+              role="option"
+              aria-selected="false"
               onMouseDown={(event) => {
                 event.preventDefault();
                 handleSuggestionSelect(term);
@@ -163,10 +178,33 @@ function SearchBar({ idSuffix, className = "", defaultValue = "" }) {
   );
 }
 
+const ACCOUNT_MENU = [
+  { href: "/account?tab=overview", label: "My Account", iconClass: "fa-solid fa-user" },
+  { href: "/account?tab=orders", label: "Orders", iconClass: "fa-solid fa-box" },
+  { href: "/account?tab=inbox", label: "Inbox", iconClass: "fa-solid fa-envelope" },
+  { href: "/account?tab=wishlist", label: "Wishlist", iconClass: "fa-regular fa-heart" },
+  { href: "/account?tab=voucher", label: "Voucher", iconClass: "fa-solid fa-ticket" },
+];
+
+const getFirstName = (user) => {
+  if (!user) return "";
+  if (user.fullName && typeof user.fullName === "string") {
+    const parts = user.fullName.trim().split(/\s+/);
+    if (parts.length) {
+      return parts[0];
+    }
+  }
+  if (user.email && typeof user.email === "string") {
+    return user.email.split("@")[0];
+  }
+  return "";
+};
+
 export default function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartQuantity, setCartQuantity] = useState(0);
+  const [user, setUser] = useState(null);
   const dropdownRef = useRef(null);
   const accountMenuId = "site-header-account-menu";
   const mobilePanelId = "site-header-mobile-panel";
@@ -199,6 +237,21 @@ export default function Header() {
       closeAccountDropdown();
     }
   };
+
+  useEffect(() => {
+    setUser(readStoredUser());
+    const handleAuthChanged = (event) => {
+      const nextUser = event?.detail?.user ?? readStoredUser();
+      setUser(nextUser);
+      if (!nextUser) {
+        closeAccountDropdown();
+      }
+    };
+    window.addEventListener(AUTH_EVENT, handleAuthChanged);
+    return () => {
+      window.removeEventListener(AUTH_EVENT, handleAuthChanged);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -284,6 +337,14 @@ export default function Header() {
     closeMobileMenu();
   };
 
+  const handleLogout = () => {
+    clearStoredUser();
+    setUser(null);
+    handleNavAction();
+  };
+
+  const accountLabel = user ? `Hi, ${getFirstName(user)}` : "Account";
+
   return (
     <header className="site-header">
       <div className="site-header__container">
@@ -327,7 +388,7 @@ export default function Header() {
                   />
                 </svg>
               </span>
-              <span className="site-header__action-label">Account</span>
+              <span className="site-header__action-label">{accountLabel}</span>
               <svg
                 className="site-header__caret"
                 width="16"
@@ -347,22 +408,45 @@ export default function Header() {
               aria-hidden={!dropdownOpen}
               className={`site-header__account-menu${dropdownOpen ? " is-visible" : ""}`}
             >
-              <Link
-                className="site-header__account-link"
-                href="/sign-in?tab=login#loginForm"
-                role="menuitem"
-                onClick={handleNavAction}
-              >
-                Login
-              </Link>
-              <Link
-                className="site-header__account-link"
-                href="/sign-in?tab=signup#signupForm"
-                role="menuitem"
-                onClick={handleNavAction}
-              >
-                Sign Up
-              </Link>
+              {user ? (
+                <>
+                  {ACCOUNT_MENU.map((item) => (
+                    <Link
+                      key={item.href}
+                      className="site-header__account-link"
+                      href={item.href}
+                      role="menuitem"
+                      onClick={handleNavAction}
+                    >
+                      <i className={item.iconClass} aria-hidden="true" />
+                      <span>{item.label}</span>
+                    </Link>
+                  ))}
+                  <button type="button" className="site-header__account-link site-header__account-link--logout" onClick={handleLogout}>
+                    <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    className="site-header__account-link"
+                    href="/sign-in?tab=login#loginForm"
+                    role="menuitem"
+                    onClick={handleNavAction}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    className="site-header__account-link"
+                    href="/sign-in?tab=signup#signupForm"
+                    role="menuitem"
+                    onClick={handleNavAction}
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -461,12 +545,27 @@ export default function Header() {
         <div className="site-header__mobile-section">
           <span className="site-header__mobile-heading">Account</span>
           <div className="site-header__mobile-links">
-            <Link href="/sign-in?tab=login#loginForm" onClick={handleNavAction}>
-              Login
-            </Link>
-            <Link href="/sign-in?tab=signup#signupForm" onClick={handleNavAction}>
-              Sign Up
-            </Link>
+            {user ? (
+              <>
+                {ACCOUNT_MENU.map((item) => (
+                  <Link key={item.href} href={item.href} onClick={handleNavAction}>
+                    {item.label}
+                  </Link>
+                ))}
+                <button type="button" onClick={handleLogout}>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/sign-in?tab=login#loginForm" onClick={handleNavAction}>
+                  Login
+                </Link>
+                <Link href="/sign-in?tab=signup#signupForm" onClick={handleNavAction}>
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
 

@@ -347,13 +347,27 @@ body {
 }
 
 .site-header__account-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
   padding: 0.6rem 0.75rem;
   border-radius: 12px;
   font-weight: 600;
   color: var(--mk-text);
   text-decoration: none;
   transition: background-color 0.2s ease, color 0.2s ease;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.site-header__account-link i {
+  font-size: 1rem;
+  width: 1.25rem;
+  text-align: center;
 }
 
 .site-header__account-link:hover,
@@ -361,6 +375,16 @@ body {
   background: rgba(0, 172, 17, 0.12);
   color: var(--mk-accent);
   outline: none;
+}
+
+.site-header__account-link--logout {
+  color: #d83a3a;
+}
+
+.site-header__account-link--logout:hover,
+.site-header__account-link--logout:focus-visible {
+  color: #b51414;
+  background: rgba(216, 58, 58, 0.12);
 }
 
 .site-header__cart-count {
@@ -508,24 +532,30 @@ body {
 
 .site-header__mobile-links {
   display: flex;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.site-header__mobile-links a {
-  flex: 1;
+.site-header__mobile-links a,
+.site-header__mobile-links button {
+  display: block;
+  width: 100%;
   padding: 0.75rem 1rem;
   border-radius: 12px;
   border: 1px solid var(--mk-border);
   background: var(--mk-surface-muted);
   font-weight: 600;
-  text-align: center;
+  text-align: left;
   color: var(--mk-text);
   text-decoration: none;
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  cursor: pointer;
 }
 
 .site-header__mobile-links a:hover,
-.site-header__mobile-links a:focus-visible {
+.site-header__mobile-links a:focus-visible,
+.site-header__mobile-links button:hover,
+.site-header__mobile-links button:focus-visible {
   background: rgba(0, 172, 17, 0.12);
   border-color: rgba(0, 172, 17, 0.35);
   color: var(--mk-accent);

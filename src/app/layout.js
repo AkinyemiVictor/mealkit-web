@@ -1,6 +1,7 @@
 ﻿import { Geist, Geist_Mono } from "next/font/google";
 import "@/styles/globals.css"; // global styles
 import "@/styles/main.css"; // bring in your main styles
+import "@/styles/checkout.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import ThemeInitializer from "@/components/theme-initializer";
@@ -35,9 +36,10 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body data-theme="light" className={`${geistSans.variable} ${geistMono.variable}`}>
         <ThemeInitializer />
-
         <Header />
-        {children}
+        <div id="main-content" className="layout-main" tabIndex={-1}>
+          {children}
+        </div>
 
         <Footer />
       </body>

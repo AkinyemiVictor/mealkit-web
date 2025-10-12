@@ -3,6 +3,7 @@ import { Fragment } from "react";
 
 import SearchHistoryRecorder from "@/components/search-history-recorder";
 import categories from "@/data/categories";
+import copy from "@/data/copy";
 import products from "@/data/products";
 import { formatProductPrice, normaliseProductCatalogue, resolveStockClass } from "@/lib/catalogue";
 import { getProductHref } from "@/lib/products";
@@ -280,8 +281,8 @@ export default function SearchPage({ searchParams }) {
               {query
                 ? totalResults
                   ? `Showing ${pagedProducts.length} of ${totalResults} matching items.`
-                  : "We couldn't find any products that match your search term. Try another keyword or browse our categories."
-                : "Search for fruits, grains, pantry bundles, or any product you need delivered fresh."}
+                  : copy.search.emptyDescription(query)
+                : copy.search.introDefault}
             </p>
           </div>
         </div>
@@ -294,7 +295,7 @@ export default function SearchPage({ searchParams }) {
             name="q"
             type="search"
             defaultValue={query}
-            placeholder='Try "cavendish bananas" or "smoked fish"'
+            placeholder={copy.search.placeholderPage}
             className="site-header__search-input"
             autoComplete="off"
             spellCheck="false"
@@ -328,8 +329,8 @@ export default function SearchPage({ searchParams }) {
           </>
         ) : (
           <div className="category-empty-state">
-            <strong>No matches</strong>
-            <p>We couldn't find any items for "{query}". Try searching by product name or browse a category.</p>
+            <strong>{copy.search.emptyTitle}</strong>
+            <p>{copy.search.emptyDescription(query)}</p>
             {suggestionTerms.length ? (
               <ul className="search-empty-suggestions">
                 {suggestionTerms.map((term) => (
@@ -340,16 +341,16 @@ export default function SearchPage({ searchParams }) {
               </ul>
             ) : null}
             <Link href="/categories" className="section-view-button">
-              Browse categories
+              {copy.search.browseCategoriesCta}
             </Link>
           </div>
         )
       ) : (
         <section className="category-empty-state">
-          <strong>Start exploring</strong>
-          <p>Enter a product name or ingredient to discover what's in stock today.</p>
+          <strong>{copy.search.emptyStartTitle}</strong>
+          <p>{copy.search.emptyStartDescription}</p>
           <Link href="/categories" className="section-view-button">
-            View all categories
+            {copy.search.browseCategoriesCta}
           </Link>
         </section>
       )}

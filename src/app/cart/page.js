@@ -2,11 +2,13 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import styles from "./cart.module.css";
 
 import CategoryCarouselSkeleton from "@/components/category-carousel-skeleton";
+import copy from "@/data/copy";
 import products from "@/data/products";
 import categories, { getCategoryHref } from "@/data/categories";
 import {
@@ -223,7 +225,10 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
       </div>
     </section>
   );
-} export default function CartPage() {
+}
+
+export default function CartPage() {
+  const router = useRouter();
   const catalogueLookup = useMemo(() => normaliseProductCatalogue(products), []);
   const catalogueList = catalogueLookup.ordered ?? [];
   const productIndex = catalogueLookup.index ?? new Map();
@@ -320,53 +325,90 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
 
   const cartIdSet = useMemo(() => new Set(cartItems.map((item) => String(item.id))), [cartItems]);
 
-  const mostPopular = useMemo(
+  const crossSellProducts = useMemo(
     () => pickMostPopularProducts(catalogueList, cartIdSet, 6),
     [catalogueList, cartIdSet]
   );
 
-  const summary = useMemo(() => {
-  const aggregates = cartItems.reduce(
-    (acc, item) => {
-      const orderSize = normaliseOrderSize(item.orderSize, MIN_ORDER_SIZE);
-      const orderCount = normaliseOrderCount(item.orderCount, 0);
-      const price = Number(item.price) || 0;
-      const quantity = computeQuantity(orderSize, orderCount);
+  const stockStatus = useMemo(() => {
+    const statuses = cartItems.map((item) => {
+      const product = productIndex.get(String(item.id));
+      const stockLabel = product?.stock || item.stock || "";
+      const normalised = stockLabel.toLowerCase();
+      let level = "ok";
+      let message = "";
+
+      if (!product) {
+        level = "error";
+        message = copy.cart.unavailableMessage;
+      } else if (normalised.includes("out") || normalised.includes("sold")) {
+        level = "error";
+        message = copy.cart.unavailableMessage;
+      } else if (normalised.includes("limited") || normalised.includes("low")) {
+        level = "warning";
+        message = copy.cart.limitedMessage;
+      }
 
       return {
-        itemsCount: acc.itemsCount + orderCount,
-        subtotal: acc.subtotal + price * quantity,
+        id: item.id,
+        stockLabel: stockLabel || "In stock",
+        level,
+        message,
       };
-    },
-    { itemsCount: 0, subtotal: 0 }
-  );
+    });
 
-  let delivery = aggregates.itemsCount > 0 ? DELIVERY_FEE : 0;
-  let discount = 0;
+    return {
+      map: new Map(statuses.map((status) => [status.id, status])),
+      hasError: statuses.some((status) => status.level === "error"),
+      hasWarning: statuses.some((status) => status.level === "warning"),
+    };
+  }, [cartItems, productIndex]);
 
-  if (activePromo) {
-    if (activePromo.type === "percent") {
-      if (!activePromo.minSubtotal || aggregates.subtotal >= activePromo.minSubtotal) {
-        discount = aggregates.subtotal * activePromo.value;
+  const hasCheckoutBlocker = stockStatus.hasError;
+
+  const summary = useMemo(() => {
+    const aggregates = cartItems.reduce(
+      (acc, item) => {
+        const orderSize = normaliseOrderSize(item.orderSize, MIN_ORDER_SIZE);
+        const orderCount = normaliseOrderCount(item.orderCount, 0);
+        const price = Number(item.price) || 0;
+        const quantity = computeQuantity(orderSize, orderCount);
+
+        return {
+          itemsCount: acc.itemsCount + orderCount,
+          subtotal: acc.subtotal + price * quantity,
+        };
+      },
+      { itemsCount: 0, subtotal: 0 }
+    );
+
+    let delivery = aggregates.itemsCount > 0 ? DELIVERY_FEE : 0;
+    let discount = 0;
+
+    if (activePromo) {
+      if (activePromo.type === "percent") {
+        if (!activePromo.minSubtotal || aggregates.subtotal >= activePromo.minSubtotal) {
+          discount = aggregates.subtotal * activePromo.value;
+        }
+      }
+
+      if (activePromo.type === "delivery" && aggregates.itemsCount > 0) {
+        delivery = 0;
       }
     }
 
-    if (activePromo.type === "delivery" && aggregates.itemsCount > 0) {
-      delivery = 0;
-    }
-  }
+    discount = Math.min(discount, aggregates.subtotal);
+    const total =
+      aggregates.itemsCount > 0 ? Math.max(aggregates.subtotal - discount, 0) + delivery : 0;
 
-  discount = Math.min(discount, aggregates.subtotal);
-  const total = aggregates.itemsCount > 0 ? Math.max(aggregates.subtotal - discount, 0) + delivery : 0;
-
-  return {
-    itemsCount: aggregates.itemsCount,
-    subtotal: aggregates.subtotal,
-    discount,
-    delivery,
-    total,
-  };
-}, [cartItems, activePromo]);
+    return {
+      itemsCount: aggregates.itemsCount,
+      subtotal: aggregates.subtotal,
+      discount,
+      delivery,
+      total,
+    };
+  }, [cartItems, activePromo]);
 
   const setPromoFeedback = useCallback((text, tone = "neutral") => {
     setPromoMessage({ text, tone });
@@ -436,10 +478,13 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
   }, [cartItems, persistCart, setPromoFeedback]);
 
   const handleCheckout = useCallback(() => {
-    window.alert(
-      `Thanks! Your total payable is ${formatCurrency(summary.total)}. Checkout experience is coming soon.`
-    );
-  }, [summary.total]);
+    if (!cartItems.length || hasCheckoutBlocker) {
+      return;
+    }
+
+    persistCart(cartItems);
+    router.push("/checkout");
+  }, [cartItems, hasCheckoutBlocker, persistCart, router]);
 
   const promoToneClass = useMemo(() => {
     switch (promoMessage.tone) {
@@ -478,25 +523,24 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
             <header className={styles.cartHeader}>
               <div className={styles.cartTitleGroup}>
                 <h1 id="cart-title" className={styles.cartTitle}>
-                  Shopping cart
+                  {copy.cart.sectionTitle}
                 </h1>
-                <p className={styles.cartSubtitle}>
-                  Secure checkout. Fresh groceries guaranteed.
-                </p>
+                <p className={styles.cartSubtitle}>{copy.cart.subtitle}</p>
               </div>
               <span className={styles.cartTag}>
                 <i className="fa-solid fa-basket-shopping" aria-hidden="true"></i>
-                {formattedItemsCount} {itemLabel}
+                {copy.cart.tagLabel(formattedItemsCount, itemLabel)}
               </span>
             </header>
 
             <div className={styles.cartMain}>
               {cartIsEmpty ? (
                 <div className={styles.placeholderCard}>
-                  Your cart is empty. Explore the catalogue and add something fresh.
+                  {copy.cart.emptyMessage}
                 </div>
               ) : (
                 cartItems.map((item) => {
+                  const status = stockStatus.map.get(item.id);
                   const orderSize = normaliseOrderSize(item.orderSize, MIN_ORDER_SIZE);
                   const orderCount = normaliseOrderCount(item.orderCount, 1);
                   const quantity = computeQuantity(orderSize, orderCount);
@@ -506,9 +550,15 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
                     ? `${formatOrderSize(orderSize)} ${item.unit}`
                     : formatOrderSize(orderSize);
                   const orderLabel = orderCount === 1 ? "order" : "orders";
+                  const lineClassNames = [styles.cartLine];
+                  if (status?.level === "error") {
+                    lineClassNames.push(styles.cartLineUnavailable);
+                  } else if (status?.level === "warning") {
+                    lineClassNames.push(styles.cartLineWarning);
+                  }
 
                   return (
-                    <article key={item.id} className={styles.cartLine}>
+                    <article key={item.id} className={lineClassNames.join(" ")}>
                       <div className={styles.cartThumbnail}>
                         <img src={item.image} alt={item.name} />
                       </div>
@@ -516,9 +566,17 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
                         <h3>{item.name}</h3>
                         <div className={styles.cartMeta}>
                           <span>{perOrderLabel} per order</span>
-                          <span>{item.stock}</span>
+                          <span>{status?.stockLabel || item.stock}</span>
                           <span className={styles.cartPrice}>{formatCurrency(price)}</span>
                         </div>
+                        {status?.message ? (
+                          <p
+                            className={`${styles.cartWarning} ${status.level === "error" ? styles.cartWarningAlert : ""}`.trim()}
+                            role={status.level === "error" ? "alert" : "status"}
+                          >
+                            {status.message}
+                          </p>
+                        ) : null}
                         {item.note ? <small>{item.note}</small> : null}
                       </div>
                       <div className={styles.cartControls}>
@@ -568,7 +626,7 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
             <div className={styles.cartFooterActions}>
               <Link className={styles.cartLink} href="/">
                 <i className="fa-solid fa-arrow-left" aria-hidden="true"></i>
-                Continue shopping
+                {copy.general.continueShopping}
               </Link>
               <button
                 type="button"
@@ -619,6 +677,17 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
               </div>
             </div>
 
+            {stockStatus.hasError ? (
+              <p className={`${styles.summaryAlert} ${styles.summaryAlertError}`.trim()} role="alert">
+                {copy.cart.removeUnavailableMessage}
+              </p>
+            ) : null}
+            {!stockStatus.hasError && stockStatus.hasWarning ? (
+              <p className={styles.summaryAlert} role="status">
+                {copy.cart.limitedNotice}
+              </p>
+            ) : null}
+
             <div className={styles.summaryBlock}>
               <label htmlFor="promo-code">Have a promo code?</label>
               <div className={styles.promoGroup}>
@@ -640,7 +709,12 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
               ) : null}
             </div>
 
-            <button type="button" className={styles.checkoutButton} onClick={handleCheckout} disabled={cartIsEmpty}>
+            <button
+              type="button"
+              className={styles.checkoutButton}
+              onClick={handleCheckout}
+              disabled={cartIsEmpty || hasCheckoutBlocker}
+            >
               Proceed to checkout
             </button>
             <p className={styles.summaryHint}>
@@ -656,7 +730,7 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
         </div>
       </div>
 
-      <CartProductSection title="Recently Viewed" eyebrow="Just For You" headingId="recently-heading">
+      <CartProductSection title={copy.cart.recentlyViewedTitle} eyebrow={copy.cart.recentlyViewedEyebrow} headingId="recently-heading">
         {recentlyViewed.length ? (
           <div className="product-card-grid" id="cartRecentlyViewedGrid">
             {recentlyViewed.map((product) => (
@@ -666,19 +740,21 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
         ) : (
           <div className={styles.cardGridPlaceholder} role="presentation">
             <div className={styles.placeholderCard}>
-              Your browsing history will appear here once you view some items.
+              {copy.cart.recentlyViewedFallback}
             </div>
           </div>
         )}
       </CartProductSection>
 
-      <CartProductSection title="Most Popular" eyebrow="Top Picks" headingId="popular-heading">
-        <div className="product-card-grid" id="cartPopularGrid">
-          {mostPopular.map((product) => (
-            <ProductHighlightCard key={product.id} product={product} />
-          ))}
-        </div>
-      </CartProductSection>
+      {crossSellProducts.length ? (
+        <CartProductSection title={copy.cart.crossSellTitle} eyebrow={copy.cart.crossSellEyebrow} headingId="crossSell-heading">
+          <div className="product-card-grid" id="cartCrossSellGrid">
+            {crossSellProducts.map((product) => (
+              <ProductHighlightCard key={product.id} product={product} />
+            ))}
+          </div>
+        </CartProductSection>
+      ) : null}
 
       <section className={styles.benefitsSection} aria-label="Why shop with MealKit">
         <div className={styles.benefitsGrid}>
@@ -716,5 +792,6 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
     </div>
   );
 }
+
 
 

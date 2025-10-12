@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import "@/styles/sign-in.css";
+import { persistStoredUser, readStoredUser } from "@/lib/auth";
 
 const TAB_OPTIONS = [
   { key: "login", label: "Login", hash: "#loginForm" },
@@ -150,8 +151,39 @@ export default function SignInPage() {
     setActiveTab(tabKey);
   }, []);
 
-  const handleSubmit = useCallback((event) => {
+  const handleLoginSubmit = useCallback((event) => {
     event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const email = String(formData.get("login-email") || "").trim();
+    if (!email) return;
+    const nameFromEmail = email.includes("@") ? email.split("@")[0] : "MealKit friend";
+    persistStoredUser({
+      fullName: nameFromEmail.replace(/[\.\_\-]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()) || "MealKit Friend",
+      email,
+    });
+    window.location.href = "/account";
+  }, []);
+
+  const handleSignupSubmit = useCallback((event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const fullName = String(formData.get("signup-name") || "").trim();
+    const email = String(formData.get("signup-email") || "").trim();
+    if (!fullName || !email) return;
+    persistStoredUser({
+      fullName,
+      email,
+    });
+    window.location.href = "/account";
+  }, []);
+
+  useEffect(() => {
+    const existing = readStoredUser();
+    if (existing) {
+      window.location.replace("/account");
+    }
   }, []);
 
   const isLoginActive = activeTab === "login";
@@ -230,7 +262,7 @@ export default function SignInPage() {
               className={`auth-form${isLoginActive ? " is-active" : ""}`}
               aria-hidden={!isLoginActive}
               aria-labelledby="login-tab"
-              onSubmit={handleSubmit}
+              onSubmit={handleLoginSubmit}
             >
               <div className="auth-field">
                 <label className="sr-only" htmlFor="login-email">
@@ -280,7 +312,7 @@ export default function SignInPage() {
               className={`auth-form${!isLoginActive ? " is-active" : ""}`}
               aria-hidden={isLoginActive}
               aria-labelledby="signup-tab"
-              onSubmit={handleSubmit}
+              onSubmit={handleSignupSubmit}
             >
               <div className="auth-field">
                 <label className="sr-only" htmlFor="signup-name">
