@@ -49,9 +49,21 @@ const copy = {
         title: "Pay with card",
         subtitle: "Visa, MasterCard, Verve",
         badges: [
-          { icon: "fa-brands fa-cc-visa", label: "Visa" },
-          { icon: "fa-brands fa-cc-mastercard", label: "Mastercard" },
-          { label: "Verve" },
+          {
+            type: "image",
+            src: "/assets/icons/png/thumbnails/bank card thumbnails/visa card.png",
+            label: "Visa",
+          },
+          {
+            type: "image",
+            src: "/assets/icons/png/thumbnails/bank card thumbnails/master card.png",
+            label: "Mastercard",
+          },
+          {
+            type: "image",
+            src: "/assets/icons/png/thumbnails/bank card thumbnails/verve card.png",
+            label: "Verve",
+          },
         ],
       },
       {
@@ -59,8 +71,31 @@ const copy = {
         title: "Bank transfer",
         subtitle: "Receive account details instantly",
         badges: [
-          { label: "OPay" },
-          { label: "PalmPay" },
+          {
+            type: "image",
+            src: "/assets/icons/png/thumbnails/bank logos thumbnails/zenith bank logo.png",
+            label: "Zenith Bank",
+          },
+          {
+            type: "image",
+            src: "/assets/icons/png/thumbnails/bank logos thumbnails/access bank logo.png",
+            label: "Access Bank",
+          },
+          {
+            type: "image",
+            src: "/assets/icons/png/thumbnails/bank logos thumbnails/uba logo.png",
+            label: "UBA",
+          },
+          {
+            type: "image",
+            src: "/assets/icons/png/thumbnails/bank logos thumbnails/opay logo.png",
+            label: "OPay",
+          },
+          {
+            type: "image",
+            src: "/assets/icons/png/thumbnails/bank logos thumbnails/palmpay logo.png",
+            label: "PalmPay",
+          },
         ],
       },
       { value: "delivery", title: "Pay on delivery", subtitle: "Cash or POS on arrival" },
@@ -87,7 +122,7 @@ const copy = {
       email: "e.g. ada@mealkit.ng",
       phone: "e.g. +234 912 000 0000",
       address: "Street, estate, and any delivery notes",
-      city: "e.g. Lekki Phase 1",
+      city: "e.g. Ibadan",
       notes: "Entrance instructions, buzzer code, etc.",
       cardName: "Exact name on your card",
       cardNumber: "1234 5678 9012 3456",
@@ -96,8 +131,10 @@ const copy = {
     },
     validation: {
       required: "Please complete this field.",
-      email: "Enter a valid email address.",
-      phone: "Enter a valid phone number.",
+      name: "Name can contain letters and spaces only.",
+      email: "Enter a valid email address ending with .com.",
+      phone: "Enter a valid phone number with country code and digits only.",
+      cityService: "Sorry, we currently service Ibadan only.",
       cardNumber: "Card number must contain 16 digits.",
       cardExpiry: "Use the MM/YY format.",
       cardCvc: "CVC must be 3 digits.",

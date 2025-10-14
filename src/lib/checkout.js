@@ -1,49 +1,16 @@
-const CART_STORAGE_KEY = "mealkit_cart";
+import { clearCartItems, dispatchCartUpdatedEvent, readCartItems, writeCartItems } from "./cart-storage";
 
-export { CART_STORAGE_KEY };
-
-export const readStoredCart = () => {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    console.warn("Unable to read checkout cart data", error);
-    return [];
-  }
-};
+export const readStoredCart = () => readCartItems();
 
 export const writeStoredCart = (items) => {
-  if (typeof window === "undefined") return;
-  try {
-    if (!Array.isArray(items)) {
-      throw new TypeError("Cart payload must be an array");
-    }
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-    dispatchCartUpdatedEvent();
-  } catch (error) {
-    console.warn("Unable to persist checkout cart data", error);
+  if (!Array.isArray(items)) {
+    throw new TypeError("Cart payload must be an array");
   }
+  writeCartItems(items);
 };
 
 export const clearStoredCart = () => {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.removeItem(CART_STORAGE_KEY);
-  } catch (error) {
-    console.warn("Unable to clear checkout cart data", error);
-  }
-  dispatchCartUpdatedEvent();
-};
-
-export const dispatchCartUpdatedEvent = () => {
-  if (typeof window === "undefined") return;
-  try {
-    window.dispatchEvent(new Event("cart-updated"));
-  } catch (error) {
-    console.warn("Unable to dispatch cart-updated event", error);
-  }
+  clearCartItems();
 };
 
 export const dispatchCheckoutCompletedEvent = (detail) => {
@@ -55,10 +22,7 @@ export const dispatchCheckoutCompletedEvent = (detail) => {
   }
 };
 
-export const computeCartSummary = (
-  items,
-  { freeDeliveryThreshold = Infinity, deliveryFee = 0 } = {}
-) => {
+export const computeCartSummary = (items, { freeDeliveryThreshold = Infinity, deliveryFee = 0 } = {}) => {
   const aggregates = (Array.isArray(items) ? items : []).reduce(
     (acc, item) => {
       const price = Number(item?.price) || 0;
@@ -120,3 +84,5 @@ export const clearCheckoutReceipt = () => {
     console.warn("Unable to clear checkout receipt", error);
   }
 };
+
+export { dispatchCartUpdatedEvent };

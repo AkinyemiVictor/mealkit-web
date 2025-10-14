@@ -1462,6 +1462,9 @@ body[data-theme="dark"] .category-carousel__card-icon {
   margin: 0px 0 5px;
   font-size: 14px;
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .price {
   color: rgb(0, 172, 17);

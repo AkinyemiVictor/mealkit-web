@@ -238,6 +238,40 @@ body[data-theme="dark"] .auth-page {
   gap: 0.35rem;
 }
 
+.auth-phone-group {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.auth-phone-select {
+  width: 100%;
+  padding: 0.9rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid var(--auth-divider-border);
+  background: var(--auth-divider-bg);
+  font-weight: 500;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.auth-phone-select:focus {
+  border-color: var(--auth-focus-border);
+  background: var(--auth-panel-bg);
+  box-shadow: 0 0 0 3px var(--auth-focus-ring);
+  outline: none;
+}
+
+.auth-phone-select option {
+  color: initial;
+}
+
+.auth-phone-input {
+  width: 100%;
+}
+
 .auth-field input {
   width: 100%;
   padding: 0.9rem 1rem;
@@ -421,6 +455,10 @@ body[data-theme="dark"] .auth-page {
   .auth-tab {
     flex: 1 1 50%;
     text-align: center;
+  }
+
+  .auth-phone-group {
+    grid-template-columns: 1fr;
   }
 }
 

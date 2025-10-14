@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import copy from "@/data/copy";
 import {
@@ -13,6 +13,8 @@ import {
   readStoredCart,
 } from "@/lib/checkout";
 import { formatProductPrice } from "@/lib/catalogue";
+import { persistStoredUser, readStoredUser } from "@/lib/auth";
+import { addUserOrder } from "@/lib/orders";
 
 const INITIAL_FORM_STATE = {
   fullName: "",
@@ -38,9 +40,30 @@ const DELIVERY_SLOT_LABELS = { ...copy.checkout.deliverySlots };
 
 const CARD_FIELDS = ["cardName", "cardNumber", "cardExpiry", "cardCvc"];
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phonePattern = /^\+?[0-9][0-9\s-]{6,}$/;
+const NAME_PATTERN = "[A-Za-z ]+";
+const EMAIL_PATTERN = "[A-Za-z0-9]+@[A-Za-z0-9]+\\.com";
+const PHONE_PATTERN = "\\+?[0-9]{10,15}";
+const CITY_PATTERN = "[A-Za-z ]+";
+const SERVICE_CITY = "Ibadan";
+const SERVICE_CITY_CANONICAL = SERVICE_CITY.toLowerCase();
+const ADDRESS_MIN_LENGTH = 10;
+const ADDRESS_PATTERN = "[A-Za-z0-9.,'\\-\\s]{10,}";
+
+const NAME_REGEX = new RegExp(`^${NAME_PATTERN}$`);
+const EMAIL_REGEX = new RegExp(`^${EMAIL_PATTERN}$`);
+const PHONE_REGEX = new RegExp(`^${PHONE_PATTERN}$`);
+const CITY_REGEX = new RegExp(`^${CITY_PATTERN}$`);
+
 const expiryPattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
+
+const createInitialFormState = (user) => ({
+  ...INITIAL_FORM_STATE,
+  fullName: user?.fullName ?? "",
+  email: user?.email ?? "",
+  phone: user?.phone ?? "",
+  address: user?.address ?? "",
+  city: user?.city ?? "",
+});
 
 const formatCardNumber = (value) => {
   const digitsOnly = value.replace(/\D/g, "").slice(0, 16);
@@ -166,11 +189,44 @@ function CheckoutConfirmation({ order }) {
 }
 
 export default function CheckoutForm() {
-  const [formState, setFormState] = useState(INITIAL_FORM_STATE);
+  const [formState, setFormState] = useState(() =>
+    createInitialFormState(typeof window !== "undefined" ? readStoredUser() : null)
+  );
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState(null);
   const [status, setStatus] = useState("idle");
   const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = readStoredUser();
+    if (!stored) return;
+    setFormState((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      if (!prev.fullName && stored.fullName) {
+        next.fullName = stored.fullName;
+        changed = true;
+      }
+      if (!prev.email && stored.email) {
+        next.email = stored.email;
+        changed = true;
+      }
+      if (!prev.phone && stored.phone) {
+        next.phone = stored.phone;
+        changed = true;
+      }
+      if (!prev.address && stored.address) {
+        next.address = stored.address;
+        changed = true;
+      }
+      if (!prev.city && stored.city) {
+        next.city = stored.city;
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, []);
 
   const showCardFields = formState.paymentMethod === "card";
   const isProcessing = status === "processing";
@@ -178,19 +234,35 @@ export default function CheckoutForm() {
   const paymentHint = useMemo(() => copy.checkout.paymentHint, []);
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormState((prev) => {
-      if (name === "cardNumber") {
-        return { ...prev, [name]: formatCardNumber(value) };
+    const { name } = event.target;
+    let { value } = event.target;
+
+    let nextValue = value;
+
+    if (name === "cardNumber") {
+      nextValue = formatCardNumber(value);
+    } else if (name === "cardExpiry") {
+      nextValue = formatCardExpiry(value);
+    } else if (name === "cardCvc") {
+      nextValue = formatCardCvc(value);
+    } else if (name === "address") {
+      nextValue = value.replace(/\s{2,}/g, " ");
+    } else if (name === "city") {
+      nextValue = value.replace(/[^A-Za-z\s]/g, "").replace(/\s{2,}/g, " ");
+    } else {
+      if (name === "fullName") {
+        nextValue = value.replace(/[^A-Za-z\s]/g, "").replace(/\s+/g, " ");
+      } else if (name === "email") {
+        nextValue = value.replace(/\s+/g, "");
+      } else if (name === "phone") {
+        const stripped = value.replace(/[^0-9+]/g, "");
+        const startsWithPlus = stripped.startsWith("+");
+        const digitsOnly = stripped.replace(/\D/g, "").slice(0, 15);
+        nextValue = startsWithPlus ? `+${digitsOnly}` : digitsOnly;
       }
-      if (name === "cardExpiry") {
-        return { ...prev, [name]: formatCardExpiry(value) };
-      }
-      if (name === "cardCvc") {
-        return { ...prev, [name]: formatCardCvc(value) };
-      }
-      return { ...prev, [name]: value };
-    });
+    }
+
+    setFormState((prev) => ({ ...prev, [name]: nextValue }));
 
     setErrors((prev) => {
       if (!prev[name]) return prev;
@@ -216,20 +288,38 @@ export default function CheckoutForm() {
     const validation = copy.checkout.validation;
     const nextErrors = {};
 
-    if (!state.fullName.trim()) {
+    const trimmedName = state.fullName.trim();
+    if (!trimmedName) {
       nextErrors.fullName = validation.required;
+    } else if (!NAME_REGEX.test(trimmedName)) {
+      nextErrors.fullName = validation.name ?? validation.required;
     }
-    if (!state.email.trim() || !emailPattern.test(state.email.trim())) {
+
+    const normalizedEmail = state.email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      nextErrors.email = validation.required;
+    } else if (!EMAIL_REGEX.test(normalizedEmail)) {
       nextErrors.email = validation.email;
     }
-    if (!state.phone.trim() || !phonePattern.test(state.phone.trim())) {
+
+    const normalizedPhone = state.phone.trim();
+    const phoneDigits = normalizedPhone.replace(/\s+/g, "");
+    if (!phoneDigits) {
+      nextErrors.phone = validation.required;
+    } else if (!PHONE_REGEX.test(phoneDigits)) {
       nextErrors.phone = validation.phone;
     }
-    if (!state.address.trim()) {
+    const addressTrimmed = state.address.trim();
+    if (!addressTrimmed) {
       nextErrors.address = validation.required;
+    } else if (addressTrimmed.length < ADDRESS_MIN_LENGTH) {
+      nextErrors.address = validation.addressLength ?? validation.required;
     }
-    if (!state.city.trim()) {
+    const cityTrimmed = state.city.trim();
+    if (!cityTrimmed) {
       nextErrors.city = validation.required;
+    } else if (!CITY_REGEX.test(cityTrimmed) || cityTrimmed.toLowerCase() !== SERVICE_CITY_CANONICAL) {
+      nextErrors.city = validation.cityService ?? validation.required;
     }
 
     if (state.paymentMethod === "card") {
@@ -276,21 +366,69 @@ export default function CheckoutForm() {
       deliveryFee: copy.checkout.deliveryFee,
     });
 
-    const order = {
+    const status =
+      formState.paymentMethod === "bank"
+        ? "awaiting payment"
+        : formState.paymentMethod === "delivery"
+          ? "awaiting delivery"
+          : "processing";
+    const storedUser = readStoredUser();
+
+    const cityTrimmed = formState.city.trim();
+    const hasServiceCity = Boolean(cityTrimmed) && cityTrimmed.toLowerCase() === SERVICE_CITY_CANONICAL;
+    const canonicalCity = hasServiceCity ? SERVICE_CITY : "";
+
+    const normalizedForm = {
       ...formState,
+      fullName: formState.fullName.trim(),
+      email: formState.email.trim().toLowerCase(),
+      phone: formState.phone.trim().replace(/\s+/g, ""),
+      address: formState.address.trim(),
+      city: canonicalCity,
+      notes: formState.notes.trim(),
+      cardName: formState.cardName.trim(),
+      cardExpiry: formState.cardExpiry.trim(),
+    };
+
+    let nextUserRecord = storedUser;
+    if (normalizedForm.email) {
+      const base = storedUser ?? {};
+      nextUserRecord = {
+        ...base,
+        fullName: normalizedForm.fullName || base.fullName || "",
+        email: normalizedForm.email,
+        phone: normalizedForm.phone || base.phone || "",
+        address: normalizedForm.address || base.address || "",
+        city: canonicalCity || base.city || "",
+      };
+      persistStoredUser(nextUserRecord);
+    }
+
+    const order = {
+      ...normalizedForm,
       orderId: generateOrderId(),
       items: cartItems,
       summary,
       createdAt: new Date().toISOString(),
+      status,
+      user: nextUserRecord
+        ? {
+            name: nextUserRecord.fullName || nextUserRecord.email,
+            email: nextUserRecord.email,
+            phone: nextUserRecord.phone,
+            address: nextUserRecord.address,
+          }
+        : null,
     };
 
     const finalize = () => {
       persistCheckoutReceipt(order);
       clearStoredCart();
+      addUserOrder(order, status, nextUserRecord);
       dispatchCheckoutCompletedEvent({ items: cartItems, summary, order });
       setResult(order);
       setStatus("success");
-      setFormState(INITIAL_FORM_STATE);
+      setFormState(createInitialFormState(nextUserRecord));
     };
 
     setStatus("processing");
@@ -303,6 +441,20 @@ export default function CheckoutForm() {
   }
 
   const getFieldErrorId = (field) => (errors[field] ? `checkout-${field}-error` : undefined);
+  const cityServiceMismatch =
+    Boolean(formState.city.trim()) && formState.city.trim().toLowerCase() !== SERVICE_CITY_CANONICAL;
+  const cityErrorId = getFieldErrorId("city");
+  const cityFieldHasError = Boolean(cityErrorId) || cityServiceMismatch;
+  const cityDescribedBy = (() => {
+    const ids = [];
+    if (cityServiceMismatch) {
+      ids.push("checkout-city-service-alert");
+    }
+    if (cityErrorId) {
+      ids.push(cityErrorId);
+    }
+    return ids.length ? ids.join(" ") : undefined;
+  })();
 
   return (
     <form
@@ -335,6 +487,8 @@ export default function CheckoutForm() {
               onChange={handleChange}
               placeholder={copy.checkout.placeholders.fullName}
               autoComplete="name"
+              pattern={NAME_PATTERN}
+              title="Use letters and spaces only."
               required
               aria-invalid={Boolean(errors.fullName)}
               aria-describedby={getFieldErrorId("fullName")}
@@ -354,6 +508,8 @@ export default function CheckoutForm() {
               onChange={handleChange}
               placeholder={copy.checkout.placeholders.email}
               autoComplete="email"
+              pattern={EMAIL_PATTERN}
+              title="Use letters or numbers, followed by @, ending with .com"
               required
               aria-invalid={Boolean(errors.email)}
               aria-describedby={getFieldErrorId("email")}
@@ -373,6 +529,8 @@ export default function CheckoutForm() {
               onChange={handleChange}
               placeholder={copy.checkout.placeholders.phone}
               autoComplete="tel"
+              pattern={PHONE_PATTERN}
+              title="Include country code and digits only, e.g. +2348120000000"
               required
               aria-invalid={Boolean(errors.phone)}
               aria-describedby={getFieldErrorId("phone")}
@@ -392,6 +550,8 @@ export default function CheckoutForm() {
             onChange={handleChange}
             rows={3}
             placeholder={copy.checkout.placeholders.address}
+            minLength={ADDRESS_MIN_LENGTH}
+            title={`Address should be at least ${ADDRESS_MIN_LENGTH} characters.`}
             required
             aria-invalid={Boolean(errors.address)}
             aria-describedby={getFieldErrorId("address")}
@@ -403,17 +563,29 @@ export default function CheckoutForm() {
           ) : null}
         </label>
         <div className="checkout-field-grid">
-          <label className={errors.city ? "checkout-field has-error" : "checkout-field"}>
+          <label className={cityFieldHasError ? "checkout-field has-error" : "checkout-field"}>
             <span>{copy.checkout.labels.city}</span>
             <input
               name="city"
               value={formState.city}
               onChange={handleChange}
               placeholder={copy.checkout.placeholders.city}
+              autoComplete="address-level2"
               required
-              aria-invalid={Boolean(errors.city)}
-              aria-describedby={getFieldErrorId("city")}
+              pattern={CITY_PATTERN}
+              title={`Enter ${SERVICE_CITY} to continue.`}
+              aria-invalid={Boolean(errors.city) || cityServiceMismatch}
+              aria-describedby={cityDescribedBy}
             />
+            {cityServiceMismatch ? (
+              <div
+                className="checkout-field__notice checkout-field__notice--error"
+                id="checkout-city-service-alert"
+                role="alert"
+              >
+                {copy.checkout.validation.cityService}
+              </div>
+            ) : null}
             {errors.city ? (
               <span className="checkout-field__error" id="checkout-city-error">
                 {errors.city}
@@ -467,7 +639,15 @@ export default function CheckoutForm() {
                 {Array.isArray(method.badges) && method.badges.length ? (
                   <div className="checkout-payment-badges">
                     {method.badges.map((badge, index) => {
-                      const key = badge.icon ? `${badge.icon}-${index}` : `${badge.label}-${index}`;
+                      const key = `${badge.label}-${index}`;
+                      if (badge.type === "image" && badge.src) {
+                        const imageSrc = encodeURI(badge.src);
+                        return (
+                          <span key={key} className="checkout-payment-badge checkout-payment-badge--image">
+                            <img src={imageSrc} alt={badge.label} />
+                          </span>
+                        );
+                      }
                       if (badge.icon) {
                         return (
                           <span key={key} className="checkout-payment-badge">

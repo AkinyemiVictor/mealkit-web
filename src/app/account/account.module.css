@@ -202,12 +202,89 @@
   background: var(--mk-surface);
 }
 
-.listItem span:first-child {
+.listItem > span:first-of-type {
   font-weight: 600;
 }
 
-.listItem span:last-child {
+.listItem > span:nth-of-type(2) {
   color: var(--mk-text-subtle);
+}
+
+.listItemValue {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.listItemValue span:first-child {
+  color: var(--mk-text-subtle);
+}
+
+.listItemControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.profileEditButton {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 1.2rem;
+  font-weight: 600;
+  background: rgba(0, 172, 17, 0.12);
+  color: var(--mk-accent);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profileEditButton:hover,
+.profileEditButton:focus-visible {
+  background: rgba(0, 172, 17, 0.22);
+  box-shadow: 0 10px 24px rgba(0, 172, 17, 0.18);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.orderInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.orderInfo strong {
+  font-size: 1rem;
+}
+
+.orderInfo span {
+  color: var(--mk-text-subtle);
+  font-size: 0.9rem;
+}
+
+.orderActions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.orderActionButton {
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--mk-border);
+  background: var(--mk-surface-muted);
+  font-weight: 600;
+  color: var(--mk-text);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.orderActionButton:hover,
+.orderActionButton:focus-visible {
+  background: rgba(0, 172, 17, 0.12);
+  border-color: rgba(0, 172, 17, 0.35);
+  color: var(--mk-accent);
+  outline: none;
 }
 
 .twoColumn {
@@ -249,6 +326,156 @@
   border: none;
   background: none;
   cursor: pointer;
+}
+
+.profileForm {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--mk-border);
+  display: grid;
+  gap: 1rem;
+}
+
+.profileField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.profileField label {
+  font-weight: 600;
+  color: var(--mk-text);
+}
+
+.profilePhoneGroup {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.profilePhoneSelect {
+  border: 1px solid var(--mk-border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  background: var(--mk-surface);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profilePhoneSelect:focus-visible {
+  border-color: var(--mk-accent);
+  box-shadow: 0 0 0 3px rgba(0, 172, 17, 0.2);
+  outline: none;
+}
+
+.profilePhoneInput {
+  border: 1px solid var(--mk-border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  background: var(--mk-surface);
+  color: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.profilePhoneInput:focus-visible {
+  border-color: var(--mk-accent);
+  box-shadow: 0 0 0 3px rgba(0, 172, 17, 0.2);
+  outline: none;
+}
+
+.profileTextarea {
+  border: 1px solid var(--mk-border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  background: var(--mk-surface);
+  color: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.profileTextarea:focus-visible {
+  border-color: var(--mk-accent);
+  box-shadow: 0 0 0 3px rgba(0, 172, 17, 0.2);
+  outline: none;
+}
+
+.profileInput {
+  border: 1px solid var(--mk-border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  background: var(--mk-surface);
+  color: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profileInput:focus-visible {
+  border-color: var(--mk-accent);
+  box-shadow: 0 0 0 3px rgba(0, 172, 17, 0.2);
+  outline: none;
+}
+
+.profileHint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--mk-text-subtle);
+}
+
+.profileActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.profileSubmit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--mk-accent);
+  color: var(--mk-accent-contrast, #fff);
+  font-weight: 600;
+  padding: 0.65rem 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.profileSubmit:hover,
+.profileSubmit:focus-visible {
+  background: #00910d;
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(0, 145, 13, 0.16);
+  outline: none;
+}
+
+.profileCancel {
+  border: none;
+  background: transparent;
+  color: var(--mk-text-subtle);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.45rem 0.75rem;
+}
+
+.profileCancel:hover,
+.profileCancel:focus-visible {
+  color: var(--mk-accent);
+  outline: none;
+}
+
+.profileMessage {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--mk-accent);
 }
 
 .skeleton {
@@ -306,6 +533,10 @@
   .section {
     padding: 1.4rem;
   }
+
+  .profilePhoneGroup {
+    grid-template-columns: 1fr;
+  }
 }
 
 body[data-theme="dark"] .sidebar,
@@ -325,4 +556,36 @@ body[data-theme="dark"] .navItemActive button {
 body[data-theme="dark"] .sectionEmpty {
   background: rgba(12, 22, 18, 0.9);
   color: rgba(233, 249, 239, 0.75);
+}
+
+body[data-theme="dark"] .profileInput {
+  background: rgba(12, 22, 18, 0.9);
+  border-color: rgba(132, 241, 162, 0.25);
+}
+
+body[data-theme="dark"] .profileInput:focus-visible {
+  box-shadow: 0 0 0 3px rgba(132, 241, 162, 0.3);
+}
+
+body[data-theme="dark"] .profilePhoneSelect,
+body[data-theme="dark"] .profilePhoneInput,
+body[data-theme="dark"] .profileTextarea {
+  background: rgba(12, 22, 18, 0.9);
+  border-color: rgba(132, 241, 162, 0.25);
+}
+
+body[data-theme="dark"] .profilePhoneSelect:focus-visible,
+body[data-theme="dark"] .profilePhoneInput:focus-visible,
+body[data-theme="dark"] .profileTextarea:focus-visible {
+  box-shadow: 0 0 0 3px rgba(132, 241, 162, 0.3);
+}
+
+body[data-theme="dark"] .profileEditButton {
+  background: rgba(132, 241, 162, 0.18);
+  color: rgba(132, 241, 162, 0.95);
+}
+
+body[data-theme="dark"] .profileEditButton:hover,
+body[data-theme="dark"] .profileEditButton:focus-visible {
+  background: rgba(132, 241, 162, 0.28);
 }

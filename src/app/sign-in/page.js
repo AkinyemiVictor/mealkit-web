@@ -5,6 +5,25 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import "@/styles/sign-in.css";
 import { persistStoredUser, readStoredUser } from "@/lib/auth";
+import { migrateGuestCartToUser } from "@/lib/cart-storage";
+
+const NAME_PATTERN = "[A-Za-z]+";
+const EMAIL_PATTERN = "[A-Za-z0-9]+@[A-Za-z0-9]+\\.com";
+const PASSWORD_PATTERN = "(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{8,}";
+const PHONE_NUMBER_PATTERN = "[0-9]{10}";
+
+const NAME_REGEX = new RegExp(`^${NAME_PATTERN}$`);
+const EMAIL_REGEX = new RegExp(`^${EMAIL_PATTERN}$`);
+const PASSWORD_REGEX = new RegExp(`^${PASSWORD_PATTERN}$`);
+const PHONE_NUMBER_REGEX = new RegExp(`^${PHONE_NUMBER_PATTERN}$`);
+
+const PHONE_COUNTRY_OPTIONS = [
+  { code: "+234", label: "Nigeria", flag: "\uD83C\uDDF3\uD83C\uDDEC" },
+  { code: "+233", label: "Ghana", flag: "\uD83C\uDDEC\uD83C\uDDED" },
+  { code: "+44", label: "United Kingdom", flag: "\uD83C\uDDEC\uD83C\uDDE7" },
+  { code: "+1", label: "United States", flag: "\uD83C\uDDFA\uD83C\uDDF8" },
+  { code: "+971", label: "United Arab Emirates", flag: "\uD83C\uDDE6\uD83C\uDDEA" },
+];
 
 const TAB_OPTIONS = [
   { key: "login", label: "Login", hash: "#loginForm" },
@@ -155,13 +174,45 @@ export default function SignInPage() {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const emailInput = form.elements.namedItem("login-email");
+    const passwordInput = form.elements.namedItem("login-password");
     const email = String(formData.get("login-email") || "").trim();
-    if (!email) return;
+    const password = String(formData.get("login-password") || "").trim();
+
+    if (emailInput instanceof HTMLInputElement) {
+      emailInput.setCustomValidity("");
+    }
+    if (passwordInput instanceof HTMLInputElement) {
+      passwordInput.setCustomValidity("");
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      if (emailInput instanceof HTMLInputElement) {
+        emailInput.setCustomValidity("Email must be letters or numbers followed by @ and end with .com");
+        emailInput.reportValidity();
+      }
+      return;
+    }
+
+    if (!PASSWORD_REGEX.test(password)) {
+      if (passwordInput instanceof HTMLInputElement) {
+        passwordInput.setCustomValidity(
+          "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol"
+        );
+        passwordInput.reportValidity();
+      }
+      return;
+    }
+
     const nameFromEmail = email.includes("@") ? email.split("@")[0] : "MealKit friend";
-    persistStoredUser({
-      fullName: nameFromEmail.replace(/[\.\_\-]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()) || "MealKit Friend",
+    const user = {
+      fullName:
+        nameFromEmail.replace(/[\.\_\-]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()) ||
+        "MealKit Friend",
       email,
-    });
+    };
+    persistStoredUser(user);
+    migrateGuestCartToUser(user);
     window.location.href = "/account";
   }, []);
 
@@ -169,13 +220,74 @@ export default function SignInPage() {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const nameInput = form.elements.namedItem("signup-name");
+    const emailInput = form.elements.namedItem("signup-email");
+    const phoneCountryInput = form.elements.namedItem("signup-phone-country");
+    const phoneDigitsInput = form.elements.namedItem("signup-phone");
+    const passwordInput = form.elements.namedItem("signup-password");
+    const confirmInput = form.elements.namedItem("signup-confirm-password");
+
     const fullName = String(formData.get("signup-name") || "").trim();
     const email = String(formData.get("signup-email") || "").trim();
-    if (!fullName || !email) return;
-    persistStoredUser({
-      fullName,
-      email,
-    });
+    const phoneCountry =
+      String(formData.get("signup-phone-country") || PHONE_COUNTRY_OPTIONS[0].code).trim() ||
+      PHONE_COUNTRY_OPTIONS[0].code;
+    const phoneDigits = String(formData.get("signup-phone") || "").trim();
+    const password = String(formData.get("signup-password") || "");
+    const confirm = String(formData.get("signup-confirm-password") || "");
+
+    if (nameInput instanceof HTMLInputElement) nameInput.setCustomValidity("");
+    if (emailInput instanceof HTMLInputElement) emailInput.setCustomValidity("");
+    if (phoneCountryInput instanceof HTMLSelectElement) phoneCountryInput.setCustomValidity("");
+    if (phoneDigitsInput instanceof HTMLInputElement) phoneDigitsInput.setCustomValidity("");
+    if (passwordInput instanceof HTMLInputElement) passwordInput.setCustomValidity("");
+    if (confirmInput instanceof HTMLInputElement) confirmInput.setCustomValidity("");
+
+    if (!NAME_REGEX.test(fullName)) {
+      if (nameInput instanceof HTMLInputElement) {
+        nameInput.setCustomValidity("Name must contain letters only (A-Z or a-z).");
+        nameInput.reportValidity();
+      }
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      if (emailInput instanceof HTMLInputElement) {
+        emailInput.setCustomValidity("Email must be letters or numbers followed by @ and end with .com");
+        emailInput.reportValidity();
+      }
+      return;
+    }
+
+    if (!PHONE_NUMBER_REGEX.test(phoneDigits)) {
+      if (phoneDigitsInput instanceof HTMLInputElement) {
+        phoneDigitsInput.setCustomValidity("Enter exactly 10 digits for your phone number.");
+        phoneDigitsInput.reportValidity();
+      }
+      return;
+    }
+
+    if (!PASSWORD_REGEX.test(password)) {
+      if (passwordInput instanceof HTMLInputElement) {
+        passwordInput.setCustomValidity(
+          "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol"
+        );
+        passwordInput.reportValidity();
+      }
+      return;
+    }
+
+    if (password !== confirm) {
+      if (confirmInput instanceof HTMLInputElement) {
+        confirmInput.setCustomValidity("Passwords must match.");
+        confirmInput.reportValidity();
+      }
+      return;
+    }
+
+    const user = { fullName, email, phone: `${phoneCountry}${phoneDigits}` };
+    persistStoredUser(user);
+    migrateGuestCartToUser(user);
     window.location.href = "/account";
   }, []);
 
@@ -268,19 +380,30 @@ export default function SignInPage() {
                 <label className="sr-only" htmlFor="login-email">
                   Email
                 </label>
-                <input id="login-email" type="email" name="login-email" placeholder="Email" required autoComplete="email" />
+                <input
+                  id="login-email"
+                  type="email"
+                  name="login-email"
+                  placeholder="Email"
+                  required
+                  autoComplete="email"
+                  pattern={EMAIL_PATTERN}
+                  title="Use letters or numbers, followed by @, ending with .com (e.g. username@domain.com)"
+                />
               </div>
               <div className="auth-field">
                 <label className="sr-only" htmlFor="login-password">
                   Password
                 </label>
                 <input
-                  id="login-password"
-                  type="password"
+                id="login-password"
+                type="password"
                   name="login-password"
                   placeholder="Password"
                   required
                   autoComplete="current-password"
+                  pattern={PASSWORD_PATTERN}
+                  title="Password must be 8+ characters with uppercase, lowercase, number, and symbol"
                 />
               </div>
               <div className="auth-forgot">
@@ -318,13 +441,67 @@ export default function SignInPage() {
                 <label className="sr-only" htmlFor="signup-name">
                   Full name
                 </label>
-                <input id="signup-name" type="text" name="signup-name" placeholder="Full Name" required autoComplete="name" />
+                <input
+                  id="signup-name"
+                  type="text"
+                  name="signup-name"
+                  placeholder="Full Name"
+                  required
+                  autoComplete="name"
+                  pattern={NAME_PATTERN}
+                  title="Only letters A-Z are allowed in your name"
+                />
               </div>
               <div className="auth-field">
                 <label className="sr-only" htmlFor="signup-email">
                   Email
                 </label>
-                <input id="signup-email" type="email" name="signup-email" placeholder="Email" required autoComplete="email" />
+                <input
+                  id="signup-email"
+                  type="email"
+                  name="signup-email"
+                  placeholder="Email"
+                  required
+                  autoComplete="email"
+                  pattern={EMAIL_PATTERN}
+                  title="Use letters or numbers, followed by @, ending with .com (e.g. username@domain.com)"
+                />
+              </div>
+              <div className="auth-field">
+                <label className="sr-only" htmlFor="signup-phone">
+                  Phone number
+                </label>
+                <div className="auth-phone-group">
+                  <label className="sr-only" htmlFor="signup-phone-country">
+                    Country code
+                  </label>
+                  <select
+                    id="signup-phone-country"
+                    name="signup-phone-country"
+                    className="auth-phone-select"
+                    defaultValue={PHONE_COUNTRY_OPTIONS[0].code}
+                    required
+                  >
+                    {PHONE_COUNTRY_OPTIONS.map((option) => (
+                      <option key={option.code} value={option.code}>
+                        {`${option.flag} ${option.code}`}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    id="signup-phone"
+                    type="tel"
+                    name="signup-phone"
+                    className="auth-phone-input"
+                    placeholder="8120000000"
+                    required
+                    autoComplete="tel"
+                    inputMode="tel"
+                    pattern={PHONE_NUMBER_PATTERN}
+                    maxLength={10}
+                    title="Enter exactly 10 digits after the country code"
+                  />
+                </div>
               </div>
               <div className="auth-field">
                 <label className="sr-only" htmlFor="signup-password">
@@ -337,6 +514,8 @@ export default function SignInPage() {
                   placeholder="Password"
                   required
                   autoComplete="new-password"
+                  pattern={PASSWORD_PATTERN}
+                  title="Password must be 8+ characters with uppercase, lowercase, number, and symbol"
                 />
               </div>
               <div className="auth-field">
@@ -350,6 +529,8 @@ export default function SignInPage() {
                   placeholder="Confirm Password"
                   required
                   autoComplete="new-password"
+                  pattern={PASSWORD_PATTERN}
+                  title="Password must be 8+ characters with uppercase, lowercase, number, and symbol"
                 />
               </div>
               <button type="submit" className="auth-primary-btn">

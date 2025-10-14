@@ -6,8 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { readRecentSearches, storeRecentSearch } from "@/lib/search-history";
 import copy from "@/data/copy";
 import { AUTH_EVENT, clearStoredUser, readStoredUser } from "@/lib/auth";
+import { readCartItems } from "@/lib/cart-storage";
 
-const CART_STORAGE_KEY = "mealkit_cart";
 const MIN_ORDER_SIZE = 0.01;
 const RECENT_SEARCHES_LIMIT_DISPLAY = 6;
 
@@ -54,18 +54,10 @@ const formatCartCount = (value) => {
 };
 
 const countStoredCartItems = () => {
-  if (typeof window === "undefined") return 0;
-  try {
-    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(parsed)) return 0;
-    return parsed
-      .map(deriveCartMetrics)
-      .reduce((sum, entry) => sum + entry.orderCount, 0);
-  } catch (error) {
-    console.warn("Unable to read stored cart", error);
-    return 0;
-  }
+  const items = readCartItems();
+  return items
+    .map(deriveCartMetrics)
+    .reduce((sum, entry) => sum + entry.orderCount, 0);
 };
 
 function SearchBar({ idSuffix, className = "", defaultValue = "" }) {
@@ -585,6 +577,7 @@ export default function Header() {
     </header>
   );
 }
+
 
 
 

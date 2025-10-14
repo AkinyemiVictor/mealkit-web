@@ -18,13 +18,13 @@ import {
   resolveStockClass,
 } from "@/lib/catalogue";
 
+import { readCartItems, writeCartItems, clearCartItems } from "@/lib/cart-storage";
 import { getProductHref } from "@/lib/products";
 
 const CategoryCarousel = dynamic(() => import("@/components/category-carousel"), {
   loading: () => <CategoryCarouselSkeleton />,
 });
 
-const CART_STORAGE_KEY = "mealkit_cart";
 const RECENTLY_VIEWED_STORAGE_KEY = "mealkit_recently_viewed";
 const DELIVERY_FEE = 1500;
 const RECENTLY_VIEWED_LIMIT = 6;
@@ -98,17 +98,7 @@ const hydrateCartItems = (items) => {
   return items.map(hydrateCartItem).filter(Boolean);
 };
 
-const readCartFromStorage = () => {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return hydrateCartItems(parsed);
-  } catch (error) {
-    console.warn("Unable to read stored cart", error);
-    return [];
-  }
-};
+const readCartFromStorage = () => hydrateCartItems(readCartItems());
 
 const PROMO_CODES = {
   FRESHSAVE: {
@@ -306,13 +296,9 @@ export default function CartPage() {
   }, [catalogueList, productIndex]);
 
   const persistCart = useCallback((items) => {
-    if (typeof window === "undefined") return;
     try {
       const normalised = hydrateCartItems(items);
-      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(normalised));
-      window.dispatchEvent(
-        new CustomEvent("cart-updated", { detail: { source: cartEventSourceRef.current } })
-      );
+      writeCartItems(normalised, undefined, { source: cartEventSourceRef.current });
     } catch (error) {
       console.warn("Unable to persist cart", error);
     }
@@ -442,6 +428,7 @@ export default function CartPage() {
     setActivePromo(null);
     setPromoInput("");
     setPromoFeedback("Your cart is now empty.");
+    clearCartItems(undefined, { source: cartEventSourceRef.current });
   }, [cartItems.length, setPromoFeedback]);
 
   const handleApplyPromo = useCallback(() => {

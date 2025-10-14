@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-const CART_STORAGE_KEY = "mealkit_cart";
+import { readCartItems, writeCartItems } from "@/lib/cart-storage";
 const RECENTLY_VIEWED_STORAGE_KEY = "mealkit_recently_viewed";
 const MIN_QUANTITY = 0.01;
 
@@ -58,23 +58,13 @@ const formatQuantityLabel = (value) => {
   return numeric.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 };
 
-const readCartFromStorage = () => {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.map(normaliseStoredItem).filter(Boolean) : [];
-  } catch (error) {
-    console.warn("Could not read cart from storage", error);
-    return [];
-  }
-};
+const readCartFromStorage = () =>
+  readCartItems().map(normaliseStoredItem).filter(Boolean);
 
 const persistCartToStorage = (items) => {
-  if (typeof window === "undefined") return;
   try {
     const normalised = Array.isArray(items) ? items.map(normaliseStoredItem).filter(Boolean) : [];
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(normalised));
+    writeCartItems(normalised, undefined, { source: "add-to-cart" });
   } catch (error) {
     console.warn("Could not persist cart", error);
   }
