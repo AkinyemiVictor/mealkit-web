@@ -124,7 +124,6 @@ function ProductSection({ title, products, gridId, variant = "plain", eyebrow, c
     </section>
   );
 }
-
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const intervalRef = useRef(null);
@@ -375,4 +374,8 @@ export default function HomePage() {
     </main>
   );
 }
+
+
+
+
 

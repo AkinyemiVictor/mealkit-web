@@ -1,3 +1,7 @@
+'use client';
+
+import { useState } from "react";
+
 import HelpCenterFaqs from "@/components/help-center-faqs";
 import styles from "./help-center.module.css";
 
@@ -333,6 +337,12 @@ const faqSections = [
 ];
 
 export default function HelpCenterPage() {
+  const [searchValue, setSearchValue] = useState("");
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+  };
+
   return (
     <div className={styles.pageWrapper}>
       <main>
@@ -367,21 +377,23 @@ export default function HelpCenterPage() {
 
         <section id="searchQnAAgent" className={styles.searchQnAAgent}>
           <div className={styles.searchQnAAgentInner}>
-            <div className={styles.searchBarShell}>
+            <form className={styles.searchBarShell} onSubmit={handleSearchSubmit}>
               <input
                 type="search"
                 id="help-search"
                 className={styles.searchInput}
                 placeholder='Type a keyword like "track"'
                 aria-label="Search help articles"
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
               />
-              <button type="button" className={styles.searchButton}>
+              <button type="submit" className={styles.searchButton}>
                 <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
                 <span className="sr-only">Search help center</span>
               </button>
-            </div>
+            </form>
 
-            <HelpCenterFaqs sidebarTopics={sidebarTopics} sections={faqSections} />
+            <HelpCenterFaqs sidebarTopics={sidebarTopics} sections={faqSections} searchQuery={searchValue} />
           </div>
         </section>
 

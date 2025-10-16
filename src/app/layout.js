@@ -4,7 +4,6 @@ import "@/styles/main.css"; // bring in your main styles
 import "@/styles/checkout.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import ThemeInitializer from "@/components/theme-initializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,8 +33,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body data-theme="light" className={`${geistSans.variable} ${geistMono.variable}`}>
-        <ThemeInitializer />
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <Header />
         <div id="main-content" className="layout-main" tabIndex={-1}>
           {children}

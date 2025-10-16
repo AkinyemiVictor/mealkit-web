@@ -746,8 +746,8 @@ body[data-theme="dark"] .site-header__mobile-link {
   }
 
   .home-section__inner .product-card-grid {
-    overflow-x: auto;
-    padding: 0 0.75rem 0.75rem;
+    overflow: visible;
+    padding: 0;
     gap: 1rem;
   }
 
@@ -1398,11 +1398,11 @@ body[data-theme="dark"] .category-carousel__card-icon {
   width: 100%;
   align-items: stretch;
   justify-content: flex-start;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   margin-top: 3rem;
   gap: 1.5rem;
-  overflow: hidden;
-  padding: 1.25rem 1rem;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .product-card {
@@ -1421,6 +1421,7 @@ body[data-theme="dark"] .category-carousel__card-icon {
   padding: 0.75rem;
   box-shadow: 0 2px 12px rgba(15, 24, 36, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
 }
 
 .product-card:hover {
@@ -1600,11 +1601,12 @@ body[data-theme="dark"] .category-carousel__card-icon {
 .home-section__inner .product-card-grid {
   width: 100%;
   gap: 1.25rem;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: flex-start;
   align-items: stretch;
-  overflow: hidden;
-  padding: 0 1rem 0.75rem;
+  overflow: visible;
+  padding: 0;
+  box-sizing: border-box;
 }
 .category-page .product-card-grid,
 .category-products .product-card-grid {
@@ -1613,7 +1615,7 @@ body[data-theme="dark"] .category-carousel__card-icon {
   align-items: stretch;
   gap: 1.5rem;
   overflow: visible;
-  padding: 1.5rem 0;
+  padding: 0;
 }
 
 .category-page .product-card,
@@ -1971,10 +1973,10 @@ body[data-theme="dark"] .category-carousel__card-icon {
   max-width: 1050px;
   }
   .product-card-grid {
-    display: flex;
-    width: 1020px;
-    padding: 1rem;
+    padding: 1rem 0;
     gap: 2.1rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 }
 @media all and (max-width: 1250px) {
@@ -1991,10 +1993,10 @@ body[data-theme="dark"] .category-carousel__card-icon {
   max-width: 1050px;
   }
   .product-card-grid {
-    display: flex;
-    width: 1020px;
-    padding: 1rem;
+    padding: 1rem 0;
     gap: 2.1rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 }
 @media all and (max-width: 1140px) {
@@ -2011,13 +2013,12 @@ body[data-theme="dark"] .category-carousel__card-icon {
   max-width: 850px;
   }
   .product-card-grid {
-    display: flex;
-    justify-content: start;
-    width: 850px;
-    padding: 1rem 0 1rem 1rem;
-    margin: 0 1rem 0 0;
+    justify-content: flex-start;
+    padding: 1rem 0;
+    margin: 0;
     gap: 1.3rem;
-    flex-wrap: wrap;
+    width: 100%;
+    box-sizing: border-box;
   }
 .header-search-bar {
     display: none;
@@ -2050,44 +2051,47 @@ body[data-theme="dark"] .category-carousel__card-icon {
     width: auto;
   }
   .product-card-grid {
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 2.8rem;
-  max-width: 650px;
+    gap: 2rem;
+    width: 100%;
+    max-width: none;
     margin: 0;
-    padding: 1rem 0 1rem 1.6rem;
-  }  .boardShape {
+    padding: 1rem 0;
+    box-sizing: border-box;
+  }
+  .boardShape {
     width: 100%;
     height: 450px;
     border-radius: 0;
-  }  .bestSellingFlex {
-  max-width: 700px;
+  }
+  .bestSellingFlex {
+    max-width: 700px;
   }
   .advert-section-content {
-  max-width: 700px;
+    max-width: 700px;
   }
-  }
+}
 @media all and (max-width: 800px) {
   .header-content {
     width: 600px;
   }
   .searchBar {
     width: 600px;
-  }  .bestSellingFlex {
-  max-width: 600px;
+  }
+  .bestSellingFlex {
+    max-width: 600px;
   }
   .product-card-grid {
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 2rem;
-  max-width: 600px;
+    gap: 1.75rem;
+    width: 100%;
+    max-width: none;
     margin: 0;
-    padding: 1rem 0 1rem 1.6rem;
+    padding: 1rem 0;
+    box-sizing: border-box;
   }
-.advert-section-content {
-  max-width: 600px;
+  .advert-section-content {
+    max-width: 600px;
   }
-  }
+}
 
 @media all and (max-width: 700px) {
   .searchBar {
@@ -2123,7 +2127,8 @@ body[data-theme="dark"] .category-carousel__card-icon {
   }
   .cart .cartSVG {
     stroke: rgb(255, 255, 255);
-  }  .hamburgerMenu {
+  }
+  .hamburgerMenu {
     display: block;
   }
   .sidebar {
@@ -2135,15 +2140,17 @@ body[data-theme="dark"] .category-carousel__card-icon {
     right: 0;
   }
   .product-card-grid {
-    gap: 1rem;
-  max-width: 500px;
-    padding: 1rem 0 1rem 0.5rem;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: none;
+    padding: 1rem 0;
+    box-sizing: border-box;
   }
-.advert-section-content {
-  max-width: 500px;
+  .advert-section-content {
+    max-width: 500px;
   }
   .bestSellingFlex {
-  max-width: 500px;
+    max-width: 500px;
   }
   .buttonHolder img {
     border-radius: 6px;
@@ -2157,33 +2164,38 @@ body[data-theme="dark"] .category-carousel__card-icon {
   }
   .header-content {
     width: 400px;
-  }  .bestSellingFlex {
-  max-width: 400px;
+  }
+  .bestSellingFlex {
+    max-width: 400px;
   }
   .product-card-grid {
-  max-width: 400px;
-    gap: 0.7rem;
-    padding: 1rem 0 1rem 0.5rem;
+    gap: 1.25rem;
+    width: 100%;
+    max-width: none;
+    padding: 1rem 0;
+    box-sizing: border-box;
   }
-.advert-section-content {
-  max-width: 400px;
+  .advert-section-content {
+    max-width: 400px;
   }
-  }
+}
 @media all and (max-width: 430px) {
   .searchBar {
-  max-width: 350px;
+    max-width: 350px;
   }
   .header-content {
     width: 350px;
-  }  .bestSellingFlex {
-  max-width: 350px;
   }
-    .product-card-grid {
-  max-width: 350px;
-    gap: 0.7rem;
+  .bestSellingFlex {
+    max-width: 350px;
+  }
+  .product-card-grid {
+    gap: 1rem;
+    width: 100%;
+    max-width: none;
     padding: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: visible;
+    box-sizing: border-box;
   }
   .product-card:hover {
     transform: translateY(-3px);
@@ -2200,12 +2212,13 @@ body[data-theme="dark"] .category-carousel__card-icon {
   }
   }
 @media all and (max-width: 370px) {
-.product-card-grid {
-  max-width: 300px;
-    gap: 0.7rem;
-    padding: 0 0 0 2rem;
-    overflow-x: auto;
-    overflow-y: hidden;
+  .product-card-grid {
+    gap: 0.8rem;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    overflow: visible;
+    box-sizing: border-box;
   }
 }
 /**************************footer*****************************/
@@ -3953,6 +3966,8 @@ body[data-theme="dark"] .category-carousel__card.is-active {
   border-color: rgba(132, 241, 162, 0.45);
   box-shadow: none;
 }
+
+
 
 
 

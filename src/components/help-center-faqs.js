@@ -4,32 +4,86 @@ import { useEffect, useMemo, useState } from "react";
 
 import styles from "@/app/help-center/help-center.module.css";
 
-export default function HelpCenterFaqs({ sidebarTopics, sections }) {
-  const sectionMap = useMemo(() => {
-    const map = new Map();
-    sections.forEach((section) => {
-      map.set(section.slug, section);
+export default function HelpCenterFaqs({ sidebarTopics, sections, searchQuery = "" }) {
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const sectionsWithMatches = useMemo(() => {
+    if (!normalizedQuery) {
+      return sections;
+    }
+
+    return sections
+      .map((section) => {
+        const matchingItems = section.items.filter((item) => {
+          const question = item.question.toLowerCase();
+          const answer = item.answer.toLowerCase();
+          return question.includes(normalizedQuery) || answer.includes(normalizedQuery);
+        });
+
+        if (!matchingItems.length) {
+          return null;
+        }
+
+        return {
+          ...section,
+          items: matchingItems,
+        };
+      })
+      .filter(Boolean);
+  }, [sections, normalizedQuery]);
+
+  const sectionsToDisplay = normalizedQuery ? sectionsWithMatches : sections;
+
+  const availableSlugs = useMemo(
+    () => sectionsToDisplay.map((section) => section.slug),
+    [sectionsToDisplay]
+  );
+
+  const [activeSlug, setActiveSlug] = useState(() => availableSlugs[0] ?? null);
+
+  useEffect(() => {
+    if (!availableSlugs.length) {
+      setActiveSlug(null);
+      return;
+    }
+
+    setActiveSlug((current) => {
+      if (current && availableSlugs.includes(current)) {
+        return current;
+      }
+      return availableSlugs[0];
     });
-    return map;
-  }, [sections]);
+  }, [availableSlugs]);
 
-  const defaultSlug =
-    sidebarTopics.find((topic) => sectionMap.has(topic.slug))?.slug ??
-    (sections.length ? sections[0].slug : null);
+  const activeSection =
+    sectionsToDisplay.find((section) => section.slug === activeSlug) ??
+    sectionsToDisplay[0] ??
+    null;
 
-  const [activeSlug, setActiveSlug] = useState(defaultSlug);
-  const activeSection = (activeSlug && sectionMap.get(activeSlug)) || sections[0] || null;
   const [activeQuestion, setActiveQuestion] = useState(
     activeSection?.items?.[0]?.question ?? null
   );
 
   useEffect(() => {
-    setActiveQuestion(activeSection?.items?.[0]?.question ?? null);
+    if (!activeSection) {
+      setActiveQuestion(null);
+      return;
+    }
+
+    setActiveQuestion((current) => {
+      if (current && activeSection.items.some((item) => item.question === current)) {
+        return current;
+      }
+
+      return activeSection.items[0]?.question ?? null;
+    });
   }, [activeSection]);
 
-  if (!activeSection) {
-    return null;
-  }
+  const resultCount = sectionsToDisplay.reduce((total, section) => total + section.items.length, 0);
+  const isSearching = Boolean(normalizedQuery);
+  const hasResults = resultCount > 0;
+
+  const availableSlugSet = useMemo(() => new Set(availableSlugs), [availableSlugs]);
 
   return (
     <div className={styles.qna}>
@@ -37,15 +91,30 @@ export default function HelpCenterFaqs({ sidebarTopics, sections }) {
         <h4 className={styles.sidebarTitle}>Browse Topics</h4>
         <ul className={styles.sidebarList}>
           {sidebarTopics.map((topic) => {
-            const isActive = topic.slug === activeSection.slug;
-            const className = `${styles.sidebarItem} ${isActive ? styles.sidebarItemActive : ""}`.trim();
+            const topicIsActive = topic.slug === activeSection?.slug;
+            const topicHasMatches = availableSlugSet.has(topic.slug);
+            const shouldDisable = isSearching && !topicHasMatches;
+            const className = [
+              styles.sidebarItem,
+              topicIsActive ? styles.sidebarItemActive : "",
+              shouldDisable ? styles.sidebarItemDisabled : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+
             return (
               <li key={topic.slug}>
                 <button
                   type="button"
                   className={className}
-                  onClick={() => setActiveSlug(topic.slug)}
-                  aria-current={isActive ? "true" : undefined}
+                  onClick={() => {
+                    if (shouldDisable) {
+                      return;
+                    }
+                    setActiveSlug(topic.slug);
+                  }}
+                  aria-current={topicIsActive ? "true" : undefined}
+                  disabled={shouldDisable}
                 >
                   <span className={styles.sidebarIcon}>
                     <i className={`fa-solid ${topic.icon}`} aria-hidden="true" />
@@ -61,31 +130,53 @@ export default function HelpCenterFaqs({ sidebarTopics, sections }) {
 
       <div className={styles.qnaContent}>
         <header className={styles.qnaContentHeader}>
-          <h3>{activeSection.title}</h3>
-          <p>{activeSection.description}</p>
+          {isSearching ? (
+            <>
+              <h3>{hasResults ? `Results for "${searchQuery.trim()}"` : "No results found"}</h3>
+              <p>
+                {hasResults
+                  ? `We found ${resultCount} ${resultCount === 1 ? "answer" : "answers"} across ${availableSlugs.length} ${availableSlugs.length === 1 ? "topic" : "topics"}.`
+                  : "Try a different keyword or browse the topics on the left."}
+              </p>
+            </>
+          ) : (
+            <>
+              <h3>{activeSection?.title}</h3>
+              <p>{activeSection?.description}</p>
+            </>
+          )}
         </header>
-        <div className={styles.qnaAccordion}>
-          {activeSection.items.map((faq) => {
-            const isOpen = activeQuestion === faq.question;
-            return (
-              <details key={faq.question} className={styles.qnaItem} open={isOpen}>
-                <summary
-                  onClick={(event) => {
-                    event.preventDefault();
-                    setActiveQuestion((current) => (current === faq.question ? null : faq.question));
-                  }}
-                  aria-expanded={isOpen}
-                >
-                  <span className={styles.questionMeta}>{activeSection.tag || activeSection.title}</span>
-                  <span className={styles.questionText}>{faq.question}</span>
-                </summary>
-                <div className={styles.answer}>
-                  <p>{faq.answer}</p>
-                </div>
-              </details>
-            );
-          })}
-        </div>
+
+        {hasResults && activeSection ? (
+          <div className={styles.qnaAccordion}>
+            {activeSection.items.map((faq) => {
+              const isOpen = activeQuestion === faq.question;
+              return (
+                <details key={faq.question} className={styles.qnaItem} open={isOpen}>
+                  <summary
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setActiveQuestion((current) => (current === faq.question ? null : faq.question));
+                    }}
+                    aria-expanded={isOpen}
+                  >
+                    <span className={styles.questionMeta}>{activeSection.tag || activeSection.title}</span>
+                    <span className={styles.questionText}>{faq.question}</span>
+                  </summary>
+                  <div className={styles.answer}>
+                    <p>{faq.answer}</p>
+                  </div>
+                </details>
+              );
+            })}
+          </div>
+        ) : (
+          <div className={styles.noResults}>
+            <p>
+              Try searching with another keyword, or select a topic from the menu to keep exploring the help center.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

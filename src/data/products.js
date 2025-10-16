@@ -59,93 +59,6 @@ export const products = {
       "category": "fruits"
     },
     {
-      "id": 3,
-      "name": "Red Bananas",
-      "image": "/assets/products/fruits/red-bananas-ripe.png",
-      "variations": [
-        {
-          "variationId": "Red_banana-ripe",
-          "ripeness": "Ripe",
-          "price": 1000,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/red-bananas-ripe.png",
-          "oldPrice": 1500,
-          "discount": 10
-        },
-        {
-          "variationId": "Red_banana-unripe",
-          "ripeness": "Unripe",
-          "price": 950,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/red-bananas-unripe.png",
-          "oldPrice": 1500,
-          "discount": 5
-        }
-      ],
-      "inSeason": true,
-      "category": "fruits"
-    },
-    {
-      "id": 4,
-      "name": "Apple Banana (Sweet Banana)",
-      "image": "/assets/products/fruits/apple-banana-sweet-banana-ripe.png",
-      "variations": [
-        {
-          "variationId": "Apple_banana-ripe",
-          "ripeness": "Ripe",
-          "price": 1000,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/apple-banana-sweet-banana-ripe.png",
-          "oldPrice": 1500,
-          "discount": 10
-        },
-        {
-          "variationId": "Apple_banana-unripe",
-          "ripeness": "Unripe",
-          "price": 950,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/apple-banana-sweet-banana-unripe.png",
-          "oldPrice": 1500,
-          "discount": 5
-        }
-      ],
-      "inSeason": true,
-      "category": "fruits"
-    },
-    {
-      "id": 5,
-      "name": "Julie Mango",
-      "image": "/assets/products/fruits/julie-mango-ripe.png",
-      "variations": [
-        {
-          "variationId": "Julie_mango-ripe",
-          "ripeness": "Ripe",
-          "price": 1000,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/julie-mango-ripe.png",
-          "oldPrice": 1500,
-          "discount": 10
-        },
-        {
-          "variationId": "Julie_mango-unripe",
-          "ripeness": "Unripe",
-          "price": 950,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/julie-mango-unripe.png",
-          "oldPrice": 1500,
-          "discount": 5
-        }
-      ],
-      "inSeason": true,
-      "category": "fruits"
-    },
-    {
       "id": 6,
       "name": "Sheri Mango",
       "image": "/assets/products/fruits/sheri-mango-ripe.png",
@@ -290,64 +203,7 @@ export const products = {
       "inSeason": true,
       "category": "fruits"
     },
-    {
-      "id": 9,
-      "name": "Yellow Mango",
-      "image": "/assets/products/fruits/yellow-mango-ripe.png",
-      "variations": [
-        {
-          "variationId": "Yellow_mango-ripe",
-          "ripeness": "Ripe",
-          "price": 1000,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/yellow-mango-ripe.png",
-          "oldPrice": 1500,
-          "discount": 10
-        },
-        {
-          "variationId": "Yellow_mango-unripe",
-          "ripeness": "Unripe",
-          "price": 950,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/yellow-mango-unripe.png",
-          "oldPrice": 1500,
-          "discount": 5
-        }
-      ],
-      "inSeason": true,
-      "category": "fruits"
-    },
-    {
-      "id": 10,
-      "name": "King of Mango",
-      "image": "/assets/products/fruits/king-of-mango-ripe.png",
-      "variations": [
-        {
-          "variationId": "King_of_mango-ripe",
-          "ripeness": "Ripe",
-          "price": 1000,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/king-of-mango-ripe.png",
-          "oldPrice": 1500,
-          "discount": 10
-        },
-        {
-          "variationId": "King_of_mango-unripe",
-          "ripeness": "Unripe",
-          "price": 950,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/king-of-mango-unripe.png",
-          "oldPrice": 1500,
-          "discount": 5
-        }
-      ],
-      "inSeason": true,
-      "category": "fruits"
-    },
+   ,
     {
       "id": 11,
       "name": "Broken Bottle Mango",
@@ -407,122 +263,6 @@ export const products = {
       "category": "fruits"
     },
     {
-      "id": 13,
-      "name": "Horn Plantain",
-      "image": "/assets/products/fruits/horn-plantain-ripe.png",
-      "variations": [
-        {
-          "variationId": "Horn_plantain-ripe",
-          "ripeness": "Ripe",
-          "price": 700,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/horn-plantain-ripe.png",
-          "oldPrice": 1000,
-          "discount": 10
-        },
-        {
-          "variationId": "Horn_plantain-unripe",
-          "ripeness": "Unripe",
-          "price": 650,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/horn-plantain-unripe.png",
-          "oldPrice": 1000,
-          "discount": 5
-        }
-      ],
-      "inSeason": true,
-      "category": "fruits"
-    },
-    {
-      "id": 14,
-      "name": "French Plantain",
-      "image": "/assets/products/fruits/french-plantain-ripe.png",
-      "variations": [
-        {
-          "variationId": "French_plantain-ripe",
-          "ripeness": "Ripe",
-          "price": 700,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/french-plantain-ripe.png",
-          "oldPrice": 1000,
-          "discount": 10
-        },
-        {
-          "variationId": "French_plantain-unripe",
-          "ripeness": "Unripe",
-          "price": 650,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/french-plantain-unripe.png",
-          "oldPrice": 1000,
-          "discount": 5
-        }
-      ],
-      "inSeason": true,
-      "category": "fruits"
-    },
-    {
-      "id": 15,
-      "name": "False Horn Plantain",
-      "image": "/assets/products/fruits/false-horn-plantain-ripe.png",
-      "variations": [
-        {
-          "variationId": "False_horn_plantain-ripe",
-          "ripeness": "Ripe",
-          "price": 700,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/false-horn-plantain-ripe.png",
-          "oldPrice": 1000,
-          "discount": 10
-        },
-        {
-          "variationId": "False_horn_plantain-unripe",
-          "ripeness": "Unripe",
-          "price": 650,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/false-horn-plantain-unripe.png",
-          "oldPrice": 1000,
-          "discount": 5
-        }
-      ],
-      "inSeason": true,
-      "category": "fruits"
-    },
-    {
-      "id": 16,
-      "name": "Dwarf Plantain",
-      "image": "/assets/products/fruits/dwarf-plantain-ripe.png",
-      "variations": [
-        {
-          "variationId": "Dwarf_plantain-ripe",
-          "ripeness": "Ripe",
-          "price": 700,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/dwarf-plantain-ripe.png",
-          "oldPrice": 1000,
-          "discount": 10
-        },
-        {
-          "variationId": "Dwarf_plantain-unripe",
-          "ripeness": "Unripe",
-          "price": 650,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/dwarf-plantain-unripe.png",
-          "oldPrice": 1000,
-          "discount": 5
-        }
-      ],
-      "inSeason": true,
-      "category": "fruits"
-    },
-    {
       "id": 17,
       "name": "Agbagba Plantain",
       "image": "/assets/products/fruits/agbagba-plantain-ripe.png",
@@ -544,35 +284,6 @@ export const products = {
           "unit": "kg",
           "stock": "In Stock",
           "image": "/assets/products/fruits/agbagba-plantain-unripe.png",
-          "oldPrice": 1000,
-          "discount": 5
-        }
-      ],
-      "inSeason": true,
-      "category": "fruits"
-    },
-    {
-      "id": 18,
-      "name": "Oranta Plantain",
-      "image": "/assets/products/fruits/oranta-plantain-ripe.png",
-      "variations": [
-        {
-          "variationId": "Oranta_plantain-ripe",
-          "ripeness": "Ripe",
-          "price": 700,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/oranta-plantain-ripe.png",
-          "oldPrice": 1000,
-          "discount": 10
-        },
-        {
-          "variationId": "Oranta_plantain-unripe",
-          "ripeness": "Unripe",
-          "price": 650,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/oranta-plantain-unripe.png",
           "oldPrice": 1000,
           "discount": 5
         }
@@ -1014,36 +725,8 @@ export const products = {
       ],
       "inSeason": true,
       "category": "fruits"
-    },
-    {
-      "id": 34,
-      "name": "Blueberry",
-      "image": "/assets/products/fruits/blueberry-ripe.png",
-      "variations": [
-        {
-          "variationId": "Blueberry-ripe",
-          "ripeness": "Ripe",
-          "price": 1800,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/blueberry-ripe.png",
-          "oldPrice": 2100,
-          "discount": 10
-        },
-        {
-          "variationId": "Blueberry-unripe",
-          "ripeness": "Unripe",
-          "price": 1700,
-          "unit": "kg",
-          "stock": "In Stock",
-          "image": "/assets/products/fruits/blueberry-unripe.png",
-          "oldPrice": 2100,
-          "discount": 5
-        }
-      ],
-      "inSeason": true,
-      "category": "fruits"
     }
+   
   ],
   "vegetables": [
     {
@@ -1536,8 +1219,116 @@ export const products = {
   "fishSeaFood": [
     {
       "id": 500,
-      "name": "Tilapia",
-      "image": "/assets/products/fishseafood/tilapia.png",
+      "name": "Tilapia(Oreochromis Niloticus)",
+      "image": "/assets/products/fishseafood/tilapia-(oreochromis-niloticus).png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "fishSeaFood"
+    },
+    {
+      "id": 500,
+      "name": "Kote(Horse Mackerel)",
+      "image": "/assets/products/fishseafood/kote(horse mackerel).png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "fishSeaFood"
+    },
+    {
+      "id": 500,
+      "name": "Panla(Hake/Whiting)",
+      "image": "/assets/products/fishseafood/panla(hake/witing).png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "fishSeaFood"
+    },
+    {
+      "id": 500,
+      "name": "Snappers(Red)",
+      "image": "/assets/products/fishseafood/snappers(red).png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "fishSeaFood"
+    },
+    {
+      "id": 500,
+      "name": "Snappers(White)",
+      "image": "/assets/products/fishseafood/snappers(white).png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "fishSeaFood"
+    },
+    {
+      "id": 500,
+      "name": "Groupers",
+      "image": "/assets/products/fishseafood/groupers.png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "fishSeaFood"
+    },
+        {
+      "id": 500,
+      "name": "Shawa(Herring)",
+      "image": "/assets/products/fishseafood/shawa(herring).png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "fishSeaFood"
+    },
+      {
+      "id": 500,
+      "name": "Croaker(Yellow)",
+      "image": "/assets/products/fishseafood/croaker(yellow).png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "fishSeaFood"
+    },
+    {
+      "id": 500,
+      "name": "Croaker(White)",
+      "image": "/assets/products/fishseafood/croaker-(white).png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "fishSeaFood"
+    },
+    {
+      "id": 500,
+      "name": "Sardine",
+      "image": "/assets/products/fishseafood/sardine.png",
       "price": 3500,
       "oldPrice": 4000,
       "stock": "In Stock",
@@ -1550,6 +1341,18 @@ export const products = {
       "id": 501,
       "name": "Catfish",
       "image": "/assets/products/fishseafood/catfish.png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "fishSeaFood"
+    },
+    {
+      "id": 501,
+      "name": "Silver Catfish (Chrysichthys)",
+      "image": "/assets/products/fishseafood/silver-catfish-(chrysichthys).png",
       "price": 3500,
       "oldPrice": 4000,
       "stock": "In Stock",
@@ -1641,18 +1444,6 @@ export const products = {
       "inSeason": true,
       "discount": 15,
       "category": "fishSeaFood"
-    },
-    {
-      "id": 509,
-      "name": "Clams & Shellfish",
-      "image": "/assets/products/fishseafood/clams-shellfish.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "fishSeaFood"
     }
   ],
   "meatPoultry": [
@@ -1728,10 +1519,10 @@ export const products = {
       "discount": 15,
       "category": "meatPoultry"
     },
-    {
-      "id": 606,
-      "name": "Duck",
-      "image": "/assets/products/meatpoultry/duck.png",
+       {
+      "id": 607,
+      "name": "grasscutter",
+      "image": "/assets/products/meatpoultry/grasscutter.png",
       "price": 3500,
       "oldPrice": 4000,
       "stock": "In Stock",
@@ -1742,8 +1533,20 @@ export const products = {
     },
     {
       "id": 607,
-      "name": "Bush meat (e.g., grasscutter, antelope",
-      "image": "/assets/products/meatpoultry/bush-meat-e-g-grasscutter-antelope.png",
+      "name": "Bush Rat",
+      "image": "/assets/products/meatpoultry/bush-rat.png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "meatPoultry"
+    },
+     {
+      "id": 607,
+      "name": "Bush Rabbit",
+      "image": "/assets/products/meatpoultry/bush-rabbit.png",
       "price": 3500,
       "oldPrice": 4000,
       "stock": "In Stock",
@@ -1768,8 +1571,32 @@ export const products = {
   "spicesCondiments": [
     {
       "id": 700,
-      "name": "Seasoning cubes (Maggi, Knorr)",
-      "image": "/assets/products/spicescondiments/seasoning-cubes-maggi-knorr.png",
+      "name": "Maggi",
+      "image": "/assets/products/spicescondiments/maggi.png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "spicesCondiments"
+    },
+     {
+      "id": 700,
+      "name": "Knorr",
+      "image": "/assets/products/spicescondiments/knorr.png",
+      "price": 3500,
+      "oldPrice": 4000,
+      "stock": "In Stock",
+      "unit": "kg",
+      "inSeason": true,
+      "discount": 15,
+      "category": "spicesCondiments"
+    },
+     {
+      "id": 700,
+      "name": "Terra seasoning cube",
+      "image": "/assets/products/spicescondiments/terra seasoning cube.png",
       "price": 3500,
       "oldPrice": 4000,
       "stock": "In Stock",
@@ -1830,30 +1657,6 @@ export const products = {
       "id": 705,
       "name": "Ogiri",
       "image": "/assets/products/spicescondiments/ogiri.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "spicesCondiments"
-    },
-    {
-      "id": 706,
-      "name": "Cameroon pepper",
-      "image": "/assets/products/spicescondiments/cameroon-pepper.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "spicesCondiments"
-    },
-    {
-      "id": 707,
-      "name": "Chili powder",
-      "image": "/assets/products/spicescondiments/chili-powder.png",
       "price": 3500,
       "oldPrice": 4000,
       "stock": "In Stock",
@@ -1936,20 +1739,8 @@ export const products = {
     },
     {
       "id": 714,
-      "name": "Alligator pepper",
-      "image": "/assets/products/spicescondiments/alligator-pepper.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "spicesCondiments"
-    },
-    {
-      "id": 715,
-      "name": "Ehuru (Calabash nutmeg)",
-      "image": "/assets/products/spicescondiments/ehuru-calabash-nutmeg.png",
+      "name": "Alligator pepper(ata ire)",
+      "image": "/assets/products/spicescondiments/alligator-pepper(ata ire).png",
       "price": 3500,
       "oldPrice": 4000,
       "stock": "In Stock",
@@ -2000,42 +1791,6 @@ export const products = {
       "id": 803,
       "name": "Vegetable oil",
       "image": "/assets/products/oilcookingessentials/vegetable-oil.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "liter",
-      "inSeason": true,
-      "discount": 15,
-      "category": "oilCookingEssentials"
-    },
-    {
-      "id": 804,
-      "name": "Shea butter (for cooking/skincare)",
-      "image": "/assets/products/oilcookingessentials/shea-butter-for-cooking-skincare.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "liter",
-      "inSeason": true,
-      "discount": 15,
-      "category": "oilCookingEssentials"
-    },
-    {
-      "id": 805,
-      "name": "Red oil (native)",
-      "image": "/assets/products/oilcookingessentials/red-oil-native.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "liter",
-      "inSeason": true,
-      "discount": 15,
-      "category": "oilCookingEssentials"
-    },
-    {
-      "id": 806,
-      "name": "Cooking gas cylinders (optional)",
-      "image": "/assets/products/oilcookingessentials/cooking-gas-cylinders-optional.png",
       "price": 3500,
       "oldPrice": 4000,
       "stock": "In Stock",
@@ -2095,18 +1850,6 @@ export const products = {
       "category": "DrinksBeverages"
     },
     {
-      "id": 904,
-      "name": "Baobab drink",
-      "image": "/assets/products/drinksbeverages/baobab-drink.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "liter",
-      "inSeason": true,
-      "discount": 15,
-      "category": "DrinksBeverages"
-    },
-    {
       "id": 905,
       "name": "Fresh fruit juice",
       "image": "/assets/products/drinksbeverages/fresh-fruit-juice.png",
@@ -2118,420 +1861,15 @@ export const products = {
       "discount": 15,
       "category": "DrinksBeverages"
     },
-    {
-      "id": 906,
-      "name": "Local herbal drinks",
-      "image": "/assets/products/drinksbeverages/local-herbal-drinks.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "liter",
-      "inSeason": true,
-      "discount": 15,
-      "category": "DrinksBeverages"
-    }
   ],
   "cookedFood": [
-    {
-      "id": 1000,
-      "name": "Garri (white/yellow)",
-      "image": "/assets/products/cookedfood/garri-white-yellow.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "cookedFood"
-    },
-    {
-      "id": 1001,
-      "name": "Fufu flour",
-      "image": "/assets/products/cookedfood/fufu-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "cookedFood"
-    },
-    {
-      "id": 1002,
-      "name": "Yam flour (Elubo)",
-      "image": "/assets/products/cookedfood/yam-flour-elubo.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "ocookedFood"
-    },
-    {
-      "id": 1003,
-      "name": "Cassava flour",
-      "image": "/assets/products/cookedfood/cassava-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "cookedFood"
-    },
-    {
-      "id": 1004,
-      "name": "Plantain flour",
-      "image": "/assets/products/cookedfood/plantain-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "cookedFood"
-    },
-    {
-      "id": 1005,
-      "name": "Corn flour",
-      "image": "/assets/products/cookedfood/corn-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "cookedFood"
-    },
-    {
-      "id": 1006,
-      "name": "Beans flour",
-      "image": "/assets/products/cookedfood/beans-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "cookedFood"
-    },
-    {
-      "id": 1007,
-      "name": "Beans flour",
-      "image": "/assets/products/cookedfood/beans-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "ocookedFood"
-    },
-    {
-      "id": 1008,
-      "name": "Baking ingredients (yeast, baking powder, vanilla)",
-      "image": "/assets/products/cookedfood/baking-ingredients-yeast-baking-powder-vanilla.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "cookedFood"
-    },
-    {
-      "id": 1009,
-      "name": "Honey",
-      "image": "/assets/products/cookedfood/honey.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "cookedFood"
-    },
-    {
-      "id": 1010,
-      "name": "Sugar (brown/white)",
-      "image": "/assets/products/cookedfood/sugar-brown-white.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "cookedFood"
-    }
+
   ],
   "SnackesPasteries": [
-    {
-      "id": 1100,
-      "name": "Garri (white/yellow)",
-      "image": "/assets/products/snackespasteries/garri-white-yellow.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "SnackesPasteries"
-    },
-    {
-      "id": 1101,
-      "name": "Fufu flour",
-      "image": "/assets/products/snackespasteries/fufu-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "SnackesPasteries"
-    },
-    {
-      "id": 1102,
-      "name": "Yam flour (Elubo)",
-      "image": "/assets/products/snackespasteries/yam-flour-elubo.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "SnackesPasteries"
-    },
-    {
-      "id": 1103,
-      "name": "Cassava flour",
-      "image": "/assets/products/snackespasteries/cassava-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "SnackesPasteries"
-    },
-    {
-      "id": 1104,
-      "name": "Plantain flour",
-      "image": "/assets/products/snackespasteries/plantain-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "SnackesPasteries"
-    },
-    {
-      "id": 1105,
-      "name": "Corn flour",
-      "image": "/assets/products/snackespasteries/corn-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "SnackesPasteries"
-    },
-    {
-      "id": 1106,
-      "name": "Beans flour",
-      "image": "/assets/products/snackespasteries/beans-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "SnackesPasteries"
-    },
-    {
-      "id": 1107,
-      "name": "Beans flour",
-      "image": "/assets/products/snackespasteries/beans-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "SnackesPasteries"
-    },
-    {
-      "id": 1108,
-      "name": "Baking ingredients (yeast, baking powder, vanilla)",
-      "image": "/assets/products/snackespasteries/baking-ingredients-yeast-baking-powder-vanilla.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "SnackesPasteries"
-    },
-    {
-      "id": 1109,
-      "name": "Honey",
-      "image": "/assets/products/snackespasteries/honey.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "liter",
-      "inSeason": true,
-      "discount": 15,
-      "category": "SnackesPasteries"
-    },
-    {
-      "id": 1110,
-      "name": "Sugar (brown/white)",
-      "image": "/assets/products/snackespasteries/sugar-brown-white.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "SnackesPasteries"
-    }
+
   ],
   "others": [
-    {
-      "id": 1200,
-      "name": "Garri (white/yellow)",
-      "image": "/assets/products/others/garri-white-yellow.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "others"
-    },
-    {
-      "id": 1201,
-      "name": "Fufu flour",
-      "image": "/assets/products/others/fufu-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "others"
-    },
-    {
-      "id": 1202,
-      "name": "Yam flour (Elubo)",
-      "image": "/assets/products/others/yam-flour-elubo.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "others"
-    },
-    {
-      "id": 1203,
-      "name": "Cassava flour",
-      "image": "/assets/products/others/cassava-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "others"
-    },
-    {
-      "id": 1204,
-      "name": "Plantain flour",
-      "image": "/assets/products/others/plantain-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "others"
-    },
-    {
-      "id": 1205,
-      "name": "Corn flour",
-      "image": "/assets/products/others/corn-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "others"
-    },
-    {
-      "id": 1206,
-      "name": "Beans flour",
-      "image": "/assets/products/others/beans-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "others"
-    },
-    {
-      "id": 1207,
-      "name": "Beans flour",
-      "image": "/assets/products/others/beans-flour.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "others"
-    },
-    {
-      "id": 1208,
-      "name": "Baking ingredients (yeast, baking powder, vanilla)",
-      "image": "/assets/products/others/baking-ingredients-yeast-baking-powder-vanilla.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "others"
-    },
-    {
-      "id": 1209,
-      "name": "Honey",
-      "image": "/assets/products/others/honey.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "liter",
-      "inSeason": true,
-      "discount": 15,
-      "category": "others"
-    },
-    {
-      "id": 1210,
-      "name": "Sugar (brown/white)",
-      "image": "/assets/products/others/sugar-brown-white.png",
-      "price": 3500,
-      "oldPrice": 4000,
-      "stock": "In Stock",
-      "unit": "kg",
-      "inSeason": true,
-      "discount": 15,
-      "category": "others"
-    }
+
   ]
 };
 

@@ -321,6 +321,23 @@ body[data-theme="dark"] .pageWrapper {
   color: var(--mk-accent);
 }
 
+.sidebarItemDisabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.sidebarItemDisabled:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--help-item-border);
+}
+
+.sidebarItemDisabled .sidebarIcon {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--help-subtle-text);
+}
+
 .qnaContent {
   display: flex;
   flex-direction: column;
@@ -351,6 +368,14 @@ body[data-theme="dark"] .pageWrapper {
   padding: 1.35rem 1.75rem;
   background: var(--help-surface);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.noResults {
+  padding: 2.5rem;
+  border-radius: 20px;
+  border: 1px dashed var(--help-divider);
+  background: var(--help-surface-soft);
+  color: var(--help-muted-text);
 }
 
 .qnaItem summary {
