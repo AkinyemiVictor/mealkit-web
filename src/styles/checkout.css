@@ -642,58 +642,22 @@
   }
 }
 
-body[data-theme="dark"] .checkout-card,
-body[data-theme="dark"] .checkout-summary,
-body[data-theme="dark"] .checkout-empty,
-body[data-theme="dark"] .checkout-state {
-  background: rgba(15, 28, 23, 0.96);
-  border-color: rgba(132, 241, 162, 0.18);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
-}
 
-body[data-theme="dark"] .checkout-card input,
-body[data-theme="dark"] .checkout-card textarea,
-body[data-theme="dark"] .checkout-card select {
-  background: rgba(12, 22, 18, 0.9);
-  color: var(--mk-text);
-  border-color: rgba(132, 241, 162, 0.22);
-}
 
-body[data-theme="dark"] .checkout-payment-tile {
-  background: rgba(12, 22, 18, 0.9);
-}
 
-body[data-theme="dark"] .checkout-confirmation__details div {
-  background: rgba(12, 22, 18, 0.6);
-}
 
-body[data-theme="dark"] .checkout-confirmation__notice {
-  background: rgba(132, 241, 162, 0.12);
-  border-color: rgba(132, 241, 162, 0.28);
-}
 
-body[data-theme="dark"] .checkout-payment-badge {
-  background: rgba(132, 241, 162, 0.16);
-  color: #a8e5bd;
-}
 
-body[data-theme="dark"] .checkout-payment-badge--image {
-  background: rgba(12, 22, 18, 0.85);
-  border-color: rgba(132, 241, 162, 0.25);
-}
 
-body[data-theme="dark"] .checkout-payment-badge--text {
-  background: rgba(243, 169, 108, 0.2);
-  color: #ffc596;
-}
 
-body[data-theme="dark"] .checkout-field__notice--error {
-  background: rgba(248, 113, 113, 0.12);
-  border-color: rgba(248, 113, 113, 0.28);
-  color: #fecaca;
-}
 
-body[data-theme="dark"] .checkout-field__notice--error::before {
-  background: rgba(248, 113, 113, 0.25);
-  color: #fee2e2;
-}
+
+
+
+
+
+
+
+
+
+

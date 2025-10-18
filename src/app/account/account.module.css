@@ -539,53 +539,20 @@
   }
 }
 
-body[data-theme="dark"] .sidebar,
-body[data-theme="dark"] .card,
-body[data-theme="dark"] .section {
-  background: rgba(15, 28, 23, 0.96);
-  border-color: rgba(132, 241, 162, 0.18);
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.5);
-}
 
-body[data-theme="dark"] .navItem button:hover,
-body[data-theme="dark"] .navItem button:focus-visible,
-body[data-theme="dark"] .navItemActive button {
-  box-shadow: 0 12px 28px rgba(132, 241, 162, 0.2);
-}
 
-body[data-theme="dark"] .sectionEmpty {
-  background: rgba(12, 22, 18, 0.9);
-  color: rgba(233, 249, 239, 0.75);
-}
 
-body[data-theme="dark"] .profileInput {
-  background: rgba(12, 22, 18, 0.9);
-  border-color: rgba(132, 241, 162, 0.25);
-}
 
-body[data-theme="dark"] .profileInput:focus-visible {
-  box-shadow: 0 0 0 3px rgba(132, 241, 162, 0.3);
-}
 
-body[data-theme="dark"] .profilePhoneSelect,
-body[data-theme="dark"] .profilePhoneInput,
-body[data-theme="dark"] .profileTextarea {
-  background: rgba(12, 22, 18, 0.9);
-  border-color: rgba(132, 241, 162, 0.25);
-}
 
-body[data-theme="dark"] .profilePhoneSelect:focus-visible,
-body[data-theme="dark"] .profilePhoneInput:focus-visible,
-body[data-theme="dark"] .profileTextarea:focus-visible {
-  box-shadow: 0 0 0 3px rgba(132, 241, 162, 0.3);
-}
 
-body[data-theme="dark"] .profileEditButton {
-  background: rgba(132, 241, 162, 0.18);
-  color: rgba(132, 241, 162, 0.95);
-}
 
-body[data-theme="dark"] .profileEditButton:hover,
-body[data-theme="dark"] .profileEditButton:focus-visible {
-  background: rgba(132, 241, 162, 0.28);
-}
+
+
+
+
+
+
+
+
+

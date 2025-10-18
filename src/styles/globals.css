@@ -15,13 +15,6 @@
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 html,
 body {
   max-width: 100vw;
@@ -36,21 +29,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-body[data-theme="dark"] {
-  --mk-body-bg: #0a110e;
-  --mk-surface: #0f1c17;
-  --mk-surface-muted: rgba(255, 255, 255, 0.08);
-  --mk-text: #e6f3eb;
-  --mk-text-subtle: #c3d0c7;
-  --mk-border: rgba(255, 255, 255, 0.08);
-  --mk-card-shadow: rgba(2, 9, 5, 0.55);
-  color: var(--mk-text);
-  background: var(--mk-body-bg);
-}
 
-body[data-theme="dark"] a {
-  color: #84f1a2;
-}
+
+
 
 a {
   color: inherit;

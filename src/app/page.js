@@ -59,7 +59,7 @@ function ProductCard({ product }) {
   const href = getProductHref(product);
 
   return (
-    <Link href={href} className="product-card" aria-label={`View ${product.name}`} prefetch={false}>
+    <Link href={href} className="product-card" aria-label={`View ${product.name}`} prefetch={false} role="listitem">
       <span className="product-card-badges">
         {product.discount ? (
           <div className="product-card-discount">
@@ -102,6 +102,90 @@ function ProductSection({ title, products, gridId, variant = "plain", eyebrow, c
     sectionClasses.push(`home-section--${variant}`);
   }
 
+  const viewportRef = useRef(null);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const evaluateScroll = useCallback(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const { scrollLeft, clientWidth, scrollWidth } = viewport;
+    const threshold = 8;
+    setCanScrollPrev(scrollLeft > threshold);
+    setCanScrollNext(scrollLeft + clientWidth < scrollWidth - threshold);
+  }, []);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const handleScroll = () => {
+      window.requestAnimationFrame(evaluateScroll);
+    };
+
+    evaluateScroll();
+    viewport.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
+
+    return () => {
+      viewport.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, [evaluateScroll, products.length]);
+
+  useEffect(() => {
+    evaluateScroll();
+  }, [evaluateScroll, products.length]);
+
+  const scrollByAmount = useCallback((direction) => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const card = viewport.querySelector(".product-card");
+    if (!card) return;
+
+    const grid = viewport.querySelector(".product-card-grid");
+    const cardWidth = card.getBoundingClientRect().width;
+
+    let gap = 24;
+    if (grid) {
+      const styles = window.getComputedStyle(grid);
+      const gapValue = styles.columnGap || styles.gap || styles.rowGap || "0";
+      const parsedGap = parseFloat(gapValue);
+      if (!Number.isNaN(parsedGap)) {
+        gap = parsedGap;
+      }
+    }
+
+    const trackSize = cardWidth + gap;
+    if (!(trackSize > 0)) {
+      viewport.scrollBy({ left: direction * viewport.clientWidth, behavior: "smooth" });
+      return;
+    }
+
+    const visibleWidth = viewport.clientWidth;
+    const cardsPerViewport = Math.max(1, Math.round(visibleWidth / trackSize));
+    const baseStep = cardsPerViewport * trackSize;
+    const maxScroll = Math.max(0, viewport.scrollWidth - visibleWidth);
+
+    let target = viewport.scrollLeft + direction * baseStep;
+    if (direction > 0) {
+      target = Math.min(target, maxScroll);
+    } else {
+      target = Math.max(target, 0);
+    }
+
+    const snapped = Math.round(target / trackSize) * trackSize;
+    const finalTarget = Number.isFinite(snapped)
+      ? (direction > 0 ? Math.min(snapped, maxScroll) : Math.max(snapped, 0))
+      : target;
+
+    viewport.scrollTo({ left: finalTarget, behavior: "smooth" });
+  }, []);
+
+  const handlePrev = useCallback(() => scrollByAmount(-1), [scrollByAmount]);
+  const handleNext = useCallback(() => scrollByAmount(1), [scrollByAmount]);
+
   return (
     <section className={sectionClasses.join(" ")}>
       <div className="home-section__inner">
@@ -115,10 +199,40 @@ function ProductSection({ title, products, gridId, variant = "plain", eyebrow, c
           </button>
         </header>
 
-        <div className="product-card-grid" id={gridId}>
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        <div className="home-section__rail">
+          <button
+            type="button"
+            className="home-section__nav home-section__nav--prev"
+            onClick={handlePrev}
+            disabled={!canScrollPrev}
+            aria-label={`Scroll ${title} backwards`}
+            aria-controls={gridId}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M15 19l-7-7 7-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          <div className="home-section__viewport" ref={viewportRef}>
+            <div className="product-card-grid" id={gridId} role="list">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="home-section__nav home-section__nav--next"
+            onClick={handleNext}
+            disabled={!canScrollNext}
+            aria-label={`Scroll ${title} forwards`}
+            aria-controls={gridId}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
       </div>
     </section>
@@ -236,47 +350,28 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="home-hero__controls">
-            <div className="home-hero__arrows">
-              <button
-                className="home-hero__arrow home-hero__arrow--prev"
-                type="button"
-                onClick={handlePrev}
-                aria-label="Previous slide"
-              >
-                <svg viewBox="0 0 24 24" className="home-hero__arrow-icon" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15 18l-6-6 6-6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              <button
-                className="home-hero__arrow home-hero__arrow--next"
-                type="button"
-                onClick={handleNext}
-                aria-label="Next slide"
-              >
-                <svg viewBox="0 0 24 24" className="home-hero__arrow-icon" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 6l6 6-6 6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-
-            <ol className="home-hero__dots" role="list">
-              {heroSlides.map((slide, index) => {
-                const isActive = currentSlide === index;
-                return (
-                  <li key={slide.tag}>
-                    <button
-                      type="button"
-                      className={`home-hero__dot${isActive ? " is-active" : ""}`}
-                      onClick={() => goToSlide(index)}
-                      aria-label={`Go to slide ${index + 1}`}
-                      aria-pressed={isActive}
-                    />
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
+          <nav className="home-hero__controls" aria-label="Hero navigation">
+            <button
+              className="home-hero__arrow home-hero__arrow--prev"
+              type="button"
+              onClick={handlePrev}
+              aria-label="Previous slide"
+            >
+              <svg viewBox="0 0 24 24" className="home-hero__arrow-icon" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 18l-6-6 6-6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <button
+              className="home-hero__arrow home-hero__arrow--next"
+              type="button"
+              onClick={handleNext}
+              aria-label="Next slide"
+            >
+              <svg viewBox="0 0 24 24" className="home-hero__arrow-icon" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 6l6 6-6 6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </nav>
         </div>
       </section>
 

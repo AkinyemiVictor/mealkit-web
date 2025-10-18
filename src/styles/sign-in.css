@@ -24,26 +24,7 @@
   justify-content: center;
   padding: clamp(2.5rem, 6vw, 4rem) 1.5rem;
 }
-body[data-theme="dark"] .auth-page {
-  --auth-page-bg-start: #041009;
-  --auth-page-bg-end: #0a1a12;
-  --auth-shell-bg: rgba(15, 27, 22, 0.95);
-  --auth-card-shadow: rgba(0, 0, 0, 0.55);
-  --auth-panel-bg: rgba(13, 24, 20, 0.92);
-  --auth-muted-text: #c4d7cd;
-  --auth-subtle-text: #9fb7ab;
-  --auth-divider-border: rgba(132, 200, 158, 0.32);
-  --auth-divider-bg: rgba(22, 35, 29, 0.9);
-  --auth-input-border: rgba(132, 200, 158, 0.32);
-  --auth-input-border-hover: rgba(132, 200, 158, 0.52);
-  --auth-google-bg: rgba(20, 33, 27, 0.95);
-  --auth-focus-border: rgba(132, 200, 158, 0.5);
-  --auth-focus-ring: rgba(132, 200, 158, 0.35);
-  --auth-outline: rgba(132, 200, 158, 0.45);
-  --auth-tab-shadow: rgba(0, 172, 17, 0.24);
-  --auth-primary-shadow: rgba(0, 172, 17, 0.32);
-  --auth-google-text: #d8f1e1;
-}
+
 
 
 .auth-shell {

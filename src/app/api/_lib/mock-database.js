@@ -67,6 +67,8 @@ const mockOrders = [
 ];
 
 const cartStore = new Map();
+const mockPayments = [];
+const mockSupportMessages = [];
 
 const generateId = (prefix) => {
   const random = Math.random().toString(36).slice(2, 8);
@@ -133,6 +135,8 @@ export const listOrders = ({ userId } = {}) => {
   if (!userId) return [...mockOrders];
   return mockOrders.filter((order) => order.userId === userId);
 };
+
+export const getOrderById = (orderId) => mockOrders.find((order) => order.orderId === orderId) || null;
 
 export const createOrder = ({ userId, items = [], total = 0, status = "processing", paymentStatus = "pending", deliveryAddress = "" }) => {
   const now = new Date().toISOString();
@@ -209,3 +213,38 @@ export const clearCartForUser = (userId = "guest") => {
   cartStore.delete(key);
   return { success: true };
 };
+
+export const createPaymentIntent = ({ amount, currency = "NGN", provider = "paystack", email, metadata = {} }) => {
+  const reference = generateId(`payment-${provider}`);
+  const paymentRecord = {
+    reference,
+    amount,
+    currency,
+    provider,
+    email: email || "",
+    status: "pending",
+    metadata,
+    createdAt: new Date().toISOString(),
+    checkoutUrl: `https://checkout.mock/${provider}/${reference}`,
+  };
+  mockPayments.unshift(paymentRecord);
+  return paymentRecord;
+};
+
+export const submitSupportMessage = ({ name = "", email = "", subject = "", message = "", orderId = null }) => {
+  const ticketId = generateId("support");
+  const supportRecord = {
+    ticketId,
+    name,
+    email,
+    subject,
+    message,
+    orderId,
+    status: "open",
+    createdAt: new Date().toISOString(),
+  };
+  mockSupportMessages.unshift(supportRecord);
+  return supportRecord;
+};
+
+export const listSupportMessages = () => [...mockSupportMessages];

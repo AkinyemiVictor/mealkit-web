@@ -260,65 +260,6 @@ new_css = """
   outline: none;
 }
 
-body[data-theme="dark"] .site-header {
-  background: rgba(15, 28, 23, 0.92);
-  border-color: rgba(132, 241, 162, 0.16);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55);
-}
-
-body[data-theme="dark"] .site-header__search {
-  background: rgba(132, 241, 162, 0.08);
-  border-color: rgba(132, 241, 162, 0.18);
-}
-
-body[data-theme="dark"] .site-header__search:focus-within {
-  background: rgba(132, 241, 162, 0.16);
-  box-shadow: 0 20px 40px rgba(132, 241, 162, 0.25);
-}
-
-body[data-theme="dark"] .site-header__search-input::placeholder {
-  color: rgba(198, 215, 205, 0.75);
-}
-
-body[data-theme="dark"] .site-header__action {
-  background: rgba(15, 28, 23, 0.88);
-  border-color: rgba(132, 241, 162, 0.08);
-  box-shadow: 0 22px 42px rgba(0, 0, 0, 0.45);
-  color: #e6f3eb;
-}
-
-body[data-theme="dark"] .site-header__action:hover,
-body[data-theme="dark"] .site-header__action:focus-visible,
-body[data-theme="dark"] .site-header__action.is-open {
-  border-color: rgba(132, 241, 162, 0.45);
-  color: #84f1a2;
-  box-shadow: 0 26px 50px rgba(132, 241, 162, 0.28);
-}
-
-body[data-theme="dark"] .site-header__icon {
-  background: rgba(132, 241, 162, 0.18);
-  color: #84f1a2;
-}
-
-body[data-theme="dark"] .site-header__action:hover .site-header__icon,
-body[data-theme="dark"] .site-header__action:focus-visible .site-header__icon,
-body[data-theme="dark"] .site-header__action.is-open .site-header__icon {
-  background: #84f1a2;
-  color: #0a120c;
-}
-
-body[data-theme="dark"] .site-header__badge {
-  background: #84f1a2;
-  color: #0a120c;
-  box-shadow: 0 20px 40px rgba(132, 241, 162, 0.45);
-}
-
-body[data-theme="dark"] .site-header__account-menu {
-  background: rgba(15, 28, 23, 0.95);
-  border-color: rgba(132, 241, 162, 0.18);
-  box-shadow: 0 32px 54px rgba(0, 0, 0, 0.6);
-}
-
 @media (max-width: 1024px) {
   .site-header {
     padding: 1.3rem 1.5rem;
