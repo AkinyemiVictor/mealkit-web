@@ -60,9 +60,8 @@ export default function HelpCenterFaqs({ sidebarTopics, sections, searchQuery = 
     sectionsToDisplay[0] ??
     null;
 
-  const [activeQuestion, setActiveQuestion] = useState(
-    activeSection?.items?.[0]?.question ?? null
-  );
+  // Do not auto-open any question on first load
+  const [activeQuestion, setActiveQuestion] = useState(null);
 
   useEffect(() => {
     if (!activeSection) {
@@ -70,13 +69,12 @@ export default function HelpCenterFaqs({ sidebarTopics, sections, searchQuery = 
       return;
     }
 
-    setActiveQuestion((current) => {
-      if (current && activeSection.items.some((item) => item.question === current)) {
-        return current;
-      }
-
-      return activeSection.items[0]?.question ?? null;
-    });
+    // Preserve current selection if it still exists; otherwise keep all closed
+    setActiveQuestion((current) => (
+      current && activeSection.items.some((item) => item.question === current)
+        ? current
+        : null
+    ));
   }, [activeSection]);
 
   const resultCount = sectionsToDisplay.reduce((total, section) => total + section.items.length, 0);

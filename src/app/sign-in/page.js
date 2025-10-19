@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import "@/styles/sign-in.css";
 import { persistStoredUser, readStoredUser } from "@/lib/auth";
@@ -60,6 +61,7 @@ function GoogleIcon() {
 }
 
 export default function SignInPage() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window === "undefined") {
       return "login";
@@ -129,6 +131,15 @@ export default function SignInPage() {
       window.removeEventListener("popstate", syncFromLocation);
     };
   }, [syncFromLocation]);
+
+  // Also react to client-side Next.js navigation where hashchange/popstate may not fire
+  useEffect(() => {
+    if (!searchParams) return;
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "login" || tabParam === "signup") {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (typeof window === "undefined") {

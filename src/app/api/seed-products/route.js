@@ -9,6 +9,17 @@ const flattenProducts = (catalogue) =>
     .map(({ variations, ...product }) => product);
 
 export async function POST() {
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = process.env;
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return NextResponse.json(
+      {
+        error:
+          "Supabase configuration missing. Set SUPABASE_URL and SUPABASE_ANON_KEY in .env.local",
+      },
+      { status: 500 },
+    );
+  }
+
   const records = flattenProducts(productsCatalogue);
 
   if (records.length === 0) {
@@ -16,7 +27,10 @@ export async function POST() {
   }
 
   try {
-    const { data, error } = await supabase.from("products").insert(records);
+    const { data, error } = await supabase
+      .from("products")
+      .upsert(records, { onConflict: "id" })
+      .select();
 
     if (error) {
       throw error;
@@ -25,7 +39,7 @@ export async function POST() {
     return NextResponse.json(
       {
         message: "Products inserted successfully!",
-        count: data.length,
+        count: Array.isArray(data) ? data.length : records.length,
         data,
       },
       { status: 200 },
@@ -45,4 +59,3 @@ export function GET() {
     { status: 405, headers: { Allow: "POST" } },
   );
 }
-

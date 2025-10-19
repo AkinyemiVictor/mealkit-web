@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { readCartItems, writeCartItems } from "@/lib/cart-storage";
+import { readStoredUser } from "@/lib/auth";
 const RECENTLY_VIEWED_STORAGE_KEY = "mealkit_recently_viewed";
 const MIN_QUANTITY = 0.01;
 
@@ -148,6 +149,17 @@ export default function AddToCartForm({ product, fallbackImage }) {
     }
 
     persistCartToStorage(items);
+
+    // Also notify backend cart API (best effort)
+    try {
+      const user = typeof window !== "undefined" ? readStoredUser() : null;
+      const userId = user?.email || "guest";
+      fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, product_id: product.id, quantity: 1 }),
+      }).catch(() => {});
+    } catch (_) {}
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("cart-updated"));

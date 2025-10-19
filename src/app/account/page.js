@@ -103,6 +103,7 @@ export default function AccountPage() {
   const [addressFeedback, setAddressFeedback] = useState("");
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const addressFeedbackTimeoutRef = useRef(null);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
 
   const activeTab = useMemo(() => {
     const slug = searchParams?.get("tab");
@@ -425,8 +426,18 @@ export default function AccountPage() {
                         <span>Placed {formatOrderDate(order.placedAt)}</span>
                         <span>Total {formatProductPrice(order.summary?.total || 0)}</span>
                         <span>Status: {formatStatusLabel(order.status)}</span>
+                        {expandedOrderId === order.orderId ? (
+                          <OrderTracker order={order} />
+                        ) : null}
                       </div>
                       <div className={styles.orderActions}>
+                        <button
+                          type="button"
+                          className={styles.orderActionButton}
+                          onClick={() => setExpandedOrderId(expandedOrderId === order.orderId ? null : order.orderId)}
+                        >
+                          {expandedOrderId === order.orderId ? "Hide tracking" : "Track order"}
+                        </button>
                         <button
                           type="button"
                           className={styles.orderActionButton}
@@ -457,8 +468,18 @@ export default function AccountPage() {
                         <strong>Order {order.orderId}</strong>
                         <span>Delivered {formatOrderDate(order.placedAt)}</span>
                         <span>Total {formatProductPrice(order.summary?.total || 0)}</span>
+                        {expandedOrderId === order.orderId ? (
+                          <OrderTracker order={{ ...order, status: "delivered" }} />
+                        ) : null}
                       </div>
                       <div className={styles.orderActions}>
+                        <button
+                          type="button"
+                          className={styles.orderActionButton}
+                          onClick={() => setExpandedOrderId(expandedOrderId === order.orderId ? null : order.orderId)}
+                        >
+                          {expandedOrderId === order.orderId ? "Hide tracking" : "View tracking"}
+                        </button>
                         <Link href="/products" className={styles.cardAction}>
                           Reorder items
                         </Link>
@@ -779,5 +800,55 @@ export default function AccountPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+// Lightweight order tracking timeline component
+function OrderTracker({ order }) {
+  const steps = [
+    { key: "processing", label: "Order received" },
+    { key: "packed", label: "Packed" },
+    { key: "awaiting delivery", label: "Out for delivery" },
+    { key: "delivered", label: "Delivered" },
+  ];
+
+  const statusKey = String(order?.status || "processing").toLowerCase();
+  const currentIndex = (() => {
+    if (statusKey === "delivered") return 3;
+    if (statusKey.includes("awaiting") && statusKey.includes("delivery")) return 2;
+    // Treat any other non-delivered as step 1 or 0
+    return 1; // packed
+  })();
+
+  const etaText = (() => {
+    if (currentIndex >= 3) return "Delivered";
+    if (currentIndex === 2) return "ETA: within 1–2 hours";
+    return "Preparing your items";
+  })();
+
+  return (
+    <div className={styles.orderTracker} role="status" aria-live="polite">
+      <div className={styles.orderTrackerHeader}>
+        <strong>Tracking</strong>
+        <span className={styles.orderTrackerEta}>{etaText}</span>
+      </div>
+      <div className={styles.orderTrackerSteps}>
+        {steps.map((step, index) => {
+          const className = [
+            styles.orderTrackerStep,
+            index === currentIndex ? styles.isActive : "",
+            index < currentIndex ? styles.isDone : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+          return (
+            <div key={step.key} className={className}>
+              {step.label}
+            </div>
+          );
+        })}
+      </div>
+      <p className={styles.orderTrackerNote}>Order {order?.orderId}</p>
+    </div>
   );
 }

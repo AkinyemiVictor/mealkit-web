@@ -19,6 +19,8 @@ import {
 } from "@/lib/catalogue";
 
 import { readCartItems, writeCartItems, clearCartItems } from "@/lib/cart-storage";
+import { readStoredUser } from "@/lib/auth";
+import { readStoredUser, AUTH_EVENT } from "@/lib/auth";
 import { getProductHref } from "@/lib/products";
 
 const CategoryCarousel = dynamic(() => import("@/components/category-carousel"), {
@@ -197,6 +199,65 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
     sectionClasses.push(`home-section--${variant}`);
   }
 
+  const viewportRef = useRef(null);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const evalScroll = useCallback(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const { scrollLeft, clientWidth, scrollWidth } = el;
+    const threshold = 8;
+    setCanScrollPrev(scrollLeft > threshold);
+    setCanScrollNext(scrollLeft + clientWidth < scrollWidth - threshold);
+  }, []);
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const onScroll = () => window.requestAnimationFrame(evalScroll);
+    evalScroll();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [evalScroll]);
+
+  const scrollByAmount = useCallback((direction) => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const card = viewport.querySelector(".product-card, .product-highlight-card");
+    let trackSize = 260; // fallback
+    let gap = 24;
+    if (card) {
+      const rect = card.getBoundingClientRect();
+      trackSize = rect.width || trackSize;
+    }
+    const grid = viewport.querySelector(".product-card-grid");
+    if (grid) {
+      const styles = window.getComputedStyle(grid);
+      const gapValue = styles.columnGap || styles.gap || styles.rowGap || "0";
+      const parsed = parseFloat(gapValue);
+      if (!Number.isNaN(parsed)) gap = parsed;
+    }
+
+    const step = trackSize + gap;
+    const visible = viewport.clientWidth;
+    const cardsPerView = Math.max(1, Math.round(visible / step));
+    const delta = cardsPerView * step * direction;
+    const maxScroll = Math.max(0, viewport.scrollWidth - visible);
+    let target = viewport.scrollLeft + delta;
+    target = Math.max(0, Math.min(target, maxScroll));
+    const snapped = Math.round(target / step) * step;
+    viewport.scrollTo({ left: snapped, behavior: "smooth" });
+  }, []);
+
+  const handlePrev = useCallback(() => scrollByAmount(-1), [scrollByAmount]);
+  const handleNext = useCallback(() => scrollByAmount(1), [scrollByAmount]);
+
   return (
     <section className={sectionClasses.join(" ")} aria-labelledby={headingId}>
       <div className="home-section__inner">
@@ -211,7 +272,36 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
             {ctaLabel}
           </button>
         </header>
-        {children}
+
+        <div className="home-section__rail">
+          <button
+            type="button"
+            className="home-section__nav home-section__nav--prev"
+            onClick={handlePrev}
+            disabled={!canScrollPrev}
+            aria-label={`Scroll ${title} backwards`}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M15 19l-7-7 7-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          <div className="home-section__viewport" ref={viewportRef}>
+            {children}
+          </div>
+
+          <button
+            type="button"
+            className="home-section__nav home-section__nav--next"
+            onClick={handleNext}
+            disabled={!canScrollNext}
+            aria-label={`Scroll ${title} forwards`}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
       </div>
     </section>
   );
@@ -224,6 +314,7 @@ export default function CartPage() {
   const productIndex = catalogueLookup.index ?? new Map();
 
   const [cartItems, setCartItems] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [hydrated, setHydrated] = useState(false);
   const [promoInput, setPromoInput] = useState("");
   const [promoMessage, setPromoMessage] = useState({ text: "", tone: "neutral" });
@@ -302,6 +393,43 @@ export default function CartPage() {
     } catch (error) {
       console.warn("Unable to persist cart", error);
     }
+  }, []);
+
+  // Try to hydrate cart from backend for logged-in users
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const user = readStoredUser();
+    if (!user?.email) return;
+    const controller = new AbortController();
+    fetch(`/api/cart?user_id=${encodeURIComponent(user.email)}`, { signal: controller.signal })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        const items = data?.items || data?.cart?.items;
+        if (Array.isArray(items) && items.length) {
+          setCartItems(hydrateCartItems(items));
+          setHydrated(true);
+        }
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
+
+  // Track auth state so we can gate checkout when not signed in
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // Initial read
+    setCurrentUser(readStoredUser());
+
+    const onAuthChanged = (evt) => {
+      try {
+        const user = evt?.detail?.user ?? readStoredUser();
+        setCurrentUser(user || null);
+      } catch (_) {
+        setCurrentUser(readStoredUser());
+      }
+    };
+    window.addEventListener(AUTH_EVENT, onAuthChanged);
+    return () => window.removeEventListener(AUTH_EVENT, onAuthChanged);
   }, []);
 
   useEffect(() => {
@@ -469,6 +597,14 @@ export default function CartPage() {
       return;
     }
 
+    const user = readStoredUser();
+    if (!user) {
+      // No prompt — go straight to sign-in
+      persistCart(cartItems);
+      router.push("/sign-in?tab=login");
+      return;
+    }
+
     persistCart(cartItems);
     router.push("/checkout");
   }, [cartItems, hasCheckoutBlocker, persistCart, router]);
@@ -490,15 +626,24 @@ export default function CartPage() {
   const cartIsEmpty = cartItems.length === 0;
 
   return (
+    <>
     <div className={styles.page}>
-            <CategoryCarousel
-        cards={CATEGORY_CARDS}
-        heading="Browse categories"
-        eyebrow="Shop by aisle"
-        className={styles.categorySection}
-      />
 
       <div className={styles.pageInner}>
+        {/* Benefits section moved to top of page */}
+        <section className={styles.benefitsSection} aria-label="Why shop with MealKit">
+          <div className={styles.benefitsGrid}>
+            {BENEFITS.map((benefit) => (
+              <article key={benefit.title} className={styles.benefitCard}>
+                <i className={`fa-solid ${benefit.icon}`} aria-hidden="true"></i>
+                <h3>{benefit.title}</h3>
+                <p>{benefit.body}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* Breadcrumbs directly above the cart section */}
         <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
           <Link href="/">Home</Link>
           <span>/</span>
@@ -743,40 +888,40 @@ export default function CartPage() {
         </CartProductSection>
       ) : null}
 
-      <section className={styles.benefitsSection} aria-label="Why shop with MealKit">
-        <div className={styles.benefitsGrid}>
-          {BENEFITS.map((benefit) => (
-            <article key={benefit.title} className={styles.benefitCard}>
-              <i className={`fa-solid ${benefit.icon}`} aria-hidden="true"></i>
-              <h3>{benefit.title}</h3>
-              <p>{benefit.body}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+      {/* Benefits section moved to top; block removed from here */}
 
-      <section className="downloadAppSec">
-        <div className="downloadAppFlex">
-          <div className="downloadAppTB">
-            <div className="phoneWrapper">
-              <img src="/assets/img/apple.png" alt="Download on App Store" className="phone phone-apple" />
-              <img src="/assets/img/android.png" alt="Download on Play Store" className="phone phone-android" />
-            </div>
-            <div className="appTextndButtons">
-              <h2>Download App</h2>
-              <p className="appPar">
-                Get our mobile app to shop fresh produce, meats, grains, and pantry staples anytime. Track orders, unlock
-                exclusive deals, and receive real-time updates right from your phone.
-              </p>
-              <div className="buttonHolder">
-                <img src="/assets/img/apple store.png" alt="Download on the App Store" />
-                <img src="/assets/img/play store.png" alt="Get it on Google Play" />
-              </div>
+      {/* Category aisle just above the Download App section */}
+      <CategoryCarousel
+        cards={CATEGORY_CARDS}
+        heading="Browse categories"
+        eyebrow="Shop by aisle"
+        className={styles.categorySection}
+      />
+    </div>
+
+    {/* Full-bleed Download App section (outside the page container to avoid side/bottom gutters) */}
+    <section className="downloadAppSec">
+      <div className="downloadAppFlex">
+        <div className="downloadAppTB">
+          <div className="phoneWrapper">
+            <img src="/assets/img/apple.png" alt="Download on App Store" className="phone phone-apple" />
+            <img src="/assets/img/android.png" alt="Download on Play Store" className="phone phone-android" />
+          </div>
+          <div className="appTextndButtons">
+            <h2>Download App</h2>
+            <p className="appPar">
+              Get our mobile app to shop fresh produce, meats, grains, and pantry staples anytime. Track orders, unlock
+              exclusive deals, and receive real-time updates right from your phone.
+            </p>
+            <div className="buttonHolder">
+              <img src="/assets/img/apple store.png" alt="Download on the App Store" />
+              <img src="/assets/img/play store.png" alt="Get it on Google Play" />
             </div>
           </div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
+  </>
   );
 }
 

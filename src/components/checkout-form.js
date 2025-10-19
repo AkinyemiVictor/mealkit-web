@@ -426,6 +426,14 @@ export default function CheckoutForm() {
       clearStoredCart();
       addUserOrder(order, status, nextUserRecord);
       dispatchCheckoutCompletedEvent({ items: cartItems, summary, order });
+      // Fire-and-forget email receipt; do not block UI
+      try {
+        fetch("/api/receipt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order, to: order.email }),
+        }).catch(() => {});
+      } catch (_) {}
       setResult(order);
       setStatus("success");
       setFormState(createInitialFormState(nextUserRecord));

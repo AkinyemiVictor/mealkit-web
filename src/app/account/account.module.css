@@ -287,6 +287,61 @@
   outline: none;
 }
 
+/* Order tracker */
+.orderTracker {
+  margin-top: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: var(--mk-surface-muted);
+  border: 1px dashed var(--mk-border);
+}
+
+.orderTrackerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.orderTrackerEta {
+  color: var(--mk-text-subtle);
+  font-size: 0.9rem;
+}
+
+.orderTrackerSteps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+}
+
+.orderTrackerStep {
+  text-align: center;
+  padding: 0.55rem 0.5rem;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid var(--mk-border);
+  color: var(--mk-text-subtle);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.orderTrackerStep.isActive,
+.orderTrackerStep.isDone {
+  border-color: rgba(0, 172, 17, 0.35);
+  color: var(--mk-accent);
+  background: rgba(0, 172, 17, 0.08);
+}
+
+/* marker classes exported for CSS Modules */
+.isActive {}
+.isDone {}
+
+.orderTrackerNote {
+  margin-top: 0.6rem;
+  color: var(--mk-text-subtle);
+  font-size: 0.85rem;
+}
+
 .twoColumn {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -538,8 +593,6 @@
     grid-template-columns: 1fr;
   }
 }
-
-
 
 
 
