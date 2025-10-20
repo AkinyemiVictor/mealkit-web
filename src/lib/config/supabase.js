@@ -8,10 +8,25 @@ const ensureEnv = (key) => {
   return value;
 };
 
+// For client-side (browser) bundles, Next.js only inlines env vars
+// when they are referenced statically, e.g. process.env.NEXT_PUBLIC_*
+// Do NOT access them via dynamic keys or helper functions.
+const publicUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const publicAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 export const supabasePublicConfig = Object.freeze({
-  url: ensureEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  anonKey: ensureEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+  url: publicUrl,
+  anonKey: publicAnonKey,
 });
+
+// Provide a clear runtime error in the browser if envs are missing
+if (typeof window !== "undefined") {
+  if (!publicUrl || !publicAnonKey) {
+    throw new Error(
+      "Required environment variables NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are missing. Add them to .env.local and restart the dev server."
+    );
+  }
+}
 
 let cachedServerConfig = null;
 
@@ -34,4 +49,3 @@ export const getSupabaseServerConfig = () => {
 
   return cachedServerConfig;
 };
-

@@ -10,7 +10,9 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.75.1",
+    "@supabase/supabase-js": "^2.76.0",
+    "@supabase/ssr": "^0.5.7",
+    "dotenv": "^17.2.3",
     "next": "15.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0"

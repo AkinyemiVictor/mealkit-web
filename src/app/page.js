@@ -13,6 +13,7 @@ import {
   pickNewestProducts,
   resolveStockClass,
 } from "@/lib/catalogue";
+import { recordProductClick, recordProductView, pickTopEngagedProducts } from "@/lib/engagement";
 import { getProductHref } from "@/lib/products";
 
 const heroSlides = [
@@ -59,7 +60,14 @@ function ProductCard({ product }) {
   const href = getProductHref(product);
 
   return (
-    <Link href={href} className="product-card" aria-label={`View ${product.name}`} prefetch={false} role="listitem">
+    <Link
+      href={href}
+      className="product-card"
+      aria-label={`View ${product.name}`}
+      prefetch={false}
+      role="listitem"
+      onClick={() => { recordProductClick(product.id); recordProductView(product.id); }}
+    >
       <span className="product-card-badges">
         {product.discount ? (
           <div className="product-card-discount">
@@ -96,7 +104,7 @@ function ProductCard({ product }) {
   );
 }
 
-function ProductSection({ title, products, gridId, variant = "plain", eyebrow, ctaLabel = "See all" }) {
+function ProductSection({ title, products, gridId, variant = "plain", eyebrow, ctaLabel = "See all", ctaHref }) {
   const sectionClasses = ["home-section"];
   if (variant && variant !== "plain") {
     sectionClasses.push(`home-section--${variant}`);
@@ -194,9 +202,13 @@ function ProductSection({ title, products, gridId, variant = "plain", eyebrow, c
             {eyebrow ? <span className="home-section__eyebrow">{eyebrow}</span> : null}
             <h2 className="home-section__title">{title}</h2>
           </div>
-          <button type="button" className="home-section__cta">
-            {ctaLabel}
-          </button>
+          {ctaHref ? (
+            <Link href={ctaHref} className="home-section__cta">
+              {ctaLabel}
+            </Link>
+          ) : (
+            <button type="button" className="home-section__cta">{ctaLabel}</button>
+          )}
         </header>
 
         <div className="home-section__rail">
@@ -288,18 +300,20 @@ export default function HomePage() {
     return ordered;
   }, []);
 
-  const popularProducts = useMemo(
-    () => pickMostPopularProducts(catalogueList),
-    [catalogueList]
-  );
-  const newestProducts = useMemo(
-    () => pickNewestProducts(catalogueList),
-    [catalogueList]
-  );
-  const inSeasonProducts = useMemo(
-    () => pickInSeasonProducts(catalogueList),
-    [catalogueList]
-  );
+  const popularProducts = useMemo(() => {
+    const engaged = pickTopEngagedProducts(catalogueList);
+    return engaged.length ? engaged : pickMostPopularProducts(catalogueList);
+  }, [catalogueList]);
+  const freshInStockProducts = useMemo(() => {
+    const notOut = catalogueList.filter((p) => !String(p.stock || "").toLowerCase().includes("out"));
+    const engaged = pickTopEngagedProducts(notOut);
+    return engaged.length ? engaged : pickNewestProducts(catalogueList);
+  }, [catalogueList]);
+  const inSeasonProducts = useMemo(() => {
+    const seasonal = catalogueList.filter((p) => p.inSeason);
+    const engaged = pickTopEngagedProducts(seasonal);
+    return engaged.length ? engaged : pickInSeasonProducts(catalogueList);
+  }, [catalogueList]);
 
   const heroTransform = {
     transform: `translateX(-${currentSlide * 100}%)`,
@@ -326,23 +340,7 @@ export default function HomePage() {
                     aria-hidden={!isActive}
                   >
                     <div className="home-hero__content">
-                      <h1
-                        id={isActive ? "home-hero-heading" : undefined}
-                        className="home-hero__title"
-                      >
-                        <span>{slide.heading[0]}</span>
-                        <span>{slide.heading[1]}</span>
-                      </h1>
-                      {slide.description ? (
-                        <p className="home-hero__description">{slide.description}</p>
-                      ) : null}
-                      <p className="home-hero__tag">{slide.tag}</p>
-                    </div>
-
-                    <div className="home-hero__visual" aria-hidden="true">
-                      <span className="home-hero__bubble home-hero__bubble--primary" />
-                      <span className="home-hero__bubble home-hero__bubble--secondary" />
-                      <span className="home-hero__badge">Fresh Today</span>
+                      <h1 className="home-hero__title">Banner</h1>
                     </div>
                   </article>
                 );
@@ -418,11 +416,12 @@ export default function HomePage() {
         </div>
       </section>
       <ProductSection
-        title="Popular Combo Packs"
+        title="Popular Items"
         eyebrow="Top Picks"
         products={popularProducts}
         gridId="homepagePopularGrid"
         variant="emphasis"
+        ctaHref="/section/popular"
       />
 
       <section className="advert-section">
@@ -433,9 +432,10 @@ export default function HomePage() {
       <ProductSection
         title="Fresh In Stock"
         eyebrow="Just Arrived"
-        products={newestProducts}
+        products={freshInStockProducts}
         gridId="homepageNewStockGrid"
         variant="emphasis"
+        ctaHref="/section/new"
       />
       <ProductSection
         title="In Season"
@@ -443,6 +443,7 @@ export default function HomePage() {
         products={inSeasonProducts}
         gridId="homepageInSeasonGrid"
         variant="emphasis"
+        ctaHref="/section/in-season"
       />
 
       <section className="downloadAppSec">

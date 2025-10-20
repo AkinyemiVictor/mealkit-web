@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { formatProductPrice, resolveStockClass } from "@/lib/catalogue";
 import AddToCartForm from "@/components/add-to-cart-form";
+import ProductEngagementTracker from "@/components/product-engagement-tracker";
 import {
   buildProductSlug,
   getAllProducts,
@@ -406,6 +407,7 @@ export default function ProductDetailPage({ params }) {
 
   return (
     <main className="product-detail-page" data-product-id={product.id}>
+      <ProductEngagementTracker productId={product.id} />
       <div className="product-detail-breadcrumb">
         <Link href="/">Home</Link>
         <span aria-hidden="true" className="product-detail-breadcrumb-divider">

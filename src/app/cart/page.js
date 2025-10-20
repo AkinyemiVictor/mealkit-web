@@ -17,9 +17,9 @@ import {
   pickMostPopularProducts,
   resolveStockClass,
 } from "@/lib/catalogue";
+import { pickTopEngagedProducts, recordProductClick, recordProductView, RECENTLY_VIEWED_KEY } from "@/lib/engagement";
 
 import { readCartItems, writeCartItems, clearCartItems } from "@/lib/cart-storage";
-import { readStoredUser } from "@/lib/auth";
 import { readStoredUser, AUTH_EVENT } from "@/lib/auth";
 import { getProductHref } from "@/lib/products";
 
@@ -27,7 +27,7 @@ const CategoryCarousel = dynamic(() => import("@/components/category-carousel"),
   loading: () => <CategoryCarouselSkeleton />,
 });
 
-const RECENTLY_VIEWED_STORAGE_KEY = "mealkit_recently_viewed";
+const RECENTLY_VIEWED_STORAGE_KEY = RECENTLY_VIEWED_KEY;
 const DELIVERY_FEE = 1500;
 const RECENTLY_VIEWED_LIMIT = 6;
 const MIN_ORDER_SIZE = 0.01;
@@ -158,7 +158,13 @@ function ProductHighlightCard({ product }) {
   const href = getProductHref(product);
 
   return (
-    <Link href={href} className="product-card" aria-label={`View ${product.name}`} prefetch={false}>
+    <Link
+      href={href}
+      className="product-card"
+      aria-label={`View ${product.name}`}
+      prefetch={false}
+      onClick={() => { recordProductClick(product.id); recordProductView(product.id); }}
+    >
       <span className="product-card-badges">
         {product.discount ? (
           <div className="product-card-discount">
@@ -193,7 +199,7 @@ function ProductHighlightCard({ product }) {
   );
 }
 
-function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, variant = "emphasis", children }) {
+function CartProductSection({ title, eyebrow, ctaLabel = "See all", ctaHref, headingId, variant = "emphasis", children }) {
   const sectionClasses = ["home-section"];
   if (variant && variant !== "plain") {
     sectionClasses.push(`home-section--${variant}`);
@@ -268,9 +274,13 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", headingId, v
               {title}
             </h2>
           </div>
-          <button type="button" className="home-section__cta">
-            {ctaLabel}
-          </button>
+          {ctaHref ? (
+            <Link href={ctaHref} className="home-section__cta">
+              {ctaLabel}
+            </Link>
+          ) : (
+            <button type="button" className="home-section__cta">{ctaLabel}</button>
+          )}
         </header>
 
         <div className="home-section__rail">
@@ -373,16 +383,6 @@ export default function CartPage() {
       if (product) picked.push(product);
     });
 
-    if (picked.length < RECENTLY_VIEWED_LIMIT) {
-      const used = new Set(picked.map((item) => item.id));
-      for (const product of catalogueList) {
-        if (picked.length >= RECENTLY_VIEWED_LIMIT) break;
-        if (used.has(product.id)) continue;
-        picked.push(product);
-        used.add(product.id);
-      }
-    }
-
     setRecentlyViewed(picked.slice(0, RECENTLY_VIEWED_LIMIT));
   }, [catalogueList, productIndex]);
 
@@ -395,20 +395,15 @@ export default function CartPage() {
     }
   }, []);
 
-  // Try to hydrate cart from backend for logged-in users
+  // Optional: hydrate cart from backend (Supabase-based API)
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const user = readStoredUser();
-    if (!user?.email) return;
     const controller = new AbortController();
-    fetch(`/api/cart?user_id=${encodeURIComponent(user.email)}`, { signal: controller.signal })
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        const items = data?.items || data?.cart?.items;
-        if (Array.isArray(items) && items.length) {
-          setCartItems(hydrateCartItems(items));
-          setHydrated(true);
-        }
+    fetch(`/api/cart`, { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then(() => {
+        // This endpoint returns rows in Supabase shape.
+        // Leaving local cart as source of truth for now unless product mapping is added.
       })
       .catch(() => {});
     return () => controller.abort();
@@ -439,10 +434,29 @@ export default function CartPage() {
 
   const cartIdSet = useMemo(() => new Set(cartItems.map((item) => String(item.id))), [cartItems]);
 
-  const crossSellProducts = useMemo(
-    () => pickMostPopularProducts(catalogueList, cartIdSet, 6),
-    [catalogueList, cartIdSet]
-  );
+  const cartCategories = useMemo(() => {
+    const cats = new Set();
+    for (const item of cartItems) {
+      const prod = productIndex.get(String(item.id));
+      if (prod?.category) cats.add(prod.category);
+    }
+    return cats;
+  }, [cartItems, productIndex]);
+
+  const crossSellProducts = useMemo(() => {
+    const pool = catalogueList.filter((p) => !cartIdSet.has(p.id));
+    let base = pickTopEngagedProducts(pool, 12);
+    if (!base.length) {
+      base = pickMostPopularProducts(pool, new Set(), 12);
+    }
+    base.sort((a, b) => {
+      const aBoost = cartCategories.has(a.category) ? 1 : 0;
+      const bBoost = cartCategories.has(b.category) ? 1 : 0;
+      if (aBoost !== bBoost) return bBoost - aBoost;
+      return a.name.localeCompare(b.name);
+    });
+    return base.slice(0, 6);
+  }, [catalogueList, cartIdSet, cartCategories]);
 
   const stockStatus = useMemo(() => {
     const statuses = cartItems.map((item) => {
@@ -862,24 +876,18 @@ export default function CartPage() {
         </div>
       </div>
 
-      <CartProductSection title={copy.cart.recentlyViewedTitle} eyebrow={copy.cart.recentlyViewedEyebrow} headingId="recently-heading">
-        {recentlyViewed.length ? (
+      {recentlyViewed.length ? (
+        <CartProductSection title={copy.cart.recentlyViewedTitle} eyebrow={copy.cart.recentlyViewedEyebrow} headingId="recently-heading" ctaHref="/section/recently-viewed">
           <div className="product-card-grid" id="cartRecentlyViewedGrid">
             {recentlyViewed.map((product) => (
               <ProductHighlightCard key={product.id} product={product} />
             ))}
           </div>
-        ) : (
-          <div className={styles.cardGridPlaceholder} role="presentation">
-            <div className={styles.placeholderCard}>
-              {copy.cart.recentlyViewedFallback}
-            </div>
-          </div>
-        )}
-      </CartProductSection>
+        </CartProductSection>
+      ) : null}
 
       {crossSellProducts.length ? (
-        <CartProductSection title={copy.cart.crossSellTitle} eyebrow={copy.cart.crossSellEyebrow} headingId="crossSell-heading">
+        <CartProductSection title={copy.cart.crossSellTitle} eyebrow={copy.cart.crossSellEyebrow} headingId="crossSell-heading" ctaHref="/section/cross-sell">
           <div className="product-card-grid" id="cartCrossSellGrid">
             {crossSellProducts.map((product) => (
               <ProductHighlightCard key={product.id} product={product} />

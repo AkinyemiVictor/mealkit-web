@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { getBrowserSupabaseClient } from "@/lib/supabase/browser-client";
 import { useSearchParams } from "next/navigation";
 
 import "@/styles/sign-in.css";
@@ -62,30 +63,8 @@ function GoogleIcon() {
 
 export default function SignInPage() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window === "undefined") {
-      return "login";
-    }
-
-    const { hash, search } = window.location;
-    const hashMatch = TAB_OPTIONS.find((tab) => tab.hash === hash);
-    if (hashMatch) {
-      return hashMatch.key;
-    }
-
-    if (search) {
-      const params = new URLSearchParams(search);
-      const tabParam = params.get("tab");
-      if (tabParam) {
-        const tabMatch = TAB_OPTIONS.find((tab) => tab.key === tabParam);
-        if (tabMatch) {
-          return tabMatch.key;
-        }
-      }
-    }
-
-    return "login";
-  });
+  // Initialize to a stable server-safe default; update from URL after mount
+  const [activeTab, setActiveTab] = useState("login");
 
   const hashLookup = useMemo(() => TAB_OPTIONS.reduce((acc, tab) => {
     acc[tab.key] = tab.hash;
@@ -227,7 +206,7 @@ export default function SignInPage() {
     window.location.href = "/account";
   }, []);
 
-  const handleSignupSubmit = useCallback((event) => {
+  const handleSignupSubmit = useCallback(async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
@@ -296,10 +275,39 @@ export default function SignInPage() {
       return;
     }
 
-    const user = { fullName, email, phone: `${phoneCountry}${phoneDigits}` };
-    persistStoredUser(user);
-    migrateGuestCartToUser(user);
-    window.location.href = "/account";
+    // Attempt Supabase sign-up with metadata
+    try {
+      const supabase = getBrowserSupabaseClient();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: fullName,
+            phone: `${phoneCountry}${phoneDigits}`,
+          },
+        },
+      });
+
+      if (error) {
+        window.alert(error.message || "Signup failed. Please try again.");
+        return;
+      }
+
+      const user = { fullName, email, phone: `${phoneCountry}${phoneDigits}` };
+      persistStoredUser(user);
+      migrateGuestCartToUser(user);
+
+      if (!data?.session) {
+        // Email confirmation may be required
+        window.alert("Account created. Please check your email to confirm your account.");
+      }
+
+      window.location.href = "/account";
+    } catch (e) {
+      console.error("Supabase signup error", e);
+      window.alert("Unexpected error during signup. Please try again.");
+    }
   }, []);
 
   useEffect(() => {

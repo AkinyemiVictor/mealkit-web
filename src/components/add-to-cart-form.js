@@ -152,12 +152,10 @@ export default function AddToCartForm({ product, fallbackImage }) {
 
     // Also notify backend cart API (best effort)
     try {
-      const user = typeof window !== "undefined" ? readStoredUser() : null;
-      const userId = user?.email || "guest";
       fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, product_id: product.id, quantity: 1 }),
+        body: JSON.stringify({ product_id: product.id, quantity: 1 }),
       }).catch(() => {});
     } catch (_) {}
 
