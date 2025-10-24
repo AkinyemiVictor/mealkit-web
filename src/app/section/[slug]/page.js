@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 
-import products from "@/data/products";
+import useProducts from "@/lib/use-products";
 import {
   formatProductPrice,
   normaliseProductCatalogue,
@@ -62,9 +62,7 @@ export default function SectionViewPage({ params }) {
   // In client pages, params is a Promise in React 19/Next 15.
   // Unwrap it using React.use to avoid the deprecation warning.
   const { slug } = use(params);
-  const catalogue = useMemo(() => normaliseProductCatalogue(products), []);
-  const productIndex = catalogue.index ?? new Map();
-  const allProducts = catalogue.ordered ?? [];
+  const { ordered: allProducts, index: productIndex } = useProducts();
 
   const [items, setItems] = useState([]);
 

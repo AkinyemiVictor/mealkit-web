@@ -4,12 +4,8 @@ import { notFound } from "next/navigation";
 import { formatProductPrice, resolveStockClass } from "@/lib/catalogue";
 import AddToCartForm from "@/components/add-to-cart-form";
 import ProductEngagementTracker from "@/components/product-engagement-tracker";
-import {
-  buildProductSlug,
-  getAllProducts,
-  getProductBySlug,
-  getRawProductBySlug,
-} from "@/lib/products";
+import { buildProductSlug } from "@/lib/products";
+import { fetchAllProducts, fetchProductBySlug } from "@/lib/products-server";
 
 const FALLBACK_IMAGE = "/assets/img/product images/tomato-fruit-isolated-transparent-background.png";
 const REVIEW_DATE_FORMATTER = new Intl.DateTimeFormat("en-GB", {
@@ -188,14 +184,17 @@ const normaliseProductDetailContent = (product, rawProduct) => {
   };
 };
 
-export function generateStaticParams() {
-  return getAllProducts().map((product) => ({
-    productSlug: buildProductSlug(product),
-  }));
+export async function generateStaticParams() {
+  try {
+    const list = await fetchAllProducts();
+    return list.map((product) => ({ productSlug: buildProductSlug(product) }));
+  } catch {
+    return [];
+  }
 }
 
-export function generateMetadata({ params }) {
-  const product = getProductBySlug(params.productSlug);
+export async function generateMetadata({ params }) {
+  const { product } = await fetchProductBySlug(params.productSlug);
 
   if (!product) {
     return {
@@ -204,9 +203,31 @@ export function generateMetadata({ params }) {
     };
   }
 
+  const { raw } = await fetchProductBySlug(params.productSlug);
+  const description = raw?.description
+    ? String(raw.description)
+    : `Order ${product.name} fresh from the MealKit marketplace delivered to your kitchen.`;
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const pageUrl = `${site}/products/${params.productSlug}`;
+  const image = product.image || FALLBACK_IMAGE;
+
   return {
     title: `MealKit | ${product.name}`,
-    description: `Order ${product.name} fresh from the MealKit marketplace delivered to your kitchen.`,
+    description,
+    alternates: { canonical: pageUrl },
+    openGraph: {
+      type: "product",
+      url: pageUrl,
+      title: `MealKit | ${product.name}`,
+      description,
+      images: [{ url: image, alt: product.name }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `MealKit | ${product.name}`,
+      description,
+      images: [image],
+    },
   };
 }
 
@@ -392,15 +413,14 @@ function ProductFeedbackSection({ ratings, productName }) {
   );
 }
 
-export default function ProductDetailPage({ params }) {
-  const product = getProductBySlug(params.productSlug);
+export default async function ProductDetailPage({ params }) {
+  const { product, raw: rawProduct } = await fetchProductBySlug(params.productSlug);
 
   if (!product) {
     notFound();
   }
 
-  const rawProduct = getRawProductBySlug(params.productSlug) || {};
-  const variations = Array.isArray(rawProduct.variations) ? rawProduct.variations : [];
+  const variations = Array.isArray(rawProduct?.variations) ? rawProduct.variations : [];
   const detailContent = normaliseProductDetailContent(product, rawProduct);
 
   const stockClass = resolveStockClass(product.stock);

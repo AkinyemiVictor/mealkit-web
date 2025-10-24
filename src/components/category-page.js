@@ -6,8 +6,9 @@ import { useEffect, useMemo, useState } from "react";
 
 import categories, { getCategoryHref } from "@/data/categories";
 import CategoryCarouselSkeleton from "@/components/category-carousel-skeleton";
-import { formatProductPrice, resolveStockClass } from "@/lib/catalogue";
-import { buildCategoryProducts, findCategoryBySlug } from "@/lib/category-products";
+import { formatProductPrice, resolveStockClass, normaliseProductCatalogue } from "@/lib/catalogue";
+import useProducts from "@/lib/use-products";
+import categories from "@/data/categories";
 import { getProductHref } from "@/lib/products";
 
 const CategoryCarousel = dynamic(() => import("@/components/category-carousel"), {
@@ -22,7 +23,7 @@ const CATEGORY_CARDS = categories.map((entry) => ({
   icon: entry.icon,
   href: getCategoryHref(entry),
 }));
-const getCategory = (slug) => findCategoryBySlug(slug) || undefined;
+const getCategory = (slug) => categories.find((entry) => entry.slug === slug) || undefined;
 
 function CategoryProductCard({ product }) {
   const stockClass = resolveStockClass(product.stock);
@@ -74,7 +75,13 @@ export default function CategoryPage({ category: incomingCategory, pageSize = DE
 
   const itemsPerPage = category?.itemsPerPage || pageSize || DEFAULT_PAGE_SIZE;
 
-  const categoryProducts = useMemo(() => buildCategoryProducts(category), [category]);
+  const { ordered } = useProducts();
+  const categoryProducts = useMemo(() => {
+    if (!category) return [];
+    const slug = category.slug;
+    const list = ordered || [];
+    return list.filter((p) => (p.category || "").toLowerCase().replace(/\s+/g, "-") === slug);
+  }, [category, ordered]);
   const totalPages = Math.max(1, Math.ceil(categoryProducts.length / itemsPerPage));
 
   useEffect(() => {

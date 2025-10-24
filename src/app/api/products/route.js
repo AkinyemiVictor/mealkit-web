@@ -1,58 +1,69 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-
-import { listProducts } from "@/app/api/_lib/mock-database";
+import { getSupabaseRouteClient } from "@/lib/supabase/route-client";
+import { getSupabaseAdminClient } from "@/lib/supabase/server-client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const methodNotAllowed = () =>
-  NextResponse.json({ error: "Method not allowed" }, { status: 405, headers: { Allow: "GET" } });
+const mapRowToProduct = (row) => {
+  if (!row || typeof row !== "object") return null;
+  const price = Number(row.price) || 0;
+  const oldPrice = Number(row.oldPrice ?? row.old_price ?? price) || price;
+  const discount = Number(
+    row.discount ?? (oldPrice > price ? Math.round(((oldPrice - price) / (oldPrice || 1)) * 100) : 0)
+  ) || 0;
 
-export function GET(request) {
-  const url = new URL(request.url);
-  const searchParams = url.searchParams;
+  return {
+    id: String(row.id ?? ""),
+    name: row.name || "Fresh produce",
+    image: row.image || row.image_url || row.imageUrl || "",
+    price,
+    oldPrice,
+    unit: row.unit || "",
+    stock: row.stock || "",
+    inSeason: typeof row.inSeason === "boolean" ? row.inSeason : Boolean(row.in_season ?? row.inseason ?? true),
+    discount,
+    category: row.category || "uncategorised",
+  };
+};
 
-  const category = searchParams.get("category");
-  const query = searchParams.get("q")?.trim().toLowerCase();
+export async function GET() {
+  try {
+    const supabase = getSupabaseRouteClient(cookies());
+    let { data, error } = await supabase.from("products").select("*");
+    if (error) {
+      // Fallback with service role if public read is restricted
+      try {
+        const admin = getSupabaseAdminClient();
+        const res = await admin.from("products").select("*");
+        data = res.data;
+        error = res.error;
+      } catch (e) {
+        error = e;
+      }
+      if (error) {
+        return NextResponse.json({ error: String(error?.message || error) }, { status: 500 });
+      }
+    }
 
-  let products = listProducts({ category });
-  if (query) {
-    products = products.filter((product) => {
-      const haystack = `${product.name ?? ""} ${product.description ?? ""}`.toLowerCase();
-      return haystack.includes(query);
-    });
-  }
+    const rows = Array.isArray(data) ? data : [];
+    const mapped = rows.map(mapRowToProduct).filter(Boolean);
 
-  return NextResponse.json({
-    count: products.length,
-    products,
-  });
-}
+    const grouped = mapped.reduce((acc, p) => {
+      const key = p.category || "uncategorised";
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(p);
+      return acc;
+    }, {});
 
-export function POST() {
-  return methodNotAllowed();
-}
-
-export function PUT() {
-  return methodNotAllowed();
-}
-
-export function PATCH() {
-  return methodNotAllowed();
-}
-
-export function DELETE() {
-  return methodNotAllowed();
-}
-
-export function OPTIONS() {
-  return NextResponse.json(
-    {},
-    {
+    return NextResponse.json(grouped, {
       status: 200,
       headers: {
-        Allow: "GET",
+        "Cache-Control": "no-store",
       },
-    }
-  );
+    });
+  } catch (err) {
+    return NextResponse.json({ error: err?.message || "Failed to fetch products" }, { status: 500 });
+  }
 }

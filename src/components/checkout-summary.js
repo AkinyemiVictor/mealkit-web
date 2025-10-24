@@ -3,13 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 
 import copy from "@/data/copy";
-import { formatProductPrice, normaliseProductCatalogue } from "@/lib/catalogue";
+import { formatProductPrice } from "@/lib/catalogue";
 import { computeCartSummary, readStoredCart } from "@/lib/checkout";
-import products from "@/data/products";
-
-const catalogue = normaliseProductCatalogue(products);
+import useProducts from "@/lib/use-products";
 
 export default function CheckoutSummary() {
+  const { index: productIndex } = useProducts();
   const [items, setItems] = useState(() => readStoredCart());
   const [lastCheckout, setLastCheckout] = useState(null);
 
@@ -77,7 +76,7 @@ export default function CheckoutSummary() {
         {itemsToRender.length ? (
           itemsToRender.map((item, index) => {
             const key = item?.id != null ? String(item.id) : `${item?.name ?? "item"}-${index}`;
-            const product = catalogue.index?.get(String(item?.id));
+            const product = productIndex?.get(String(item?.id));
             const price = Number(item?.price) || Number(product?.price) || 0;
             return (
               <li key={key}>

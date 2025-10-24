@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import products from "@/data/products";
+import useProducts from "@/lib/use-products";
 import categories, { getCategoryHref } from "@/data/categories";
 import {
   formatProductPrice,
-  normaliseProductCatalogue,
   pickInSeasonProducts,
   pickMostPopularProducts,
   pickNewestProducts,
@@ -254,6 +253,10 @@ export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const intervalRef = useRef(null);
   const categoryRef = useRef(null);
+  // Ensure client-only personalization (localStorage-driven) does not
+  // change the initial HTML that the server rendered. We gate those
+  // computations behind a client-ready flag to avoid hydration mismatch.
+  const [isClient, setIsClient] = useState(false);
 
   const heroLength = heroSlides.length;
 
@@ -268,6 +271,7 @@ export default function HomePage() {
 
   useEffect(() => {
     restartAutoSlide();
+    setIsClient(true);
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -295,25 +299,22 @@ export default function HomePage() {
     categoryRef.current?.scrollBy({ left: offset, behavior: "smooth" });
   }, []);
 
-  const catalogueList = useMemo(() => {
-    const { ordered } = normaliseProductCatalogue(products);
-    return ordered;
-  }, []);
+  const { ordered: catalogueList } = useProducts();
 
   const popularProducts = useMemo(() => {
-    const engaged = pickTopEngagedProducts(catalogueList);
+    const engaged = isClient ? pickTopEngagedProducts(catalogueList) : [];
     return engaged.length ? engaged : pickMostPopularProducts(catalogueList);
-  }, [catalogueList]);
+  }, [catalogueList, isClient]);
   const freshInStockProducts = useMemo(() => {
     const notOut = catalogueList.filter((p) => !String(p.stock || "").toLowerCase().includes("out"));
-    const engaged = pickTopEngagedProducts(notOut);
+    const engaged = isClient ? pickTopEngagedProducts(notOut) : [];
     return engaged.length ? engaged : pickNewestProducts(catalogueList);
-  }, [catalogueList]);
+  }, [catalogueList, isClient]);
   const inSeasonProducts = useMemo(() => {
     const seasonal = catalogueList.filter((p) => p.inSeason);
-    const engaged = pickTopEngagedProducts(seasonal);
+    const engaged = isClient ? pickTopEngagedProducts(seasonal) : [];
     return engaged.length ? engaged : pickInSeasonProducts(catalogueList);
-  }, [catalogueList]);
+  }, [catalogueList, isClient]);
 
   const heroTransform = {
     transform: `translateX(-${currentSlide * 100}%)`,

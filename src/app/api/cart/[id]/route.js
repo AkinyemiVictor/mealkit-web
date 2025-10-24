@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { cookies } from "next/headers";
 import { getSupabaseRouteClient } from "@/lib/supabase/route-client";
+import { getSupabaseAdminClient } from "@/lib/supabase/server-client";
+import { checkRateLimit, applyRateLimitHeaders } from "@/lib/api/rate-limit";
+import { respondZodError } from "@/lib/api/validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,9 +13,11 @@ export async function PATCH(req, { params }) {
   const { id } = params || {};
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  const supabase = getSupabaseRouteClient(cookies());
-  const { data: { user } } = await supabase.auth.getUser();
+  const authClient = getSupabaseRouteClient(cookies());
+  const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  const rl = await checkRateLimit({ request: req, id: "cart:update", limit: 60, windowMs: 60_000 });
 
   let body;
   try {
@@ -20,39 +26,44 @@ export async function PATCH(req, { params }) {
     return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
   }
 
-  const quantityNum = Number(body?.quantity);
-  if (!Number.isFinite(quantityNum) || quantityNum <= 0) {
-    return NextResponse.json({ error: "Quantity must be a number > 0" }, { status: 400 });
+  const schema = z.object({ quantity: z.number().int().positive().max(999) });
+  const parsed = schema.safeParse(body || {});
+  if (!parsed.success) {
+    return respondZodError(parsed.error);
   }
+  const quantityNum = parsed.data.quantity;
 
-  const { data, error } = await supabase
+  const admin = getSupabaseAdminClient();
+  const { data, error } = await admin
     .from("cart_items")
     .update({ quantity: quantityNum })
     .eq("id", id)
     .eq("user_id", user.id)
     .select("id");
 
-  if (error) return NextResponse.json({ error }, { status: 400 });
-  if (!data || data.length === 0) return NextResponse.json({ error: "Item not found" }, { status: 404 });
-  return NextResponse.json({ message: "Quantity updated" }, { status: 200 });
+  if (error) return applyRateLimitHeaders(NextResponse.json({ error }, { status: 400 }), rl);
+  if (!data || data.length === 0) return applyRateLimitHeaders(NextResponse.json({ error: "Item not found" }, { status: 404 }), rl);
+  return applyRateLimitHeaders(NextResponse.json({ message: "Quantity updated" }, { status: 200 }), rl);
 }
 
 export async function DELETE(req, { params }) {
   const { id } = params || {};
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  const supabase = getSupabaseRouteClient(cookies());
-  const { data: { user } } = await supabase.auth.getUser();
+  const authClient = getSupabaseRouteClient(cookies());
+  const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  const { data, error } = await supabase
+  const rl = await checkRateLimit({ request: req, id: "cart:remove", limit: 60, windowMs: 60_000 });
+  const admin = getSupabaseAdminClient();
+  const { data, error } = await admin
     .from("cart_items")
     .delete()
     .eq("id", id)
     .eq("user_id", user.id)
     .select("id");
 
-  if (error) return NextResponse.json({ error }, { status: 400 });
-  if (!data || data.length === 0) return NextResponse.json({ error: "Item not found" }, { status: 404 });
-  return NextResponse.json({ message: "Item removed" }, { status: 200 });
+  if (error) return applyRateLimitHeaders(NextResponse.json({ error }, { status: 400 }), rl);
+  if (!data || data.length === 0) return applyRateLimitHeaders(NextResponse.json({ error: "Item not found" }, { status: 404 }), rl);
+  return applyRateLimitHeaders(NextResponse.json({ message: "Item removed" }, { status: 200 }), rl);
 }

@@ -9,11 +9,10 @@ import styles from "./cart.module.css";
 
 import CategoryCarouselSkeleton from "@/components/category-carousel-skeleton";
 import copy from "@/data/copy";
-import products from "@/data/products";
+import useProducts from "@/lib/use-products";
 import categories, { getCategoryHref } from "@/data/categories";
 import {
   formatProductPrice,
-  normaliseProductCatalogue,
   pickMostPopularProducts,
   resolveStockClass,
 } from "@/lib/catalogue";
@@ -319,9 +318,10 @@ function CartProductSection({ title, eyebrow, ctaLabel = "See all", ctaHref, hea
 
 export default function CartPage() {
   const router = useRouter();
-  const catalogueLookup = useMemo(() => normaliseProductCatalogue(products), []);
-  const catalogueList = catalogueLookup.ordered ?? [];
-  const productIndex = catalogueLookup.index ?? new Map();
+  const { ordered: catalogueList, index: productIndex } = useProducts();
+  // Prevent hydration mismatches by deferring client-only computations
+  // (like reading localStorage-driven engagement) until after mount.
+  const [isClient, setIsClient] = useState(false);
 
   const [cartItems, setCartItems] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -350,6 +350,7 @@ export default function CartPage() {
     if (typeof window === "undefined") {
       return undefined;
     }
+    setIsClient(true);
 
     window.addEventListener("storage", updateCart);
     window.addEventListener("cart-updated", updateCart);
@@ -445,7 +446,7 @@ export default function CartPage() {
 
   const crossSellProducts = useMemo(() => {
     const pool = catalogueList.filter((p) => !cartIdSet.has(p.id));
-    let base = pickTopEngagedProducts(pool, 12);
+    let base = isClient ? pickTopEngagedProducts(pool, 12) : [];
     if (!base.length) {
       base = pickMostPopularProducts(pool, new Set(), 12);
     }
@@ -456,13 +457,13 @@ export default function CartPage() {
       return a.name.localeCompare(b.name);
     });
     return base.slice(0, 6);
-  }, [catalogueList, cartIdSet, cartCategories]);
+  }, [catalogueList, cartIdSet, cartCategories, isClient]);
 
   const stockStatus = useMemo(() => {
     const statuses = cartItems.map((item) => {
       const product = productIndex.get(String(item.id));
-      const stockLabel = product?.stock || item.stock || "";
-      const normalised = stockLabel.toLowerCase();
+      const stockLabel = product?.stock ?? item.stock ?? "";
+      const normalised = String(stockLabel).toLowerCase();
       let level = "ok";
       let message = "";
 

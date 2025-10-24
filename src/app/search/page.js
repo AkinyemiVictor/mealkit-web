@@ -1,17 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import { Fragment } from "react";
 
 import SearchHistoryRecorder from "@/components/search-history-recorder";
 import categories from "@/data/categories";
 import copy from "@/data/copy";
-import products from "@/data/products";
-import { formatProductPrice, normaliseProductCatalogue, resolveStockClass } from "@/lib/catalogue";
+import useProducts from "@/lib/use-products";
+import { formatProductPrice, resolveStockClass } from "@/lib/catalogue";
 import { getProductHref } from "@/lib/products";
 
 const PAGE_SIZE = 12;
 
-const catalogue = normaliseProductCatalogue(products);
-const allProducts = catalogue.ordered ?? [];
+// Product catalogue is fetched on the client via API to use DB source
 
 const categoryLabelMap = new Map(
   (categories || []).map((entry) => [String(entry.slug || "").toLowerCase(), entry.label || ""])
@@ -72,11 +73,11 @@ function levenshtein(a, b) {
   return dp[lenA][lenB];
 }
 
-function getSuggestions(query, limit = 3) {
+function getSuggestions(query, limit = 3, list = []) {
   const normalisedQuery = normalise(query);
   if (!normalisedQuery) return [];
 
-  const scored = allProducts.map((product) => {
+  const scored = list.map((product) => {
     const name = normalise(product.name);
     const category = normalise(product.category);
     const label = normalise(getCategoryLabel(product.category, product.category));
@@ -231,6 +232,7 @@ function Pagination({ query, currentPage, totalPages }) {
 }
 
 export default function SearchPage({ searchParams }) {
+  const { ordered: allProducts } = useProducts();
   const rawQuery = searchParams?.q ?? "";
   const query = rawQuery.toString().trim();
   const tokens = buildTokens(query);
@@ -266,7 +268,7 @@ export default function SearchPage({ searchParams }) {
     a.label.localeCompare(b.label)
   );
 
-  const suggestionTerms = query && !totalResults ? getSuggestions(query) : [];
+  const suggestionTerms = query && !totalResults ? getSuggestions(query, 3, allProducts) : [];
 
   return (
     <main className="category-page" data-search-term={query}>

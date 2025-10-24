@@ -4,8 +4,11 @@
   return normalisedUnit ? `${formattedPrice}/${normalisedUnit}` : formattedPrice;
 };
 export const resolveStockClass = (stockText) => {
-  if (!stockText) return "";
-  const lowered = stockText.toLowerCase();
+  if (stockText == null) return "";
+  if (typeof stockText === "number") {
+    return stockText > 0 ? "is-available" : "is-unavailable";
+  }
+  const lowered = String(stockText).toLowerCase();
   if (lowered.includes("out")) return "is-unavailable";
   if (lowered.includes("almost") || lowered.includes("low") || lowered.includes("limited")) {
     return "is-limited";
@@ -81,7 +84,8 @@ export const pickMostPopularProducts = (list, excludeIds = new Set(), limit = 6)
     .map((product) => {
       const discountScore = Number(product.discount) || 0;
       const seasonScore = product.inSeason ? 5 : 0;
-      const availabilityScore = product.stock && product.stock.toLowerCase().includes("stock") ? 3 : 0;
+      const stockText = product?.stock;
+      const availabilityScore = String(stockText || "").toLowerCase().includes("stock") || Number(stockText) > 0 ? 3 : 0;
 
       return {
         product,
