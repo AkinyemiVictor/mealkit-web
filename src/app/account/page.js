@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import styles from "./account.module.css";
 import { AUTH_EVENT, clearStoredUser, persistStoredUser, readStoredUser } from "@/lib/auth";
-import { ORDERS_EVENT, readUserOrders, updateUserOrderStatus } from "@/lib/orders";
+import { ORDERS_EVENT, readUserOrders, updateUserOrderStatus, setUserOrders } from "@/lib/orders";
 import { formatProductPrice } from "@/lib/catalogue";
 
 const ACCOUNT_TABS = [
@@ -416,7 +416,37 @@ export default function AccountPage() {
         return (
           <>
             <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Current orders</h3>
+              <div className={styles.sectionHeader} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h3 className={styles.sectionTitle}>Current orders</h3>
+                <button
+                  type="button"
+                  className={styles.orderActionButton}
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/orders', { cache: 'no-store' });
+                      const payload = await res.json().catch(() => ({}));
+                      if (!res.ok) {
+                        console.warn('Failed to fetch orders', payload?.error || res.statusText);
+                        return;
+                      }
+                      const apiOrders = Array.isArray(payload?.orders) ? payload.orders : [];
+                      const mapped = apiOrders.map((o) => ({
+                        orderId: String(o.id ?? ''),
+                        placedAt: o.createdAt || new Date().toISOString(),
+                        status: o.status || (o.paymentStatus === 'paid' ? 'awaiting delivery' : 'processing'),
+                        summary: { total: Number(o.total) || 0 },
+                        items: Array.isArray(o.items) ? o.items : [],
+                      }));
+                      setUserOrders(mapped);
+                      setOrders(mapped);
+                    } catch (e) {
+                      console.warn('Unable to sync orders', e);
+                    }
+                  }}
+                >
+                  Refresh from server
+                </button>
+              </div>
               {presentOrders.length ? (
                 <div className={styles.list}>
                   {presentOrders.map((order) => (
@@ -434,9 +464,23 @@ export default function AccountPage() {
                         <button
                           type="button"
                           className={styles.orderActionButton}
+                          aria-expanded={expandedOrderId === order.orderId}
                           onClick={() => setExpandedOrderId(expandedOrderId === order.orderId ? null : order.orderId)}
                         >
-                          {expandedOrderId === order.orderId ? "Hide tracking" : "Track order"}
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                            <span>{expandedOrderId === order.orderId ? "Hide details" : "View details"}</span>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                              aria-hidden="true"
+                              style={{ transition: "transform .2s ease", transform: expandedOrderId === order.orderId ? "rotate(180deg)" : "rotate(0deg)" }}
+                            >
+                              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </span>
                         </button>
                         <button
                           type="button"
@@ -446,6 +490,34 @@ export default function AccountPage() {
                           Mark as delivered
                         </button>
                       </div>
+                      {expandedOrderId === order.orderId ? (
+                        <div style={{ marginTop: 12, borderTop: "1px solid #e5e7eb", paddingTop: 12 }}>
+                          <strong style={{ display: "block", marginBottom: 8 }}>Items</strong>
+                          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+                            {(Array.isArray(order.items) ? order.items : []).map((it, idx) => (
+                              <li key={idx} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                {it?.product?.image ? (
+                                  <img src={it.product.image} alt="" style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 6, border: "1px solid #e5e7eb" }} />
+                                ) : (
+                                  <div style={{ width: 44, height: 44, borderRadius: 6, border: "1px solid #e5e7eb", background: "#f8fafc" }} />
+                                )}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {it?.product?.title || it?.product?.name || `Item ${idx + 1}`}
+                                  </div>
+                                  <div style={{ color: "#6b7280", fontSize: 13 }}>
+                                    {it?.product?.unit ? `${it.product.unit} • ` : ""}Qty {it?.quantity ?? 0}
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: "right" }}>
+                                  <div style={{ fontWeight: 600 }}>{formatProductPrice(Number(it?.lineTotal) || (Number(it?.unitPrice) || 0) * (Number(it?.quantity) || 0))}</div>
+                                  <div style={{ color: "#6b7280", fontSize: 12 }}>{formatProductPrice(Number(it?.unitPrice) || 0)} each</div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
                     </div>
                   ))}
                 </div>
@@ -476,14 +548,56 @@ export default function AccountPage() {
                         <button
                           type="button"
                           className={styles.orderActionButton}
+                          aria-expanded={expandedOrderId === order.orderId}
                           onClick={() => setExpandedOrderId(expandedOrderId === order.orderId ? null : order.orderId)}
                         >
-                          {expandedOrderId === order.orderId ? "Hide tracking" : "View tracking"}
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                            <span>{expandedOrderId === order.orderId ? "Hide details" : "View details"}</span>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                              aria-hidden="true"
+                              style={{ transition: "transform .2s ease", transform: expandedOrderId === order.orderId ? "rotate(180deg)" : "rotate(0deg)" }}
+                            >
+                              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </span>
                         </button>
                         <Link href="/products" className={styles.cardAction}>
                           Reorder items
                         </Link>
                       </div>
+                      {expandedOrderId === order.orderId ? (
+                        <div style={{ marginTop: 12, borderTop: "1px solid #e5e7eb", paddingTop: 12 }}>
+                          <strong style={{ display: "block", marginBottom: 8 }}>Items</strong>
+                          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+                            {(Array.isArray(order.items) ? order.items : []).map((it, idx) => (
+                              <li key={idx} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                {it?.product?.image ? (
+                                  <img src={it.product.image} alt="" style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 6, border: "1px solid #e5e7eb" }} />
+                                ) : (
+                                  <div style={{ width: 44, height: 44, borderRadius: 6, border: "1px solid #e5e7eb", background: "#f8fafc" }} />
+                                )}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {it?.product?.title || it?.product?.name || `Item ${idx + 1}`}
+                                  </div>
+                                  <div style={{ color: "#6b7280", fontSize: 13 }}>
+                                    {it?.product?.unit ? `${it.product.unit} • ` : ""}Qty {it?.quantity ?? 0}
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: "right" }}>
+                                  <div style={{ fontWeight: 600 }}>{formatProductPrice(Number(it?.lineTotal) || (Number(it?.unitPrice) || 0) * (Number(it?.quantity) || 0))}</div>
+                                  <div style={{ color: "#6b7280", fontSize: 12 }}>{formatProductPrice(Number(it?.unitPrice) || 0)} each</div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
                     </div>
                   ))}
                 </div>

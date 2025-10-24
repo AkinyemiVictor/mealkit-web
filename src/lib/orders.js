@@ -69,3 +69,9 @@ export const dispatchOrdersChanged = (detail) => {
     console.warn("Unable to dispatch orders event", error);
   }
 };
+
+// Replace the current user's orders with a new list
+export const setUserOrders = (orders, user = readStoredUser()) => {
+  writeRawOrders(Array.isArray(orders) ? orders : [], user);
+  return readRawOrders(user);
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import getSupabaseClient from "@/lib/supabase-client";
+import { getBrowserSupabaseClient as getSupabaseClient } from "@/lib/supabase/browser-client";
 
 export async function addToCart(productId, quantity = 1) {
   const supabase = getSupabaseClient();
@@ -55,4 +55,3 @@ export async function removeCartItem(cartItemId) {
   const { error } = await supabase.from("cart_items").delete().eq("id", cartItemId);
   if (error) throw error;
 }
-

@@ -33,7 +33,11 @@ export async function GET() {
     const supabase = getSupabaseRouteClient(cookies());
     let { data, error } = await supabase.from("products").select("*");
     if (error) {
-      // Fallback with service role if public read is restricted
+      // In production, do not fall back to admin. Surface the error to ensure RLS is configured correctly.
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json({ error: String(error?.message || error) }, { status: 500 });
+      }
+      // In non-production only, allow a temporary admin fallback for local/dev environments.
       try {
         const admin = getSupabaseAdminClient();
         const res = await admin.from("products").select("*");

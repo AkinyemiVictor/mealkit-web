@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabaseAdminClient } from "@/lib/supabase/server-client";
 import productsCatalogue from "@/data/products";
 
 const flattenProducts = (catalogue) =>
@@ -9,16 +9,7 @@ const flattenProducts = (catalogue) =>
     .map(({ variations, ...product }) => product);
 
 export async function POST() {
-  const { SUPABASE_URL, SUPABASE_ANON_KEY } = process.env;
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    return NextResponse.json(
-      {
-        error:
-          "Supabase configuration missing. Set SUPABASE_URL and SUPABASE_ANON_KEY in .env.local",
-      },
-      { status: 500 },
-    );
-  }
+  const admin = getSupabaseAdminClient();
 
   const records = flattenProducts(productsCatalogue);
 
@@ -27,7 +18,7 @@ export async function POST() {
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("products")
       .upsert(records, { onConflict: "id" })
       .select();

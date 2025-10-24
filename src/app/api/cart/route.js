@@ -1,9 +1,7 @@
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { getSupabaseRouteClient } from "@/lib/supabase/route-client";
-import { getSupabaseAdminClient } from "@/lib/supabase/server-client";
 import { checkRateLimit, applyRateLimitHeaders } from "@/lib/api/rate-limit";
-import { NextResponse } from "next/server";
 import { respondZodError } from "@/lib/api/validate";
 
 export const runtime = "nodejs";
@@ -15,8 +13,7 @@ export async function GET(req) {
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return new Response(JSON.stringify({ error: "Not logged in" }), { status: 401 });
 
-  const admin = getSupabaseAdminClient();
-  const { data, error } = await admin
+  const { data, error } = await authClient
     .from("cart_items")
     .select("id, quantity, products(name, price, image_url)")
     .eq("user_id", user.id);
@@ -47,8 +44,7 @@ export async function POST(req) {
   }
   const { product_id, quantity } = parsed.data;
 
-  const admin = getSupabaseAdminClient();
-  const { error } = await admin.from("cart_items").insert({
+  const { error } = await authClient.from("cart_items").insert({
     user_id: user.id,
     product_id,
     quantity,

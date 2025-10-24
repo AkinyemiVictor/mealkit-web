@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { getSupabaseRouteClient } from "@/lib/supabase/route-client";
-import { getSupabaseAdminClient } from "@/lib/supabase/server-client";
 import { checkRateLimit, applyRateLimitHeaders } from "@/lib/api/rate-limit";
 import { respondZodError } from "@/lib/api/validate";
 
@@ -33,8 +32,8 @@ export async function PATCH(req, { params }) {
   }
   const quantityNum = parsed.data.quantity;
 
-  const admin = getSupabaseAdminClient();
-  const { data, error } = await admin
+  const routeClient = getSupabaseRouteClient(cookies());
+  const { data, error } = await routeClient
     .from("cart_items")
     .update({ quantity: quantityNum })
     .eq("id", id)
@@ -55,8 +54,8 @@ export async function DELETE(req, { params }) {
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const rl = await checkRateLimit({ request: req, id: "cart:remove", limit: 60, windowMs: 60_000 });
-  const admin = getSupabaseAdminClient();
-  const { data, error } = await admin
+  const routeClient = getSupabaseRouteClient(cookies());
+  const { data, error } = await routeClient
     .from("cart_items")
     .delete()
     .eq("id", id)

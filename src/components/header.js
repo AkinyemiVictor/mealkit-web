@@ -178,6 +178,16 @@ const ACCOUNT_MENU = [
   { href: "/account?tab=voucher", label: "Voucher", iconClass: "fa-solid fa-ticket" },
 ];
 
+const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
+  .split(",")
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
+
+const isAdmin = (user) => {
+  if (!user || !user.email) return false;
+  return ADMIN_EMAILS.includes(String(user.email).toLowerCase());
+};
+
 const getFirstName = (user) => {
   if (!user) return "";
   if (user.fullName && typeof user.fullName === "string") {
@@ -414,6 +424,17 @@ export default function Header() {
                       <span>{item.label}</span>
                     </Link>
                   ))}
+                  {isAdmin(user) ? (
+                    <Link
+                      className="site-header__account-link"
+                      href="/admin/logs"
+                      role="menuitem"
+                      onClick={handleNavAction}
+                    >
+                      <i className="fa-solid fa-shield-halved" aria-hidden="true" />
+                      <span>Admin Logs</span>
+                    </Link>
+                  ) : null}
                   <button type="button" className="site-header__account-link site-header__account-link--logout" onClick={handleLogout}>
                     <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" />
                     <span>Logout</span>
@@ -544,6 +565,11 @@ export default function Header() {
                     {item.label}
                   </Link>
                 ))}
+                {isAdmin(user) ? (
+                  <Link href="/admin/logs" onClick={handleNavAction}>
+                    Admin Logs
+                  </Link>
+                ) : null}
                 <button type="button" onClick={handleLogout}>
                   Logout
                 </button>
