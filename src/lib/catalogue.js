@@ -3,10 +3,12 @@
   const normalisedUnit = typeof unit === "string" ? unit.trim() : "";
   return normalisedUnit ? `${formattedPrice}/${normalisedUnit}` : formattedPrice;
 };
-export const resolveStockClass = (stockText) => {
+export const resolveStockClass = (stockText, { lowThreshold = 5 } = {}) => {
   if (stockText == null) return "";
   if (typeof stockText === "number") {
-    return stockText > 0 ? "is-available" : "is-unavailable";
+    if (stockText <= 0) return "is-unavailable";
+    if (stockText <= lowThreshold) return "is-limited";
+    return "is-available";
   }
   const lowered = String(stockText).toLowerCase();
   if (lowered.includes("out")) return "is-unavailable";
@@ -14,6 +16,16 @@ export const resolveStockClass = (stockText) => {
     return "is-limited";
   }
   return "is-available";
+};
+
+export const getStockLabel = (stock, { lowThreshold = 5 } = {}) => {
+  if (stock == null || stock === "") return "";
+  if (typeof stock === "number") {
+    if (stock <= 0) return "Out of stock";
+    if (stock <= lowThreshold) return `${stock} unit${stock === 1 ? "" : "s"} left`;
+    return "In stock";
+  }
+  return String(stock);
 };
 
 export const normaliseProductCatalogue = (catalogue) => {
@@ -42,10 +54,7 @@ export const normaliseProductCatalogue = (catalogue) => {
 
       const price = variant.price ?? item.price ?? 0;
       const oldPrice = variant.oldPrice ?? item.oldPrice ?? price;
-      const discount =
-        variant.discount ??
-        item.discount ??
-        (oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0);
+      const discount = oldPrice > price ? Math.round(((oldPrice - price) / (oldPrice || 1)) * 100) : 0;
 
       const normalised = {
         id: item.id != null ? String(item.id) : "",
@@ -112,6 +121,7 @@ export const pickInSeasonProducts = (list, excludeIds = new Set(), limit = 6) =>
 export default {
   formatProductPrice,
   resolveStockClass,
+  getStockLabel,
   normaliseProductCatalogue,
   pickMostPopularProducts,
   pickNewestProducts,

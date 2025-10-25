@@ -15,6 +15,7 @@ import {
   formatProductPrice,
   pickMostPopularProducts,
   resolveStockClass,
+  getStockLabel,
 } from "@/lib/catalogue";
 import { pickTopEngagedProducts, recordProductClick, recordProductView, RECENTLY_VIEWED_KEY } from "@/lib/engagement";
 
@@ -153,6 +154,7 @@ const formatCurrency = (value) =>
 
 function ProductHighlightCard({ product }) {
   const stockClass = resolveStockClass(product.stock);
+  const stockLabel = getStockLabel(product.stock);
   const hasOldPrice = product.oldPrice && product.oldPrice > product.price;
   const href = getProductHref(product);
 
@@ -170,8 +172,8 @@ function ProductHighlightCard({ product }) {
             <p>- {product.discount}%</p>
           </div>
         ) : null}
-        <div className="product-card-season">
-          <p>{product.inSeason ? "In Season" : "Off Season"}</p>
+        <div className={`product-card-season ${product.inSeason ? 'is-in' : 'is-out'}`}>
+          <p>{product.inSeason ? "In Season" : "Out of Season"}</p>
         </div>
       </span>
       <div>
@@ -189,8 +191,8 @@ function ProductHighlightCard({ product }) {
           {hasOldPrice ? (
             <span className="old-price">{formatProductPrice(product.oldPrice, product.unit)}</span>
           ) : null}
-          {product.stock ? (
-            <p className={`product-stock ${stockClass}`.trim()}>{product.stock}</p>
+          {stockLabel ? (
+            <p className={`product-stock ${stockClass}`.trim()}>{stockLabel}</p>
           ) : null}
         </div>
       </div>

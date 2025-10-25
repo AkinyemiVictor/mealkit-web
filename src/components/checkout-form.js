@@ -421,7 +421,23 @@ export default function CheckoutForm() {
         : null,
     };
 
-    const finalize = () => {
+    const finalize = async () => {
+      // Attempt to create server order (requires Supabase session)
+      try {
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+          body: JSON.stringify({ deliveryAddress: order.address, note: order.notes }),
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          console.warn("Server order create failed", payload?.error || res.statusText);
+        }
+      } catch (e) {
+        console.warn("Server order create exception", e);
+      }
+
       persistCheckoutReceipt(order);
       clearStoredCart();
       addUserOrder(order, status, nextUserRecord);
@@ -441,7 +457,7 @@ export default function CheckoutForm() {
 
     setStatus("processing");
     const delay = formState.paymentMethod === "card" ? 1400 : 400;
-    window.setTimeout(finalize, delay);
+    window.setTimeout(() => { finalize().catch(() => {}); }, delay);
   };
 
   if (result) {

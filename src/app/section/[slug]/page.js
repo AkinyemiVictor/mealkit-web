@@ -11,6 +11,7 @@ import {
   pickNewestProducts,
   pickInSeasonProducts,
   resolveStockClass,
+  getStockLabel,
 } from "@/lib/catalogue";
 import { readCartItems } from "@/lib/cart-storage";
 import { getProductHref } from "@/lib/products";
@@ -19,6 +20,7 @@ const RECENTLY_VIEWED_STORAGE_KEY = "mealkit_recently_viewed";
 
 function ProductCard({ product }) {
   const stockClass = resolveStockClass(product.stock);
+  const stockLabel = getStockLabel(product.stock);
   const hasOldPrice = product.oldPrice && product.oldPrice > product.price;
   const href = getProductHref(product);
 
@@ -30,8 +32,8 @@ function ProductCard({ product }) {
             <p>- {product.discount}%</p>
           </div>
         ) : null}
-        <div className="product-card-season">
-          <p>{product.inSeason ? "In Season" : "Off Season"}</p>
+        <div className={`product-card-season ${product.inSeason ? 'is-in' : 'is-out'}`}>
+          <p>{product.inSeason ? "In Season" : "Out of Season"}</p>
         </div>
       </span>
       <div>
@@ -49,8 +51,8 @@ function ProductCard({ product }) {
           {hasOldPrice ? (
             <span className="old-price">{formatProductPrice(product.oldPrice, product.unit)}</span>
           ) : null}
-          {product.stock ? (
-            <p className={`product-stock ${stockClass}`.trim()}>{product.stock}</p>
+          {stockLabel ? (
+            <p className={`product-stock ${stockClass}`.trim()}>{stockLabel}</p>
           ) : null}
         </div>
       </div>

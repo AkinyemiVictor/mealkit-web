@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { formatProductPrice, resolveStockClass } from "@/lib/catalogue";
+import { formatProductPrice, resolveStockClass, getStockLabel } from "@/lib/catalogue";
 import AddToCartForm from "@/components/add-to-cart-form";
 import ProductEngagementTracker from "@/components/product-engagement-tracker";
 import { buildProductSlug } from "@/lib/products";
@@ -216,7 +216,9 @@ export async function generateMetadata({ params }) {
     description,
     alternates: { canonical: pageUrl },
     openGraph: {
-      type: "product",
+      // Next.js metadata does not support a custom 'product' type.
+      // Use a valid type and still provide rich content via title/description/images.
+      type: "website",
       url: pageUrl,
       title: `MealKit | ${product.name}`,
       description,
@@ -424,6 +426,7 @@ export default async function ProductDetailPage({ params }) {
   const detailContent = normaliseProductDetailContent(product, rawProduct);
 
   const stockClass = resolveStockClass(product.stock);
+  const stockLabel = getStockLabel(product.stock);
 
   return (
     <main className="product-detail-page" data-product-id={product.id}>
@@ -445,7 +448,7 @@ export default async function ProductDetailPage({ params }) {
           <div className="product-detail-badges">
             {product.discount ? <span className="product-detail-discount">- {product.discount}%</span> : null}
             <span className={`product-detail-season ${product.inSeason ? "is-in-season" : "is-off-season"}`}>
-              {product.inSeason ? "In Season" : "Off Season"}
+              {product.inSeason ? "In Season" : "Out of Season"}
             </span>
           </div>
 
@@ -458,7 +461,7 @@ export default async function ProductDetailPage({ params }) {
             ) : null}
           </div>
 
-          {product.stock ? <p className={`product-detail-stock ${stockClass}`.trim()}>{product.stock}</p> : null}
+          {stockLabel ? <p className={`product-detail-stock ${stockClass}`.trim()}>{stockLabel}</p> : null}
 
           <dl className="product-detail-meta">
             {product.unit ? (

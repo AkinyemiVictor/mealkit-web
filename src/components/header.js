@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { readRecentSearches, storeRecentSearch } from "@/lib/search-history";
 import copy from "@/data/copy";
 import { AUTH_EVENT, clearStoredUser, readStoredUser } from "@/lib/auth";
+import { getBrowserSupabaseClient } from "@/lib/supabase/browser-client";
 import { readCartItems } from "@/lib/cart-storage";
 
 const MIN_ORDER_SIZE = 0.01;
@@ -339,7 +340,11 @@ export default function Header() {
     closeMobileMenu();
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const supabase = getBrowserSupabaseClient();
+      await supabase.auth.signOut();
+    } catch {}
     clearStoredUser();
     setUser(null);
     handleNavAction();

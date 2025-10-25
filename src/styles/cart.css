@@ -1322,8 +1322,7 @@ header {
   padding: 1.5rem 0.75rem;
 }
 
-.product-card-discount,
-.product-card-season {
+.product-card-discount {
   background-color: rgba(0, 128, 0, 0.08);
   color: #008000;
   font-size: 0.7rem;
@@ -1455,10 +1454,11 @@ header {
     margin: 5px;
 }
 .product-card-season {
-    background: rgb(0, 172, 17, 0.1);
     border-radius: 12px;
     margin: 5px;
 }
+.product-card-season.is-in { background: rgba(10,157,40,0.1); }
+.product-card-season.is-out { background: #fef3c7; }
 .productImg {
     width: 140px;
     border-radius: 12px;
@@ -1476,17 +1476,19 @@ header {
 }
 .old-price {
     text-decoration: line-through;
-    color: rgb(255, 91, 0);
+    color: #6b7280; /* gray-500 */
     font-size: 12px;
     margin-right: 6px;
 }
 .product-card-season p {
   font-size: 12px;
-    font-weight: 600;
-    padding: 8px 16px;
-    color: rgb(0, 172, 17);
-    margin: 0;
-}.product-card-badges .product-card-discount p {
+  font-weight: 600;
+  padding: 8px 16px;
+  margin: 0;
+}
+.product-card-season.is-in p { color: #0a9d28; }
+.product-card-season.is-out p { color: #b45309; }
+.product-card-badges .product-card-discount p {
     font-size: 12px;
     font-weight: 600;
     padding: 8px 16px;

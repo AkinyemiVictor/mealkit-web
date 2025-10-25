@@ -6,9 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import categories, { getCategoryHref } from "@/data/categories";
 import CategoryCarouselSkeleton from "@/components/category-carousel-skeleton";
-import { formatProductPrice, resolveStockClass, normaliseProductCatalogue } from "@/lib/catalogue";
+import { formatProductPrice, resolveStockClass, getStockLabel, normaliseProductCatalogue } from "@/lib/catalogue";
 import useProducts from "@/lib/use-products";
-import categories from "@/data/categories";
 import { getProductHref } from "@/lib/products";
 
 const CategoryCarousel = dynamic(() => import("@/components/category-carousel"), {
@@ -27,21 +26,12 @@ const getCategory = (slug) => categories.find((entry) => entry.slug === slug) ||
 
 function CategoryProductCard({ product }) {
   const stockClass = resolveStockClass(product.stock);
+  const stockLabel = getStockLabel(product.stock);
   const hasOldPrice = product.oldPrice && product.oldPrice > product.price;
   const href = getProductHref(product);
 
   return (
     <Link href={href} className="product-card" aria-label={`View ${product.name}`} prefetch={false}>
-      <span className="product-card-badges">
-        {product.discount ? (
-          <div className="product-card-discount">
-            <p>- {product.discount}%</p>
-          </div>
-        ) : null}
-        <div className="product-card-season">
-          <p>{product.inSeason ? "In Season" : "Off Season"}</p>
-        </div>
-      </span>
       <div>
         <img
           src={product.image || "/assets/img/product images/tomato-fruit-isolated-transparent-background.png"}
@@ -57,9 +47,19 @@ function CategoryProductCard({ product }) {
           {hasOldPrice ? (
             <span className="old-price">{formatProductPrice(product.oldPrice, product.unit)}</span>
           ) : null}
-          {product.stock ? (
-            <p className={`product-stock ${stockClass}`.trim()}>{product.stock}</p>
+          {stockLabel ? (
+            <p className={`product-stock ${stockClass}`.trim()}>{stockLabel}</p>
           ) : null}
+          <span className="product-card-badges" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+            {product.discount ? (
+              <div className="product-card-discount">
+                <p>- {product.discount}%</p>
+              </div>
+            ) : <span />}
+            <div className={`product-card-season ${product.inSeason ? 'is-in' : 'is-out'}`}>
+              <p>{product.inSeason ? "In Season" : "Out of Season"}</p>
+            </div>
+          </span>
         </div>
       </div>
     </Link>

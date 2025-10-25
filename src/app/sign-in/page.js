@@ -160,7 +160,7 @@ export default function SignInPage() {
     setActiveTab(tabKey);
   }, []);
 
-  const handleLoginSubmit = useCallback((event) => {
+  const handleLoginSubmit = useCallback(async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
@@ -194,16 +194,27 @@ export default function SignInPage() {
       return;
     }
 
-    const nameFromEmail = email.includes("@") ? email.split("@")[0] : "MealKit friend";
-    const user = {
-      fullName:
-        nameFromEmail.replace(/[\.\_\-]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()) ||
-        "MealKit Friend",
-      email,
-    };
-    persistStoredUser(user);
-    migrateGuestCartToUser(user);
-    window.location.href = "/account";
+    try {
+      const supabase = getBrowserSupabaseClient();
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        window.alert(error.message || "Invalid email or password");
+        return;
+      }
+      const nameFromEmail = email.includes("@") ? email.split("@")[0] : "MealKit friend";
+      const user = {
+        fullName:
+          nameFromEmail.replace(/[\.\_\-]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()) ||
+          "MealKit Friend",
+        email,
+      };
+      persistStoredUser(user);
+      migrateGuestCartToUser(user);
+      window.location.href = "/account";
+    } catch (e) {
+      console.error("Supabase login error", e);
+      window.alert("Unexpected error during login. Please try again.");
+    }
   }, []);
 
   const handleSignupSubmit = useCallback(async (event) => {

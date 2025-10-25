@@ -1356,7 +1356,7 @@ main > section:not(.home-hero) {
 }
 .old-price {
   text-decoration: line-through;
-  color: rgb(255, 91, 0);
+  color: #6b7280; /* gray-500 */
   font-size: 12px;
   margin-right: 6px;
 }
@@ -1387,13 +1387,23 @@ main > section:not(.home-hero) {
   font-size: 12px;
   font-weight: 600;
   padding: 8px 16px;
-  color: rgb(0, 172, 17);
   margin: 0;
 }
 .product-card-season {
-  background: rgb(0, 172, 17, 0.1);
   border-radius: 12px;
   margin: 5px;
+}
+.product-card-season.is-in {
+  background: rgba(10, 157, 40, 0.1);
+}
+.product-card-season.is-in p {
+  color: #0a9d28;
+}
+.product-card-season.is-out {
+  background: #fef3c7; /* amber-100 */
+}
+.product-card-season.is-out p {
+  color: #b45309; /* amber-700 */
 }
 .productImg {
   width: 140px;
@@ -3060,8 +3070,8 @@ padding-left: 12px;
 }
 
 .product-detail-season.is-off-season {
-  color: #ff5b00;
-  background: rgba(255, 91, 0, 0.12);
+  color: #b45309; /* amber-700 */
+  background: #fef3c7; /* amber-100 */
 }
 
 .product-detail-content h1 {

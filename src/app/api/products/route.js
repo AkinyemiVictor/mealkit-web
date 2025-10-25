@@ -10,9 +10,7 @@ const mapRowToProduct = (row) => {
   if (!row || typeof row !== "object") return null;
   const price = Number(row.price) || 0;
   const oldPrice = Number(row.oldPrice ?? row.old_price ?? price) || price;
-  const discount = Number(
-    row.discount ?? (oldPrice > price ? Math.round(((oldPrice - price) / (oldPrice || 1)) * 100) : 0)
-  ) || 0;
+  const discount = oldPrice > price ? Math.round(((oldPrice - price) / (oldPrice || 1)) * 100) : 0;
 
   return {
     id: String(row.id ?? ""),
