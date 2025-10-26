@@ -2,7 +2,7 @@
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css");
 
 * {
-  /* box-sizing: border-box; */
+  box-sizing: border-box;
   font-family: "Segoe UI", sans-serif;
 }
 body {
@@ -144,6 +144,14 @@ body {
   display: flex;
   justify-content: flex-end;
   flex: 0 1 460px;
+}
+
+/* Reduce search bar width on medium/large screens */
+@media (max-width: 1120px) {
+  .site-header__search-wrapper {
+    max-width: 360px;
+    flex: 0 1 360px;
+  }
 }
 
 .site-header__search-wrapper-inner {
@@ -670,11 +678,6 @@ body {
     padding: 0 1rem;
   }
 
-  .home-section__header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .home-section__cta,
   .section-view-button {
     align-self: flex-start;
@@ -894,6 +897,63 @@ main > section:not(.home-hero) {
   border-radius: 32px;
   padding: clamp(2.5rem, 6vw, 3.5rem);
   box-shadow: 0 12px 30px rgba(15, 31, 21, 0.08);
+}
+
+/* Make the home ad/hero react at the same breakpoints as sections */
+@media (max-width: 1025px) {
+  .home-hero {
+    margin: 0 0 clamp(1.8rem, 6vw, 3rem);
+    padding: clamp(1.8rem, 5vw, 3rem) clamp(1.2rem, 5vw, 2rem) clamp(2.8rem, 7vw, 3.6rem);
+    border-radius: 0;
+  }
+  .home-hero__slide {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1.2rem, 4vw, 2rem);
+  }
+  .home-hero__visual { width: clamp(240px, 38vw, 320px); }
+}
+
+/* Smooth transition at tablet sizes to match other sections */
+@media (max-width: 768px) {
+  .home-hero {
+    margin: 0 0 clamp(1.6rem, 9vw, 2.6rem);
+    padding: clamp(1.65rem, 8vw, 2.3rem) clamp(1rem, 8vw, 1.6rem) clamp(2.6rem, 12vw, 3.5rem);
+    border-radius: 0;
+  }
+  .home-hero__slide { gap: clamp(1rem, 5vw, 1.8rem); }
+}
+
+/* Unify ad/hero content: full width with fixed padding; override media rules */
+.home-hero {
+  padding: 1.5rem !important;
+}
+.home-hero__viewport,
+.home-hero__track,
+.home-hero__content {
+  width: 100%;
+}
+
+/* Switch to hamburger header at and below 1025px */
+@media (max-width: 1025px) {
+  .site-header__search-wrapper,
+  .site-header__actions {
+    display: none;
+  }
+
+  .site-header__menu-toggle,
+  .site-header__mobile-backdrop,
+  .site-header__mobile-panel {
+    display: block;
+  }
+
+  .site-header__menu-toggle { margin-left: auto; }
+}
+
+/* At and below 1200px, make the home category aisle flush (no rounded corners) */
+@media (max-width: 1200px) {
+  .category-carousel {
+    border-radius: 0;
+  }
 }
 
 .category-carousel__header {
@@ -1305,6 +1365,14 @@ main > section:not(.home-hero) {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
 }
+.product-card > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+.product-card-details {
+  margin-top: auto;
+}
 
 .product-card:hover {
   transform: translateY(-4px);
@@ -1364,7 +1432,7 @@ main > section:not(.home-hero) {
   width: auto;
 }
 .product-card-details {
-  margin-bottom: 15px;
+  margin-bottom: 0;
 }
 .product-card-badges {
   display: flex;
@@ -1412,6 +1480,7 @@ main > section:not(.home-hero) {
 }
 .home-section {
   margin-top: 6rem;
+  margin-bottom: 6rem;
   padding: 0 1.5rem;
   width: 100%;
   display: flex;
@@ -1706,7 +1775,7 @@ main > section:not(.home-hero) {
   }
 
   .home-section__header {
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
   }
 
@@ -1745,19 +1814,19 @@ main > section:not(.home-hero) {
   margin-top: 6rem;
 }
 .advert-section-content {
-  width: 100%;
   max-width: 1200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  display: block;
+  padding: 0 1.5rem; /* requested padding */
+  box-sizing: border-box;
 }
 
 .advert-section-content img {
   width: 100%;
-  max-width: 1200px;
   height: auto;
+  display: block;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: 8px; /* keep edges flush */
 }
 /***************download app******************************/
   .downloadAppTB {
@@ -1856,7 +1925,7 @@ main > section:not(.home-hero) {
 .buttonHolder img {
   width: 180px;
   height: 58px;
-  border-radius: 14px;
+  border-radius: 8px;
   cursor: pointer;
 }
 
@@ -1879,7 +1948,6 @@ main > section:not(.home-hero) {
   }
 
   .buttonHolder {
-    justify-content: center;
     flex-wrap: wrap;
   }
 }
@@ -2012,7 +2080,7 @@ main > section:not(.home-hero) {
 .buttonHolder img {
   width: 185px;
   height: 60px;
-  border-radius: 16px;
+  border-radius: 8px;
   display: block;
   box-shadow: 0 18px 30px rgba(1, 30, 10, 0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -2021,6 +2089,18 @@ main > section:not(.home-hero) {
 .buttonHolder img:hover {
   transform: translateY(-4px);
   box-shadow: 0 22px 38px rgba(1, 30, 10, 0.45);
+}
+
+/* Ensure download app buttons don't overlap around tablet widths */
+@media (max-width: 979px) {
+  .buttonHolder {
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+  }
+  .buttonHolder img {
+    width: 150px;
+    height: 48px;
+  }
 }
 
 
@@ -2034,9 +2114,6 @@ main > section:not(.home-hero) {
   }  .bestSellingFlex {
   max-width: 1050px;
   }
-  .advert-section-content {
-  max-width: 1050px;
-  }
   .product-card-grid {
     padding: 1rem 0;
     gap: 2.1rem;
@@ -2046,7 +2123,7 @@ main > section:not(.home-hero) {
 }
 @media all and (max-width: 1250px) {
   .header-content {
-    width: 1200px;
+    width: 100%;
   }  .boardShape {
     width: 100%;
     height: 450px;
@@ -2054,9 +2131,7 @@ main > section:not(.home-hero) {
   }  .bestSellingFlex {
   max-width: 1050px;
   }
-  .advert-section-content {
-  max-width: 1050px;
-  }
+
   .product-card-grid {
     padding: 1rem 0;
     gap: 2.1rem;
@@ -2074,9 +2149,7 @@ main > section:not(.home-hero) {
   }  .bestSellingFlex {
   max-width: 850px;
   }
-  .advert-section-content {
-  max-width: 850px;
-  }
+
   .product-card-grid {
     justify-content: flex-start;
     padding: 1rem 0;
@@ -2131,9 +2204,7 @@ main > section:not(.home-hero) {
   .bestSellingFlex {
     max-width: 700px;
   }
-  .advert-section-content {
-    max-width: 700px;
-  }
+
 }
 @media all and (max-width: 800px) {
   .header-content {
@@ -2153,9 +2224,7 @@ main > section:not(.home-hero) {
     padding: 1rem 0;
     box-sizing: border-box;
   }
-  .advert-section-content {
-    max-width: 600px;
-  }
+
 }
 
 @media all and (max-width: 700px) {
@@ -2211,14 +2280,12 @@ main > section:not(.home-hero) {
     padding: 1rem 0;
     box-sizing: border-box;
   }
-  .advert-section-content {
-    max-width: 500px;
-  }
+
   .bestSellingFlex {
     max-width: 500px;
   }
   .buttonHolder img {
-    border-radius: 6px;
+    border-radius: 8px;
     width: 120px;
     height: 40px;
   }
@@ -2240,9 +2307,7 @@ main > section:not(.home-hero) {
     padding: 1rem 0;
     box-sizing: border-box;
   }
-  .advert-section-content {
-    max-width: 400px;
-  }
+
 }
 @media all and (max-width: 430px) {
   .searchBar {
@@ -2268,9 +2333,6 @@ main > section:not(.home-hero) {
     background-color: rgba(188, 188, 188, 0.15);
   }
 
-.advert-section-content {
-  max-width: 350px;
-  }
   .appTextndButtons {
   max-width: 320px;
     margin-top: 0rem;
@@ -2326,6 +2388,7 @@ footer .nameSlogan p {
 }
 .p-footer {
   font-size: large;
+  color: #f68b1f; /* match header tagline */
 }
 .nameSlogan {
 padding-left: 12px;
@@ -2440,6 +2503,7 @@ padding-left: 12px;
 
   .footer-logo {
     margin-bottom: 1.5rem;
+    justify-content: center; /* center logo + text */
   }
 
   .social-icons {
@@ -2606,9 +2670,33 @@ padding-left: 12px;
 .site-footer--primary .footer-links-grid {
   display: grid;
   gap: 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  /* Use fixed max column width so the last row can center */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 240px));
+  justify-content: center; /* center the whole grid line */
   width: 100%;
-  justify-items: center;
+  justify-items: center; /* center items within their cells */
+}
+
+/* Center text inside each link group */
+.site-footer--primary .link-group {
+  text-align: center;
+}
+
+/* Ensure primary footer flex variant also centers columns */
+.site-footer--primary .footer-links {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 240px));
+  justify-content: center;
+}
+
+/* Center the final link group only on wider screens */
+@media (min-width: 940px) {
+  .site-footer--primary .footer-links-grid .link-group:last-child,
+  .site-footer--primary .footer-links .link-group:last-child {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
 }
 
 .site-footer--primary .link-group h3 {
@@ -2663,6 +2751,18 @@ padding-left: 12px;
   color: #e9f9ef;
 }
 
+/* Center the Subscribe button when layout wraps under 940px */
+@media (max-width: 940px) {
+  .site-footer--primary .newsletter-field {
+    justify-content: center;
+  }
+
+  .site-footer--primary .newsletter-field button {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .site-footer--primary .footer-newsletter {
     padding: 1.8rem;
@@ -2683,6 +2783,24 @@ padding-left: 12px;
     width: 100%;
   }
 }
+.scale-wrapper {
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+  /* full-bleed escape from centered containers */
+  margin-left: calc(50% - 50vw);
+}
+
+.scale-inner {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-origin: 0 0;
+  transform: translateX(-50%) scale(var(--s, 1));
+}
+
+/* Global page scaler (wraps the entire app) */
+/* Remove global page scaler rules (not used anymore) */
 .product-stock {
   margin-top: 0.5rem;
   font-weight: 600;
@@ -3925,3 +4043,18 @@ padding-left: 12px;
 
 
 
+/* Global page scaler */
+.scale-page-outer {
+  width: 100%;
+  overflow-x: hidden;
+  background: var(--mk-body-bg);
+}
+
+.scale-page-inner {
+  width: var(--base-width, 1200px);
+  position: relative;
+  left: 50%;
+  transform-origin: 0 0;
+  transform: translateX(-50%) scale(var(--scale, 1));
+  will-change: transform;
+}

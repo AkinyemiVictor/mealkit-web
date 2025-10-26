@@ -78,9 +78,27 @@ export default function CategoryPage({ category: incomingCategory, pageSize = DE
   const { ordered } = useProducts();
   const categoryProducts = useMemo(() => {
     if (!category) return [];
-    const slug = category.slug;
+    const target = String(category.slug || "");
     const list = ordered || [];
-    return list.filter((p) => (p.category || "").toLowerCase().replace(/\s+/g, "-") === slug);
+    const toSlug = (value) => {
+      const withSeparators = String(value || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+      const lowered = withSeparators.toLowerCase();
+      const connectors = lowered.replace(/\band\b/g, "-n-").replace(/&/g, "-n-");
+      const base = connectors.replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+      const map = new Map([
+        ["meat-poultry", "meat-n-poultry"],
+        ["fish-seafood", "fish-n-seafood"],
+        ["grains-cereals", "grains-n-cereals"],
+        ["dairy-eggs", "dairy-n-eggs"],
+        ["tubers-legumes", "tubers-n-legumes"],
+        ["spices-condiments", "spices-n-condiments"],
+        ["drinks-beverages", "drinks-n-beverages"],
+        ["snacks-pastries", "snacks-n-pastries"],
+        ["oil-cooking-essentials", "oil-n-cooking-essentials"],
+      ]);
+      return map.get(base) || base;
+    };
+    return list.filter((p) => toSlug(p.category) === target);
   }, [category, ordered]);
   const totalPages = Math.max(1, Math.ceil(categoryProducts.length / itemsPerPage));
 

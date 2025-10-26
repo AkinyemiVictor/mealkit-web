@@ -166,16 +166,6 @@ function ProductHighlightCard({ product }) {
       prefetch={false}
       onClick={() => { recordProductClick(product.id); recordProductView(product.id); }}
     >
-      <span className="product-card-badges">
-        {product.discount ? (
-          <div className="product-card-discount">
-            <p>- {product.discount}%</p>
-          </div>
-        ) : null}
-        <div className={`product-card-season ${product.inSeason ? 'is-in' : 'is-out'}`}>
-          <p>{product.inSeason ? "In Season" : "Out of Season"}</p>
-        </div>
-      </span>
       <div>
         <img
           src={product.image || "/assets/img/product images/tomato-fruit-isolated-transparent-background.png"}
@@ -194,6 +184,16 @@ function ProductHighlightCard({ product }) {
           {stockLabel ? (
             <p className={`product-stock ${stockClass}`.trim()}>{stockLabel}</p>
           ) : null}
+          <span className="product-card-badges" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+            {product.discount ? (
+              <div className="product-card-discount">
+                <p>- {product.discount}%</p>
+              </div>
+            ) : <span />}
+            <div className={`product-card-season ${product.inSeason ? 'is-in' : 'is-out'}`}>
+              <p>{product.inSeason ? "In Season" : "Out of Season"}</p>
+            </div>
+          </span>
         </div>
       </div>
     </Link>

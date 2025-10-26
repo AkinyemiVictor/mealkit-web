@@ -1,5 +1,16 @@
-﻿export const formatProductPrice = (value, unit) => {
-  const formattedPrice = `₦${Number(value || 0).toLocaleString()}`;
+export const formatProductPrice = (value, unit) => {
+  const amount = Number(value || 0);
+  let formattedPrice = "";
+  try {
+    formattedPrice = new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    // Fallback to Naira symbol with locale string
+    formattedPrice = `₦${amount.toLocaleString()}`;
+  }
   const normalisedUnit = typeof unit === "string" ? unit.trim() : "";
   return normalisedUnit ? `${formattedPrice}/${normalisedUnit}` : formattedPrice;
 };
@@ -56,6 +67,8 @@ export const normaliseProductCatalogue = (catalogue) => {
       const oldPrice = variant.oldPrice ?? item.oldPrice ?? price;
       const discount = oldPrice > price ? Math.round(((oldPrice - price) / (oldPrice || 1)) * 100) : 0;
 
+      const toSlug = (value) => { const withSeparators = String(value || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2"); const lowered = withSeparators.toLowerCase(); const connectors = lowered.replace(/\band\b/g, "-n-").replace(/&/g, "-n-"); return connectors.replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, ""); };
+
       const normalised = {
         id: item.id != null ? String(item.id) : "",
         name: item.name || "Fresh produce",
@@ -70,6 +83,7 @@ export const normaliseProductCatalogue = (catalogue) => {
             : variant.inSeason ?? true,
         discount,
         category: item.category || variant.category || "",
+        categorySlug: toSlug(item.category || variant.category || "uncategorised") || "uncategorised",
       };
 
       if (!normalised.id || index.has(normalised.id)) return;
@@ -127,6 +141,8 @@ export default {
   pickNewestProducts,
   pickInSeasonProducts,
 };
+
+
 
 
 

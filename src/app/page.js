@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+// import ScaledSection from "@/components/scaled-section";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import useProducts from "@/lib/use-products";
@@ -344,7 +345,20 @@ export default function HomePage() {
                     aria-hidden={!isActive}
                   >
                     <div className="home-hero__content">
-                      <h1 className="home-hero__title">Banner</h1>
+                      {slide.tag ? <p className="home-hero__tag">{slide.tag}</p> : null}
+                      <h1 className="home-hero__title">
+                        {Array.isArray(slide.heading) ? (
+                          <>
+                            <span>{slide.heading[0]}</span>
+                            <span>{slide.heading[1]}</span>
+                          </>
+                        ) : (
+                          <span>{slide.heading}</span>
+                        )}
+                      </h1>
+                      {slide.description ? (
+                        <p className="home-hero__description">{slide.description}</p>
+                      ) : null}
                     </div>
                   </article>
                 );

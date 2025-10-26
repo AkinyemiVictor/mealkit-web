@@ -6,6 +6,17 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server-client";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const toSlug = (value) => {
+  // Insert separators for camelCase/PascalCase before lowercasing
+  const withSeparators = String(value || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+  const lowered = withSeparators.toLowerCase();
+  const connectors = lowered.replace(/\band\b/g, "-n-").replace(/&/g, "-n-");
+  return connectors
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+};
+
 const mapRowToProduct = (row) => {
   if (!row || typeof row !== "object") return null;
   const price = Number(row.price) || 0;
@@ -22,7 +33,8 @@ const mapRowToProduct = (row) => {
     stock: row.stock || "",
     inSeason: typeof row.inSeason === "boolean" ? row.inSeason : Boolean(row.in_season ?? row.inseason ?? true),
     discount,
-    category: row.category || "uncategorised",
+    category: row.category || "",
+    categorySlug: toSlug(row.category || "uncategorised") || "uncategorised",
   };
 };
 
@@ -53,13 +65,13 @@ export async function GET() {
     const mapped = rows.map(mapRowToProduct).filter(Boolean);
 
     const grouped = mapped.reduce((acc, p) => {
-      const key = p.category || "uncategorised";
+      const key = p.categorySlug || "uncategorised";
       if (!acc[key]) acc[key] = [];
       acc[key].push(p);
       return acc;
     }, {});
 
-    return NextResponse.json(grouped, {
+    return NextResponse.json({ grouped, flat: mapped }, {
       status: 200,
       headers: {
         "Cache-Control": "no-store",
@@ -69,3 +81,4 @@ export async function GET() {
     return NextResponse.json({ error: err?.message || "Failed to fetch products" }, { status: 500 });
   }
 }
+

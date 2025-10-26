@@ -1,8 +1,17 @@
+import "server-only";
 import { renderReceiptHtml } from "@/lib/email-templates";
 
 const hasSendgrid = () => Boolean(process.env.SENDGRID_API_KEY && process.env.EMAIL_FROM);
 const hasResend = () => Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
-const hasSmtp = () => Boolean(process.env.SMTP_HOST && process.env.EMAIL_FROM);
+// Require full SMTP creds to avoid triggering nodemailer path accidentally in dev
+const hasSmtp = () =>
+  Boolean(
+    process.env.SMTP_HOST &&
+      process.env.SMTP_PORT &&
+      process.env.SMTP_USER &&
+      process.env.SMTP_PASS &&
+      process.env.EMAIL_FROM
+  );
 
 async function sendViaSendgrid({ to, subject, html }) {
   const apiKey = process.env.SENDGRID_API_KEY;

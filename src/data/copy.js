@@ -111,7 +111,7 @@ const copy = {
       cardName: "Name on card",
       cardNumber: "Card number",
       cardExpiry: "Expiry date",
-      cardCvc: "CVC",
+      cardCvc: "CVV",
       subtotal: "Items",
       delivery: "Delivery",
       total: "Total payable",
@@ -137,7 +137,7 @@ const copy = {
       cityService: "Sorry, we currently service Ibadan only.",
       cardNumber: "Card number must contain 16 digits.",
       cardExpiry: "Use the MM/YY format.",
-      cardCvc: "CVC must be 3 digits.",
+      cardCvc: "CVV must be 3 digits.",
     },
     status: {
       processingTitle: "Processing payment",

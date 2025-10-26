@@ -23,9 +23,10 @@ export default function useProducts() {
         const res = await fetch("/api/products", { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
+        const grouped = json && json.grouped ? json.grouped : json;
         if (!cancelled) {
-          inMemoryCache = json;
-          setCatalogue(json);
+          inMemoryCache = grouped;
+          setCatalogue(grouped);
           setStatus("ready");
         }
       } catch (err) {
@@ -51,4 +52,3 @@ export default function useProducts() {
     error,
   };
 }
-

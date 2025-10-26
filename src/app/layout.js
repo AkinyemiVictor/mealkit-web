@@ -4,6 +4,7 @@ import "@/styles/main.css"; // bring in your main styles
 import "@/styles/checkout.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import ScaledRoot from "@/components/scaled-root";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,12 +35,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Header />
-        <div id="main-content" className="layout-main" tabIndex={-1}>
-          {children}
-        </div>
-
-        <Footer />
+        <ScaledRoot baseWidth={1200} minScale={0.5} maxScale={3}>
+          <Header />
+          <div id="main-content" className="layout-main" tabIndex={-1}>
+            {children}
+          </div>
+          <Footer />
+        </ScaledRoot>
       </body>
     </html>
   );

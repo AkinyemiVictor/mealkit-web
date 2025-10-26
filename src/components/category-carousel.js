@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useRef } from "react";
+import { useRef } from "react";
+
+const slugify = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 
 export default function CategoryCarousel({
   cards,
@@ -11,7 +19,7 @@ export default function CategoryCarousel({
   scrollAmount = 280,
   activeSlug,
 }) {
-  const headingId = useId();
+  const headingId = `cc-${slugify(heading)}-${slugify(activeSlug || "all")}`;
   const viewportRef = useRef(null);
   const sectionClass = ["category-carousel", className].filter(Boolean).join(" ");
 

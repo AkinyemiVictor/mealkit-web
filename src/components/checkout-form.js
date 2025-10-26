@@ -228,7 +228,10 @@ export default function CheckoutForm() {
     });
   }, []);
 
-  const showCardFields = formState.paymentMethod === "card";
+  // When Paystack public key is present, card details are collected in the secure Paystack modal,
+  // so we should not render our own card inputs.
+  const usingPaystack = Boolean(process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY);
+  const showCardFields = !usingPaystack && formState.paymentMethod === "card";
   const isProcessing = status === "processing";
 
   const paymentHint = useMemo(() => copy.checkout.paymentHint, []);
@@ -341,7 +344,50 @@ export default function CheckoutForm() {
     return nextErrors;
   };
 
-  const handleSubmit = (event) => {
+  const ensurePaystackScript = () => {
+    return new Promise((resolve) => {
+      if (typeof window === "undefined") return resolve(false);
+      if (window.PaystackPop) return resolve(true);
+      const script = document.createElement("script");
+      script.src = "https://js.paystack.co/v1/inline.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const launchPaystack = async ({ email, amount, orderId }) => {
+    const ready = await ensurePaystackScript();
+    if (!ready || !window.PaystackPop) throw new Error("Paystack failed to load");
+    return new Promise((resolve, reject) => {
+      const handler = window.PaystackPop.setup({
+        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+        email,
+        amount: Math.max(0, Math.round(Number(amount) * 100)),
+        ref: `MK-${orderId || generateOrderId()}-${Date.now()}`,
+        // Use non-async function to satisfy inline.js validator
+        callback: function (response) {
+          fetch("/api/paystack/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reference: response.reference, orderId }),
+          })
+            .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
+            .then(({ ok, json }) => {
+              if (!ok || !json?.verified) throw new Error(json?.error || "Verification failed");
+              resolve(json);
+            })
+            .catch((e) => reject(e));
+        },
+        onClose: function () {
+          reject(new Error("Payment window closed"));
+        },
+      });
+      handler.openIframe();
+    });
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (isProcessing) return;
 
@@ -421,18 +467,22 @@ export default function CheckoutForm() {
         : null,
     };
 
-    const finalize = async () => {
+    const finalize = async (serverOrderId) => {
       // Attempt to create server order (requires Supabase session)
       try {
-        const res = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          cache: "no-store",
-          body: JSON.stringify({ deliveryAddress: order.address, note: order.notes }),
-        });
-        const payload = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          console.warn("Server order create failed", payload?.error || res.statusText);
+        if (!serverOrderId) {
+          const res = await fetch("/api/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            body: JSON.stringify({ deliveryAddress: order.address, note: order.notes }),
+          });
+          const payload = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            console.warn("Server order create failed", payload?.error || res.statusText);
+          } else {
+            serverOrderId = payload?.order?.id;
+          }
         }
       } catch (e) {
         console.warn("Server order create exception", e);
@@ -456,8 +506,30 @@ export default function CheckoutForm() {
     };
 
     setStatus("processing");
-    const delay = formState.paymentMethod === "card" ? 1400 : 400;
-    window.setTimeout(() => { finalize().catch(() => {}); }, delay);
+    try {
+      let createdOrderId = null;
+      // Always create the server order first to get an id
+      try {
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+          body: JSON.stringify({ deliveryAddress: order.address, note: order.notes }),
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (res.ok) createdOrderId = payload?.order?.id || null;
+      } catch {}
+
+      if (formState.paymentMethod === "card") {
+        await launchPaystack({ email: order.email, amount: summary.total, orderId: createdOrderId || generateOrderId() });
+      }
+
+      await finalize(createdOrderId);
+    } catch (err) {
+      console.warn("Checkout error", err);
+      setFormError(err?.message || "Payment was not completed");
+      setStatus("error");
+    }
   };
 
   if (result) {
