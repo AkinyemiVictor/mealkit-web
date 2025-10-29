@@ -13,6 +13,10 @@ export function renderReceiptHtml(order, options = {}) {
   const brandGreen = "#00ac11";
   const dark = "#0f172a";
   const muted = "#475569";
+  const baseUrl = options.baseUrl || process.env.APP_BASE_URL || "";
+  const logoPath = options.logoPath || "/assets/logo/LOGO%20NO%20BACKGROUND.png";
+  const logoUrl = baseUrl ? `${baseUrl.replace(/\/$/, "")}${logoPath}` :
+    (options.logoUrl || process.env.APP_LOGO_URL || "https://raw.githubusercontent.com/openai/cookbook-images/main/mealkit/logo.png");
 
   const items = Array.isArray(order?.items) ? order.items : [];
   const summary = order?.summary || { subtotal: 0, deliveryFee: 0, total: 0 };
@@ -150,7 +154,3 @@ function capitalise(value) {
   const s = String(value || "").trim();
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
-  const baseUrl = options.baseUrl || process.env.APP_BASE_URL || "";
-  const logoPath = options.logoPath || "/assets/logo/LOGO%20NO%20BACKGROUND.png";
-  const logoUrl = baseUrl ? `${baseUrl.replace(/\/$/, "")}${logoPath}` :
-    (options.logoUrl || process.env.APP_LOGO_URL || "https://raw.githubusercontent.com/openai/cookbook-images/main/mealkit/logo.png");

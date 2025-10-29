@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { getSupabaseAdminClient } from "@/lib/supabase/server-client";
+import { products as localProducts } from "@/data/products";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,6 +58,22 @@ export async function GET() {
         error = e;
       }
       if (error) {
+        // As a last resort (typically for local dev before DB is seeded),
+        // fall back to the static product data to keep the app usable.
+        try {
+          const fallback = Object.values(localProducts || {}).flat();
+          const mappedFallback = fallback.map(mapRowToProduct).filter(Boolean);
+          const groupedFallback = mappedFallback.reduce((acc, p) => {
+            const key = p.categorySlug || "uncategorised";
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(p);
+            return acc;
+          }, {});
+          return NextResponse.json({ grouped: groupedFallback, flat: mappedFallback }, {
+            status: 200,
+            headers: { "Cache-Control": "no-store", "X-Source": "local" },
+          });
+        } catch {}
         return NextResponse.json({ error: String(error?.message || error) }, { status: 500 });
       }
     }

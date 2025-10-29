@@ -24,12 +24,13 @@ export async function POST(request) {
 
   const subject = `Your MealKit receipt • ${order?.orderId ?? "Order"}`;
   const origin = new URL(request.url).origin;
+  const fixedSubject = `Your MealKit receipt — ${order?.orderId ?? "Order"}`;
   const html = renderReceiptHtml(order, { baseUrl: origin });
 
   // If no API key, accept the request but don't attempt network send
   if (!RESEND_API_KEY) {
     console.log("[receipt] No RESEND_API_KEY set. Rendering preview only.");
-    return NextResponse.json({ status: "queued-local", to, subject }, { status: 202 });
+    return NextResponse.json({ status: "queued-local", to, subject: fixedSubject }, { status: 202 });
   }
 
   try {
@@ -42,7 +43,7 @@ export async function POST(request) {
       body: JSON.stringify({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to: [to],
-        subject,
+        subject: fixedSubject,
         html,
       }),
     });

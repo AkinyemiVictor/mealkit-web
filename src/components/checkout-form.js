@@ -230,7 +230,9 @@ export default function CheckoutForm() {
 
   // When Paystack public key is present, card details are collected in the secure Paystack modal,
   // so we should not render our own card inputs.
-  const usingPaystack = Boolean(process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY);
+  const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
+  // Only treat Paystack as enabled when a real key is present
+  const usingPaystack = /^pk_(test|live)_/.test(paystackKey);
   const showCardFields = !usingPaystack && formState.paymentMethod === "card";
   const isProcessing = status === "processing";
 
@@ -521,6 +523,11 @@ export default function CheckoutForm() {
       } catch {}
 
       if (formState.paymentMethod === "card") {
+        if (!/^pk_(test|live)_/.test(paystackKey || "")) {
+          setFormError("Card payments are not available: missing Paystack public key.");
+          setStatus("idle");
+          return;
+        }
         await launchPaystack({ email: order.email, amount: summary.total, orderId: createdOrderId || generateOrderId() });
       }
 
@@ -528,7 +535,7 @@ export default function CheckoutForm() {
     } catch (err) {
       console.warn("Checkout error", err);
       setFormError(err?.message || "Payment was not completed");
-      setStatus("error");
+      setStatus("idle");
     }
   };
 

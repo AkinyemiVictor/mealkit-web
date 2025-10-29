@@ -4051,10 +4051,5 @@ padding-left: 12px;
 }
 
 .scale-page-inner {
-  width: var(--base-width, 1200px);
-  position: relative;
-  left: 50%;
-  transform-origin: 0 0;
-  transform: translateX(-50%) scale(var(--scale, 1));
-  will-change: transform;
+  width: 100%;
 }

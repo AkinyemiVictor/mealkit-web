@@ -2356,8 +2356,8 @@ export const products = {
     },
     {
       "id": 607,
-      "name": "Beans(black-eyed/white)",
-      "image": "/assets/products/tuberslegumes/beans-black-eyed-white.png",
+      "name": "Beans(black-eyed)",
+      "image": "/assets/products/tuberslegumes/beans-black-eyed-brown-honey-oloyin.png",
       "price": 800,
       "oldPrice": 950,
       "stock": "In Stock",
@@ -2369,7 +2369,7 @@ export const products = {
     {
       "id": 608,
       "name": "Beans(Drum)",
-      "image": "/assets/products/tuberslegumes/beans-drum.png",
+      "image": "/assets/products/tuberslegumes/beans-black-eyed-brown-honey-oloyin.png",
       "price": 800,
       "oldPrice": 950,
       "stock": "In Stock",
@@ -2381,7 +2381,7 @@ export const products = {
     {
       "id": 609,
       "name": "Beans(Pelebe)",
-      "image": "/assets/products/tuberslegumes/beans-pelebe.png",
+      "image": "/assets/products/tuberslegumes/beans-black-eyed-brown-honey-oloyin.png",
       "price": 800,
       "oldPrice": 950,
       "stock": "In Stock",
@@ -2393,7 +2393,7 @@ export const products = {
     {
       "id": 610,
       "name": "Beans(oloyin)",
-      "image": "/assets/products/tuberslegumes/beans-oloyin.png",
+      "image": "/assets/products/tuberslegumes/beans-black-eyed-brown-honey-oloyin.png",
       "price": 800,
       "oldPrice": 950,
       "stock": "In Stock",
