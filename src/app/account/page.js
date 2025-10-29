@@ -789,7 +789,7 @@ export default function AccountPage() {
                     minLength={ADDRESS_MIN_LENGTH}
                     title={`Address should be at least ${ADDRESS_MIN_LENGTH} characters long.`}
                   />
-                  <p className={styles.profileHint}>We'll default to this address for future orders.</p>
+                  <p className={styles.profileHint}>We&apos;ll default to this address for future orders.</p>
                 </div>
                 <div className={styles.profileActions}>
                   <button type="submit" className={styles.profileSubmit}>
