@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import styles from "./account.module.css";
@@ -88,7 +88,7 @@ const formatAddressDisplay = (user) => {
   return address || city;
 };
 
-export default function AccountPage() {
+function AccountPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [user, setUser] = useState(null);
@@ -914,6 +914,14 @@ export default function AccountPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={<div>Loading account...</div>}>
+      <AccountPageContent />
+    </Suspense>
   );
 }
 

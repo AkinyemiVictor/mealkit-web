@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser-client";
 import { useSearchParams } from "next/navigation";
 
@@ -61,7 +61,7 @@ function GoogleIcon() {
   );
 }
 
-export default function SignInPage() {
+function SignInPageContent() {
   const searchParams = useSearchParams();
   // Initialize to a stable server-safe default; update from URL after mount
   const [activeTab, setActiveTab] = useState("login");
@@ -594,5 +594,13 @@ export default function SignInPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<main className="auth-page"><div className="auth-shell">Loading…</div></main>}>
+      <SignInPageContent />
+    </Suspense>
   );
 }
