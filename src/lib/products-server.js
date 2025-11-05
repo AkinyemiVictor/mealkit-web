@@ -43,16 +43,52 @@ const mapRow = (row) => {
 
 export const fetchAllProducts = async () => {
   const admin = getSupabaseAdminClient();
-  const { data, error } = await admin.from("products").select("*");
+  const { data, error } = await admin.from("products").select("*", { head: false });
   if (error) throw error;
   return (data || []).map(mapRow);
 };
 
 export const fetchProductById = async (id) => {
   const admin = getSupabaseAdminClient();
-  const { data, error } = await admin.from("products").select("*").eq("id", id).limit(1).maybeSingle();
+  const { data, error } = await admin
+    .from("products")
+    .select("*", { head: false })
+    .eq("id", id)
+    .limit(1)
+    .maybeSingle();
   if (error) throw error;
-  return data ? { product: mapRow(data), raw: data } : { product: null, raw: null };
+  if (!data) return { product: null, raw: null };
+
+  // Try to load structured variations from a dedicated variants table if present
+  let variations = [];
+  try {
+    const { data: variantsData, error: variantsError } = await admin
+      .from("product_variants")
+      .select("*", { head: false })
+      .eq("product_id", id)
+      .order("id", { ascending: true });
+    if (!variantsError && Array.isArray(variantsData)) {
+      variations = variantsData.map((row) => ({
+        variationId: row.id,
+        name: row.name || row.ripeness || row.label || "Option",
+        ripeness: row.ripeness || undefined,
+        size: row.size || undefined,
+        packaging: row.packaging || undefined,
+        price: row.price ?? undefined,
+        oldPrice: row.old_price ?? undefined,
+        unit: row.unit || data.unit || undefined,
+        stock: typeof row.in_stock === "boolean" ? (row.in_stock ? "In stock" : "Out of stock") : row.stock || "",
+        inSeason: row.in_season ?? undefined,
+        image: row.image_url || row.image || "",
+        category: row.category || undefined,
+      }));
+    }
+  } catch (_) {
+    // Variants table may not exist yet; ignore
+  }
+
+  const raw = variations.length ? { ...data, variations } : data;
+  return { product: mapRow(raw), raw };
 };
 
 export const fetchProductBySlug = async (slug) => {

@@ -1,19 +1,11 @@
+import { formatMoney } from "@/lib/region";
+
 export const formatProductPrice = (value, unit) => {
-  const amount = Number(value || 0);
-  let formattedPrice = "";
-  try {
-    formattedPrice = new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  } catch {
-    // Fallback to Naira symbol with locale string
-    formattedPrice = `₦${amount.toLocaleString()}`;
-  }
+  const formattedPrice = formatMoney(value);
   const normalisedUnit = typeof unit === "string" ? unit.trim() : "";
   return normalisedUnit ? `${formattedPrice}/${normalisedUnit}` : formattedPrice;
 };
+
 export const resolveStockClass = (stockText, { lowThreshold = 5 } = {}) => {
   if (stockText == null) return "";
   if (typeof stockText === "number") {
@@ -141,8 +133,4 @@ export default {
   pickNewestProducts,
   pickInSeasonProducts,
 };
-
-
-
-
 

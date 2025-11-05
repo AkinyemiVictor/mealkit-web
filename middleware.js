@@ -54,6 +54,8 @@ const genNonce = () => {
 export async function middleware(request) {
   const { pathname } = request.nextUrl || {};
   const isHealth = pathname === '/api/health';
+  const url = request.nextUrl.clone();
+  const host = request.headers.get('host') || '';
 
   // Rate limit (skip health): 30 requests/10s per IP
   let rl = { allowed: true, remaining: 0, limit: 0, resetMs: 0 };
@@ -68,7 +70,38 @@ export async function middleware(request) {
   const nonce = genNonce();
   const reqHeaders = new Headers(request.headers);
   reqHeaders.set('x-nonce', nonce);
-  const response = NextResponse.next({ request: { headers: reqHeaders } });
+  // Region handling: map country hosts or prefixes to a cookie
+  const resInit = { request: { headers: reqHeaders } };
+  let response = NextResponse.next(resInit);
+
+  const setRegionCookie = (code) => {
+    response.cookies.set('mk_region', code, { path: '/', maxAge: 60 * 60 * 24 * 365 });
+  };
+
+  // 1) Host mapping (e.g., mealkit.com.gh -> gh; mealkit.com.ng -> ng)
+  const h = host.toLowerCase();
+  if (h.endsWith('.com.gh') || h.endsWith('.gh')) {
+    setRegionCookie('gh');
+  } else if (h.endsWith('.com.ng') || h.endsWith('.ng')) {
+    setRegionCookie('ng');
+  }
+
+  // 2) Query override: ?region=gh|ng
+  const queryRegion = url.searchParams.get('region');
+  if (queryRegion === 'gh' || queryRegion === 'ng') {
+    setRegionCookie(queryRegion);
+    url.searchParams.delete('region');
+    response = NextResponse.redirect(url);
+  }
+
+  // 3) Path prefix mapping: /gh/* or /ng/* — strip prefix and set cookie
+  const seg = pathname.split('/')[1];
+  if (seg === 'gh' || seg === 'ng') {
+    const stripped = '/' + pathname.split('/').slice(2).join('/');
+    url.pathname = stripped || '/';
+    setRegionCookie(seg);
+    response = NextResponse.redirect(url);
+  }
   for (const [k, v] of Object.entries(securityHeaders)) {
     response.headers.set(k, v);
   }

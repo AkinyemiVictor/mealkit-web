@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { formatProductPrice, resolveStockClass, getStockLabel } from "@/lib/catalogue";
-import AddToCartForm from "@/components/add-to-cart-form";
+import ProductDetailClient from "@/components/product-detail-client";
 import ProductEngagementTracker from "@/components/product-engagement-tracker";
 import { buildProductSlug } from "@/lib/products";
 import { fetchAllProducts, fetchProductBySlug } from "@/lib/products-server";
@@ -233,42 +233,6 @@ export async function generateMetadata({ params }) {
   };
 }
 
-function VariationList({ variations, productUnit }) {
-  if (!Array.isArray(variations) || !variations.length) {
-    return null;
-  }
-
-  return (
-    <div className="product-detail-variations">
-      <h2>Available options</h2>
-      <ul>
-        {variations.map((variation) => {
-          if (!variation || typeof variation !== "object") {
-            return null;
-          }
-
-          const label =
-            variation.name || variation.ripeness || variation.size || variation.packaging || variation.variationId;
-          const priceText = formatProductPrice(variation.price ?? 0, variation.unit || productUnit);
-          const stockLabel = variation.stock;
-          const stockClass = stockLabel ? resolveStockClass(stockLabel) : "";
-
-          return (
-            <li key={variation.variationId || `${label}-${variation.price}`}>
-              <div className="product-detail-variation-header">
-                <span className="product-detail-variation-name">{label}</span>
-                <span className="product-detail-variation-price">{priceText}</span>
-              </div>
-              {stockLabel ? (
-                <span className={`product-detail-variation-stock ${stockClass}`.trim()}>{stockLabel}</span>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
 
 function StarRating({ value, outOf = 5, showLabel = false }) {
   const safeValue = Math.max(0, Math.min(Number(value) || 0, outOf));
@@ -425,9 +389,6 @@ export default async function ProductDetailPage({ params }) {
   const variations = Array.isArray(rawProduct?.variations) ? rawProduct.variations : [];
   const detailContent = normaliseProductDetailContent(product, rawProduct);
 
-  const stockClass = resolveStockClass(product.stock);
-  const stockLabel = getStockLabel(product.stock);
-
   return (
     <main className="product-detail-page" data-product-id={product.id}>
       <ProductEngagementTracker productId={product.id} />
@@ -440,29 +401,9 @@ export default async function ProductDetailPage({ params }) {
       </div>
 
       <section className="product-detail-card">
-        <div className="product-detail-media">
-          <img src={product.image || FALLBACK_IMAGE} alt={product.name} loading="lazy" />
-        </div>
+        <ProductDetailClient product={product} variations={variations} fallbackImage={FALLBACK_IMAGE} />
 
         <div className="product-detail-content">
-          <div className="product-detail-badges">
-            {product.discount ? <span className="product-detail-discount">- {product.discount}%</span> : null}
-            <span className={`product-detail-season ${product.inSeason ? "is-in-season" : "is-off-season"}`}>
-              {product.inSeason ? "In Season" : "Out of Season"}
-            </span>
-          </div>
-
-          <h1>{product.name}</h1>
-
-          <div className="product-detail-pricing">
-            <span className="product-detail-price">{formatProductPrice(product.price, product.unit)}</span>
-            {product.oldPrice && product.oldPrice > product.price ? (
-              <span className="product-detail-old-price">{formatProductPrice(product.oldPrice, product.unit)}</span>
-            ) : null}
-          </div>
-
-          {stockLabel ? <p className={`product-detail-stock ${stockClass}`.trim()}>{stockLabel}</p> : null}
-
           <dl className="product-detail-meta">
             {product.unit ? (
               <>
@@ -479,9 +420,6 @@ export default async function ProductDetailPage({ params }) {
             <dt>Product ID</dt>
             <dd>{product.id}</dd>
           </dl>
-
-          <AddToCartForm product={product} fallbackImage={FALLBACK_IMAGE} />
-          {variations.length ? <VariationList variations={variations} productUnit={product.unit} /> : null}
         </div>
       </section>
 

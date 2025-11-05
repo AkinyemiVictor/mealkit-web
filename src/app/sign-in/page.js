@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser-client";
+import { useNotice } from "@/components/notice-provider";
 import { useSearchParams } from "next/navigation";
 
 import "@/styles/sign-in.css";
@@ -65,6 +66,29 @@ function SignInPageContent() {
   const searchParams = useSearchParams();
   // Initialize to a stable server-safe default; update from URL after mount
   const [activeTab, setActiveTab] = useState("login");
+  // Password visibility toggles
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showSignupConfirm, setShowSignupConfirm] = useState(false);
+  const { showNotice } = useNotice();
+  const handleGoogleSignIn = useCallback(async () => {
+    try {
+      const supabase = getBrowserSupabaseClient();
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
+    } catch (e) {
+      await showNotice({ tone: "error", title: "Google sign-in failed", message: e?.message || "Please try again." });
+    }
+  }, [showNotice]);
+  const clearLoginInlineHint = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const el = document.getElementById("login-inline-hint");
+      if (el) el.textContent = "";
+    } catch {}
+  }, []);
 
   const hashLookup = useMemo(() => TAB_OPTIONS.reduce((acc, tab) => {
     acc[tab.key] = tab.hash;
@@ -195,25 +219,109 @@ function SignInPageContent() {
     }
 
     try {
+      // Clear any previous inline hint
+      try {
+        const hintEl = document.getElementById("login-inline-hint");
+        if (hintEl) hintEl.textContent = "";
+      } catch {}
+
+      // Check if email exists; if not, show inline hint next to Sign Up
+      let emailExists = null;
+      try {
+        const res = await fetch("/api/auth/check-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        if (res.ok) {
+          const { exists } = await res.json();
+          emailExists = !!exists;
+          if (!emailExists) {
+            const hint = document.getElementById("login-inline-hint");
+            if (hint) {
+              hint.textContent = "We couldn't find an account with that email. Please sign up instead.";
+            }
+            return;
+          }
+        }
+      } catch {}
+
       const supabase = getBrowserSupabaseClient();
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        window.alert(error.message || "Invalid email or password");
+        // Double-check whether the email exists to distinguish no-account vs wrong password
+        try {
+          const res = await fetch("/api/auth/check-user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          if (res.ok) {
+            const { exists } = await res.json();
+            if (!exists) {
+              const hint = document.getElementById("login-inline-hint");
+              if (hint) {
+                hint.textContent = "We couldn't find an account with that email. Please sign up instead.";
+              }
+              return;
+            }
+            emailExists = exists;
+          }
+        } catch {}
+
+        // If Supabase gave the generic message and we couldn't confirm existence, prefer inline hint
+        const msg = String(error.message || "").toLowerCase();
+        if ((emailExists === false) || (emailExists !== true && msg.includes("invalid") && msg.includes("credentials"))) {
+          const hint = document.getElementById("login-inline-hint");
+          if (hint) {
+            hint.textContent = "We couldn't find an account with that email. Please sign up instead.";
+          }
+          return;
+        }
+        await showNotice({
+          tone: "error",
+          title: "Login failed",
+          message: error.message || "Incorrect email or password",
+          autoClose: false,
+          actions: [
+            {
+              label: "Reset password",
+              variant: "primary",
+              onClick: async () => {
+                try {
+                  const supabase = getBrowserSupabaseClient();
+                  await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/sign-in?tab=login#loginForm`,
+                  });
+                  await showNotice({ tone: "success", title: "Reset link sent", message: "Check your email for a password reset link." });
+                } catch {}
+              },
+            },
+            { label: "Try again", onClick: () => {} },
+          ],
+        });
         return;
       }
-      const nameFromEmail = email.includes("@") ? email.split("@")[0] : "MealKit friend";
-      const user = {
-        fullName:
-          nameFromEmail.replace(/[\.\_\-]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()) ||
-          "MealKit Friend",
-        email,
-      };
+      const nameFromEmail = email.includes("@") ? email.split("@")[0] : "MealKit Friend";
+      const cleaned = nameFromEmail.replace(/[\.\_\-]+/g, " ").trim();
+      const parts = cleaned.split(/\s+/);
+      const firstName = (parts[0] || "MealKit").toUpperCase();
+      const lastName = (parts[1] || "Friend").toUpperCase();
+      const fullName = `${firstName} ${lastName}`.trim();
+      const user = { firstName, lastName, fullName, email };
       persistStoredUser(user);
       migrateGuestCartToUser(user);
+      try {
+        await fetch("/api/users/sync", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ first_name: firstName, last_name: lastName }),
+        });
+      } catch {}
       window.location.href = "/account";
     } catch (e) {
       console.error("Supabase login error", e);
-      window.alert("Unexpected error during login. Please try again.");
+      await showNotice({ tone: "error", title: "Login error", message: "Unexpected error during login. Please try again." });
     }
   }, []);
 
@@ -221,14 +329,16 @@ function SignInPageContent() {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const nameInput = form.elements.namedItem("signup-name");
+    const firstNameInput = form.elements.namedItem("signup-first-name");
+    const lastNameInput = form.elements.namedItem("signup-last-name");
     const emailInput = form.elements.namedItem("signup-email");
     const phoneCountryInput = form.elements.namedItem("signup-phone-country");
     const phoneDigitsInput = form.elements.namedItem("signup-phone");
     const passwordInput = form.elements.namedItem("signup-password");
     const confirmInput = form.elements.namedItem("signup-confirm-password");
 
-    const fullName = String(formData.get("signup-name") || "").trim();
+    const firstNameRaw = String(formData.get("signup-first-name") || "").trim();
+    const lastNameRaw = String(formData.get("signup-last-name") || "").trim();
     const email = String(formData.get("signup-email") || "").trim();
     const phoneCountry =
       String(formData.get("signup-phone-country") || PHONE_COUNTRY_OPTIONS[0].code).trim() ||
@@ -237,17 +347,25 @@ function SignInPageContent() {
     const password = String(formData.get("signup-password") || "");
     const confirm = String(formData.get("signup-confirm-password") || "");
 
-    if (nameInput instanceof HTMLInputElement) nameInput.setCustomValidity("");
+    if (firstNameInput instanceof HTMLInputElement) firstNameInput.setCustomValidity("");
+    if (lastNameInput instanceof HTMLInputElement) lastNameInput.setCustomValidity("");
     if (emailInput instanceof HTMLInputElement) emailInput.setCustomValidity("");
     if (phoneCountryInput instanceof HTMLSelectElement) phoneCountryInput.setCustomValidity("");
     if (phoneDigitsInput instanceof HTMLInputElement) phoneDigitsInput.setCustomValidity("");
     if (passwordInput instanceof HTMLInputElement) passwordInput.setCustomValidity("");
     if (confirmInput instanceof HTMLInputElement) confirmInput.setCustomValidity("");
 
-    if (!NAME_REGEX.test(fullName)) {
-      if (nameInput instanceof HTMLInputElement) {
-        nameInput.setCustomValidity("Name must contain letters only (A-Z or a-z).");
-        nameInput.reportValidity();
+    if (!NAME_REGEX.test(firstNameRaw)) {
+      if (firstNameInput instanceof HTMLInputElement) {
+        firstNameInput.setCustomValidity("First name must contain letters only (A-Z or a-z).");
+        firstNameInput.reportValidity();
+      }
+      return;
+    }
+    if (!NAME_REGEX.test(lastNameRaw)) {
+      if (lastNameInput instanceof HTMLInputElement) {
+        lastNameInput.setCustomValidity("Last name must contain letters only (A-Z or a-z).");
+        lastNameInput.reportValidity();
       }
       return;
     }
@@ -286,38 +404,146 @@ function SignInPageContent() {
       return;
     }
 
+    // Server-side email verification to avoid non-existent domains
+    try {
+      const resp = await fetch("/api/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        const msg = data?.message || "This email doesn't appear to be valid. Please enter a valid email.";
+        if (emailInput instanceof HTMLInputElement) {
+          emailInput.setCustomValidity(msg);
+          emailInput.reportValidity();
+        }
+        return;
+      }
+    } catch (_) {
+      if (emailInput instanceof HTMLInputElement) {
+        emailInput.setCustomValidity("Could not verify email right now. Please check and try again.");
+        emailInput.reportValidity();
+      }
+      return;
+    }
+
+    // If email already exists, suggest login instead
+    try {
+      const checkRes = await fetch("/api/auth/check-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (checkRes.ok) {
+        const { exists } = await checkRes.json();
+        if (exists) {
+          await showNotice({
+            tone: "info",
+            title: "Account already exists",
+            message: "You already have an account with this email.",
+            autoClose: false,
+            actions: [
+              { label: "Go to Login", variant: "primary", onClick: () => { window.location.replace("/sign-in?tab=login#loginForm"); } },
+              { label: "Forgot password", onClick: async () => {
+                try { const supabase = getBrowserSupabaseClient(); await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/sign-in?tab=login#loginForm` }); await showNotice({ tone: "success", title: "Reset link sent", message: "Check your email for a password reset link." }); } catch {}
+              } },
+            ],
+          });
+          return;
+          await showNotice({
+            tone: "info",
+            title: "Account already exists",
+            message: "You already have an account with this email. Redirecting to login…",
+          });
+          setTimeout(() => { window.location.replace("/sign-in?tab=login#loginForm"); }, 1200);
+          return;
+        }
+      }
+    } catch {}
+
     // Attempt Supabase sign-up with metadata
     try {
       const supabase = getBrowserSupabaseClient();
+      const firstName = firstNameRaw.toUpperCase();
+      const lastName = lastNameRaw.toUpperCase();
+      const fullName = `${firstName} ${lastName}`.trim();
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             name: fullName,
+            first_name: firstName,
+            last_name: lastName,
             phone: `${phoneCountry}${phoneDigits}`,
           },
         },
       });
 
       if (error) {
-        window.alert(error.message || "Signup failed. Please try again.");
+        const msg = String(error.message || "").toLowerCase();
+        if (msg.includes("already") && (msg.includes("registered") || msg.includes("exists"))) {
+          await showNotice({
+            tone: "info",
+            title: "Account already exists",
+            message: "You already have an account with this email. Redirecting to login…",
+          });
+          setTimeout(() => { window.location.replace("/sign-in?tab=login#loginForm"); }, 1200);
+          return;
+        }
+        await showNotice({ tone: "error", title: "Signup failed", message: error.message || "Please try again." });
         return;
       }
 
-      const user = { fullName, email, phone: `${phoneCountry}${phoneDigits}` };
+      // Supabase nuance: if user already exists, identities array can be empty
+      const identities = data?.user?.identities;
+      if (Array.isArray(identities) && identities.length === 0) {
+        await showNotice({
+          tone: "info",
+          title: "Account already exists",
+          message: "You already have an account with this email.",
+          autoClose: false,
+          actions: [
+            { label: "Go to Login", variant: "primary", onClick: () => { window.location.replace("/sign-in?tab=login#loginForm"); } },
+            { label: "Forgot password", onClick: async () => {
+              try { const supabase = getBrowserSupabaseClient(); await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/sign-in?tab=login#loginForm` }); await showNotice({ tone: "success", title: "Reset link sent", message: "Check your email for a password reset link." }); } catch {}
+            } },
+          ],
+        });
+        return;
+        await showNotice({
+          tone: "info",
+          title: "Account already exists",
+          message: "You already have an account with this email. Redirecting to login…",
+        });
+        setTimeout(() => { window.location.replace("/sign-in?tab=login#loginForm"); }, 1200);
+        return;
+      }
+
+      const user = { firstName, lastName, fullName, email, phone: `${phoneCountry}${phoneDigits}` };
       persistStoredUser(user);
       migrateGuestCartToUser(user);
+      // If email confirmation is disabled and a session exists, sync names into public.users
+      try {
+        if (data?.session) {
+          await fetch("/api/users/sync", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ first_name: firstName, last_name: lastName }),
+          });
+        }
+      } catch {}
 
       if (!data?.session) {
         // Email confirmation may be required
-        window.alert("Account created. Please check your email to confirm your account.");
+        await showNotice({ tone: "success", title: "Account created", message: "Please check your email to confirm your account." });
       }
 
       window.location.href = "/account";
     } catch (e) {
       console.error("Supabase signup error", e);
-      window.alert("Unexpected error during signup. Please try again.");
+      await showNotice({ tone: "error", title: "Signup error", message: "Unexpected error during signup. Please try again." });
     }
   }, []);
 
@@ -419,22 +645,35 @@ function SignInPageContent() {
                   autoComplete="email"
                   pattern={EMAIL_PATTERN}
                   title="Use letters or numbers, followed by @, ending with .com (e.g. username@domain.com)"
+                  onInput={clearLoginInlineHint}
                 />
               </div>
               <div className="auth-field">
                 <label className="sr-only" htmlFor="login-password">
                   Password
                 </label>
-                <input
-                id="login-password"
-                type="password"
-                  name="login-password"
-                  placeholder="Password"
-                  required
-                  autoComplete="current-password"
-                  pattern={PASSWORD_PATTERN}
-                  title="Password must be 8+ characters with uppercase, lowercase, number, and symbol"
-                />
+                <div className="auth-password-group">
+                  <input
+                    id="login-password"
+                    type={showLoginPassword ? "text" : "password"}
+                    name="login-password"
+                    placeholder="Password"
+                    required
+                    autoComplete="current-password"
+                    pattern={PASSWORD_PATTERN}
+                    title="Password must be 8+ characters with uppercase, lowercase, number, and symbol"
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-toggle"
+                    aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showLoginPassword}
+                    onClick={() => setShowLoginPassword((s) => !s)}
+                    title={showLoginPassword ? "Hide password" : "Show password"}
+                  >
+                    <i className={`fa-regular ${showLoginPassword ? "fa-eye-slash" : "fa-eye"}`} aria-hidden="true" />
+                  </button>
+                </div>
               </div>
               <div className="auth-forgot">
                 <Link href="#">Forgot password?</Link>
@@ -447,18 +686,19 @@ function SignInPageContent() {
                 <span>or</span>
               </div>
 
-              <button type="button" className="auth-google-btn">
+              <button type="button" className="auth-google-btn" onClick={handleGoogleSignIn}>
                 <GoogleIcon />
                 Login with Google
               </button>
 
               <p className="auth-switch">
                 Don&apos;t have an account?{' '}
-                <button type="button" onClick={() => handleTabChange('signup')}>
-                  Sign Up
-                </button>
-              </p>
-            </form>
+              <button type="button" onClick={() => handleTabChange('signup')}>
+                Sign Up
+              </button>
+            </p>
+            <p id="login-inline-hint" className="auth-inline-error" aria-live="polite"></p>
+          </form>
 
             <form
               id="signupForm"
@@ -467,20 +707,37 @@ function SignInPageContent() {
               aria-labelledby="signup-tab"
               onSubmit={handleSignupSubmit}
             >
-              <div className="auth-field">
-                <label className="sr-only" htmlFor="signup-name">
-                  Full name
-                </label>
-                <input
-                  id="signup-name"
-                  type="text"
-                  name="signup-name"
-                  placeholder="Full Name"
-                  required
-                  autoComplete="name"
-                  pattern={NAME_PATTERN}
-                  title="Only letters A-Z are allowed in your name"
-                />
+              <div className="auth-field auth-field--split">
+                <div className="auth-field-half">
+                  <label className="sr-only" htmlFor="signup-first-name">
+                    First name
+                  </label>
+                  <input
+                    id="signup-first-name"
+                    type="text"
+                    name="signup-first-name"
+                    placeholder="First Name"
+                    required
+                    autoComplete="given-name"
+                    pattern={NAME_PATTERN}
+                    title="Only letters A-Z are allowed in your first name"
+                  />
+                </div>
+                <div className="auth-field-half">
+                  <label className="sr-only" htmlFor="signup-last-name">
+                    Last name
+                  </label>
+                  <input
+                    id="signup-last-name"
+                    type="text"
+                    name="signup-last-name"
+                    placeholder="Last Name"
+                    required
+                    autoComplete="family-name"
+                    pattern={NAME_PATTERN}
+                    title="Only letters A-Z are allowed in your last name"
+                  />
+                </div>
               </div>
               <div className="auth-field">
                 <label className="sr-only" htmlFor="signup-email">
@@ -495,6 +752,7 @@ function SignInPageContent() {
                   autoComplete="email"
                   pattern={EMAIL_PATTERN}
                   title="Use letters or numbers, followed by @, ending with .com (e.g. username@domain.com)"
+                  onInput={(e) => { try { e.currentTarget.setCustomValidity(""); } catch {} }}
                 />
               </div>
               <div className="auth-field">
@@ -537,31 +795,55 @@ function SignInPageContent() {
                 <label className="sr-only" htmlFor="signup-password">
                   Password
                 </label>
-                <input
-                  id="signup-password"
-                  type="password"
-                  name="signup-password"
-                  placeholder="Password"
-                  required
-                  autoComplete="new-password"
-                  pattern={PASSWORD_PATTERN}
-                  title="Password must be 8+ characters with uppercase, lowercase, number, and symbol"
-                />
+                <div className="auth-password-group">
+                  <input
+                    id="signup-password"
+                    type={showSignupPassword ? "text" : "password"}
+                    name="signup-password"
+                    placeholder="Password"
+                    required
+                    autoComplete="new-password"
+                    pattern={PASSWORD_PATTERN}
+                    title="Password must be 8+ characters with uppercase, lowercase, number, and symbol"
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-toggle"
+                    aria-label={showSignupPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showSignupPassword}
+                    onClick={() => setShowSignupPassword((s) => !s)}
+                    title={showSignupPassword ? "Hide password" : "Show password"}
+                  >
+                    <i className={`fa-regular ${showSignupPassword ? "fa-eye-slash" : "fa-eye"}`} aria-hidden="true" />
+                  </button>
+                </div>
               </div>
               <div className="auth-field">
                 <label className="sr-only" htmlFor="signup-confirm-password">
                   Confirm password
                 </label>
-                <input
-                  id="signup-confirm-password"
-                  type="password"
-                  name="signup-confirm-password"
-                  placeholder="Confirm Password"
-                  required
-                  autoComplete="new-password"
-                  pattern={PASSWORD_PATTERN}
-                  title="Password must be 8+ characters with uppercase, lowercase, number, and symbol"
-                />
+                <div className="auth-password-group">
+                  <input
+                    id="signup-confirm-password"
+                    type={showSignupConfirm ? "text" : "password"}
+                    name="signup-confirm-password"
+                    placeholder="Confirm Password"
+                    required
+                    autoComplete="new-password"
+                    pattern={PASSWORD_PATTERN}
+                    title="Password must be 8+ characters with uppercase, lowercase, number, and symbol"
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-toggle"
+                    aria-label={showSignupConfirm ? "Hide password" : "Show password"}
+                    aria-pressed={showSignupConfirm}
+                    onClick={() => setShowSignupConfirm((s) => !s)}
+                    title={showSignupConfirm ? "Hide password" : "Show password"}
+                  >
+                    <i className={`fa-regular ${showSignupConfirm ? "fa-eye-slash" : "fa-eye"}`} aria-hidden="true" />
+                  </button>
+                </div>
               </div>
               <button type="submit" className="auth-primary-btn">
                 Sign Up
@@ -571,7 +853,7 @@ function SignInPageContent() {
                 <span>or</span>
               </div>
 
-              <button type="button" className="auth-google-btn">
+              <button type="button" className="auth-google-btn" onClick={handleGoogleSignIn}>
                 <GoogleIcon />
                 Sign up with Google
               </button>

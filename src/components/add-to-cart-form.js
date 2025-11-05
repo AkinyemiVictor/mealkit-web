@@ -91,6 +91,8 @@ const buildCartItem = (product, orderSize, orderCount, fallbackImage) => {
   return {
     id: product.id,
     name: product.name,
+    variantId: product.variantId,
+    variantName: product.variantName,
     unit: product.unit || "Per pack",
     price: product.price,
     orderSize: size,
@@ -155,7 +157,7 @@ export default function AddToCartForm({ product, fallbackImage }) {
       fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product_id: product.id, quantity: 1 }),
+        body: JSON.stringify({ product_id: product.id, quantity: 1, variant_id: product.variantId, variant_name: product.variantName }),
       }).catch(() => {});
     } catch (_) {}
 

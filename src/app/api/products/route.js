@@ -42,7 +42,7 @@ const mapRowToProduct = (row) => {
 export async function GET() {
   try {
     const supabase = getSupabaseRouteClient(cookies());
-    let { data, error } = await supabase.from("products").select("*");
+    let { data, error } = await supabase.from("products").select("*", { head: false });
     if (error) {
       // In production, do not fall back to admin. Surface the error to ensure RLS is configured correctly.
       if (process.env.NODE_ENV === "production") {
@@ -51,7 +51,7 @@ export async function GET() {
       // In non-production only, allow a temporary admin fallback for local/dev environments.
       try {
         const admin = getSupabaseAdminClient();
-        const res = await admin.from("products").select("*");
+        const res = await admin.from("products").select("*", { head: false });
         data = res.data;
         error = res.error;
       } catch (e) {

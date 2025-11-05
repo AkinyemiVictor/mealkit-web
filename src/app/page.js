@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 // import ScaledSection from "@/components/scaled-section";
@@ -94,7 +95,7 @@ function ProductCard({ product }) {
           <span className="product-card-badges" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
             {product.discount ? (
               <div className="product-card-discount">
-                <p>- {product.discount}%</p>
+                <p>{product.discount}% Off</p>
               </div>
             ) : <span />}
             <div className={`product-card-season ${product.inSeason ? 'is-in' : 'is-out'}`}>

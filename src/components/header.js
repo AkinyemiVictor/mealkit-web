@@ -189,18 +189,43 @@ const isAdmin = (user) => {
   return ADMIN_EMAILS.includes(String(user.email).toLowerCase());
 };
 
+const MAX_GREETING_NAME = 6;
+
+const normaliseDisplayName = (value) => {
+  const str = String(value || "").trim();
+  if (!str) return "";
+  const lower = str.toLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+};
+
 const getFirstName = (user) => {
   if (!user) return "";
+  if (user.firstName && typeof user.firstName === "string" && user.firstName.trim()) {
+    const formatted = normaliseDisplayName(user.firstName);
+    return formatted.length > MAX_GREETING_NAME ? `${formatted.slice(0, MAX_GREETING_NAME)}…` : formatted;
+  }
+  let source = "";
   if (user.fullName && typeof user.fullName === "string") {
-    const parts = user.fullName.trim().split(/\s+/);
-    if (parts.length) {
-      return parts[0];
-    }
+    source = user.fullName.trim();
+  } else if (user.email && typeof user.email === "string") {
+    source = user.email.split("@")[0];
   }
-  if (user.email && typeof user.email === "string") {
-    return user.email.split("@")[0];
+  if (!source) return "";
+
+  // Prefer whitespace-delimited first token
+  let first = source.split(/\s+/)[0];
+  // If there are no spaces (e.g., PascalCase or snake/kebab), try to split sensibly
+  if (!first || first.length === source.length) {
+    const deCamel = source.replace(/([a-z])([A-Z])/g, "$1 $2");
+    first = deCamel.split(/\s+|[-_]+/)[0] || source;
   }
-  return "";
+
+  const formatted = normaliseDisplayName(first);
+  // Truncate for UI stability
+  if (formatted.length > MAX_GREETING_NAME) {
+    return `${formatted.slice(0, MAX_GREETING_NAME)}…`;
+  }
+  return formatted;
 };
 
 export default function Header() {

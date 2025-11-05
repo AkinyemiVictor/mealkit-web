@@ -168,7 +168,7 @@ function ProductResultCard({ product, tokens }) {
           <span className="product-card-badges" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
             {product.discount ? (
               <div className="product-card-discount">
-                <p>- {product.discount}%</p>
+                <p>{product.discount}% Off</p>
               </div>
             ) : <span />}
             <div className={`product-card-season ${product.inSeason ? 'is-in' : 'is-out'}`}>
