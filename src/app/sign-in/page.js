@@ -269,19 +269,28 @@ function SignInPageContent() {
           }
         } catch {}
 
-        // If Supabase gave the generic message and we couldn't confirm existence, prefer inline hint
+        // Decide error messaging based on confirmed existence and Supabase message
         const msg = String(error.message || "").toLowerCase();
-        if ((emailExists === false) || (emailExists !== true && msg.includes("invalid") && msg.includes("credentials"))) {
+        // Only show "email not found" if we CONFIRMED non-existence
+        if (emailExists === false) {
           const hint = document.getElementById("login-inline-hint");
           if (hint) {
             hint.textContent = "We couldn't find an account with that email. Please sign up instead.";
           }
           return;
         }
+        // If credentials are invalid but we didn't confirm non-existence, treat as wrong password
+        if (msg.includes("invalid") && msg.includes("credentials")) {
+          const hint = document.getElementById("login-inline-hint");
+          if (hint) {
+            hint.textContent = "Incorrect login details. Please try again or reset your password.";
+          }
+          return;
+        }
         await showNotice({
           tone: "error",
           title: "Login failed",
-          message: error.message || "Incorrect email or password",
+          message: error.message || "Incorrect login details",
           autoClose: false,
           actions: [
             {
@@ -324,6 +333,43 @@ function SignInPageContent() {
       await showNotice({ tone: "error", title: "Login error", message: "Unexpected error during login. Please try again." });
     }
   }, []);
+
+  const handleForgotPassword = useCallback(async (event) => {
+    try {
+      event?.preventDefault?.();
+      const form = typeof document !== "undefined" ? document.getElementById("loginForm") : null;
+      const emailInput = form ? form.querySelector("#login-email") : null;
+      const email = (emailInput?.value || "").trim();
+
+      if (!EMAIL_REGEX.test(email)) {
+        await showNotice({
+          tone: "info",
+          title: "Enter your email",
+          message: "Enter the email for your account to receive a reset link.",
+        });
+        if (emailInput instanceof HTMLInputElement) {
+          emailInput.focus();
+        }
+        return;
+      }
+
+      const supabase = getBrowserSupabaseClient();
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/sign-in?tab=login#loginForm`,
+      });
+      await showNotice({
+        tone: "success",
+        title: "Reset link sent",
+        message: "If an account exists for this email, a reset link has been sent.",
+      });
+    } catch (e) {
+      await showNotice({
+        tone: "error",
+        title: "Reset failed",
+        message: e?.message || "Could not send reset link. Please try again.",
+      });
+    }
+  }, [showNotice]);
 
   const handleSignupSubmit = useCallback(async (event) => {
     event.preventDefault();
@@ -676,7 +722,7 @@ function SignInPageContent() {
                 </div>
               </div>
               <div className="auth-forgot">
-                <Link href="#">Forgot password?</Link>
+                <Link href="#" onClick={handleForgotPassword}>Forgot password?</Link>
               </div>
               <button type="submit" className="auth-primary-btn">
                 Login

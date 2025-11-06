@@ -234,12 +234,17 @@
 }
 
 .checkout-payment-title {
+  display: block;
   font-weight: 600;
+  line-height: 1.25;
+  margin: 0 0 0.15rem 0;
 }
 
 .checkout-payment-subtitle {
+  display: block;
   color: var(--mk-text-subtle);
   font-size: 0.9rem;
+  line-height: 1.35;
 }
 
 .checkout-payment-badges {
@@ -541,6 +546,7 @@
   gap: 1.5rem;
   position: sticky;
   top: 7.5rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .checkout-summary--completed {
@@ -566,6 +572,8 @@
   justify-content: space-between;
   gap: 1rem;
   font-weight: 600;
+  align-items: baseline;
+  line-height: 1.35;
 }
 
 .checkout-summary__name {
@@ -584,6 +592,19 @@
   flex-direction: column;
   gap: 0.75rem;
   font-weight: 600;
+}
+
+.checkout-summary__totals > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.checkout-summary__list li > span:last-child,
+.checkout-summary__totals > div > span:last-child {
+  text-align: right;
+  white-space: nowrap;
 }
 
 .checkout-summary__totals--strong {
@@ -641,9 +662,6 @@
     transform: rotate(360deg);
   }
 }
-
-
-
 
 
 

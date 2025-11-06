@@ -23,7 +23,7 @@ const INITIAL_FORM_STATE = {
   address: "",
   city: "",
   deliverySlot: "morning",
-  paymentMethod: "card",
+  paymentMethod: "paystack",
   cardName: "",
   cardNumber: "",
   cardExpiry: "",
@@ -145,7 +145,7 @@ function CheckoutConfirmation({ order }) {
         </div>
       ) : null}
 
-      {order.paymentMethod === "bank" ? (
+      {order.paymentMethod === "bank" && !order.isOnlinePaid ? (
         <div className="checkout-confirmation__notice">
           <h3>{copy.checkout.status.bankInstructionsTitle}</h3>
           {bankSubtitle ? <p>{bankSubtitle}</p> : null}
@@ -170,6 +170,13 @@ function CheckoutConfirmation({ order }) {
         <div className="checkout-confirmation__notice">
           <h3>{copy.checkout.status.deliveryInstructionsTitle}</h3>
           <p>{copy.checkout.status.deliveryInstructionsSubtitle}</p>
+        </div>
+      ) : null}
+
+      {(order.paymentMethod === "palmpay" || order.paymentMethod === "opay") && !order.isOnlinePaid ? (
+        <div className="checkout-confirmation__notice">
+          <h3>{copy.checkout.status.walletInstructionsTitle}</h3>
+          <p>{copy.checkout.status.walletInstructionsSubtitle}</p>
         </div>
       ) : null}
 
@@ -228,12 +235,10 @@ export default function CheckoutForm() {
     });
   }, []);
 
-  // When Paystack public key is present, card details are collected in the secure Paystack modal,
-  // so we should not render our own card inputs.
+  // We use Paystack for all online payments; never collect raw card details in our UI.
   const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
-  // Only treat Paystack as enabled when a real key is present
   const usingPaystack = /^pk_(test|live)_/.test(paystackKey);
-  const showCardFields = !usingPaystack && formState.paymentMethod === "card";
+  const showCardFields = false;
   const isProcessing = status === "processing";
 
   const paymentHint = useMemo(() => copy.checkout.paymentHint, []);
@@ -276,14 +281,11 @@ export default function CheckoutForm() {
       return next;
     });
 
-    if (name === "paymentMethod" && value !== "card") {
+    if (name === "paymentMethod") {
       setErrors((prev) => {
-        const hasCardErrors = CARD_FIELDS.some((field) => prev[field]);
-        if (!hasCardErrors) return prev;
+        if (!Object.keys(prev).length) return prev;
         const next = { ...prev };
-        CARD_FIELDS.forEach((field) => {
-          delete next[field];
-        });
+        CARD_FIELDS.forEach((field) => { delete next[field]; });
         return next;
       });
     }
@@ -327,7 +329,7 @@ export default function CheckoutForm() {
       nextErrors.city = validation.cityService ?? validation.required;
     }
 
-    if (state.paymentMethod === "card") {
+    if (showCardFields) {
       if (!state.cardName.trim()) {
         nextErrors.cardName = validation.required;
       }
@@ -358,7 +360,7 @@ export default function CheckoutForm() {
     });
   };
 
-  const launchPaystack = async ({ email, amount, orderId }) => {
+  const launchPaystack = async ({ email, amount, orderId, channels }) => {
     const ready = await ensurePaystackScript();
     if (!ready || !window.PaystackPop) throw new Error("Paystack failed to load");
     return new Promise((resolve, reject) => {
@@ -367,6 +369,7 @@ export default function CheckoutForm() {
         email,
         amount: Math.max(0, Math.round(Number(amount) * 100)),
         ref: `MK-${orderId || generateOrderId()}-${Date.now()}`,
+        ...(Array.isArray(channels) && channels.length ? { channels } : {}),
         // Use non-async function to satisfy inline.js validator
         callback: function (response) {
           fetch("/api/paystack/verify", {
@@ -387,6 +390,22 @@ export default function CheckoutForm() {
       });
       handler.openIframe();
     });
+  };
+
+  const launchPalmPay = async ({ amount, orderId }) => {
+    const ref = `MK-${orderId || generateOrderId()}-${Date.now()}`;
+    const url = `https://palmpay.app/pay?ref=${encodeURIComponent(ref)}&amount=${encodeURIComponent(
+      Math.max(0, Math.round(Number(amount)))
+    )}`;
+    try { window.open(url, "_blank"); } catch (_) {}
+  };
+
+  const launchOpay = async ({ amount, orderId }) => {
+    const ref = `MK-${orderId || generateOrderId()}-${Date.now()}`;
+    const url = `https://pay.opayweb.com/?ref=${encodeURIComponent(ref)}&amount=${encodeURIComponent(
+      Math.max(0, Math.round(Number(amount)))
+    )}`;
+    try { window.open(url, "_blank"); } catch (_) {}
   };
 
   const handleSubmit = async (event) => {
@@ -415,10 +434,10 @@ export default function CheckoutForm() {
     });
 
     const status =
-      formState.paymentMethod === "bank"
-        ? "awaiting payment"
-        : formState.paymentMethod === "delivery"
-          ? "awaiting delivery"
+      formState.paymentMethod === "delivery"
+        ? "awaiting delivery"
+        : formState.paymentMethod === "palmpay" || formState.paymentMethod === "opay"
+          ? "awaiting payment"
           : "processing";
     const storedUser = readStoredUser();
 
@@ -522,13 +541,20 @@ export default function CheckoutForm() {
         if (res.ok) createdOrderId = payload?.order?.id || null;
       } catch {}
 
-      if (formState.paymentMethod === "card") {
+      if (formState.paymentMethod === "paystack") {
         if (!/^pk_(test|live)_/.test(paystackKey || "")) {
-          setFormError("Card payments are not available: missing Paystack public key.");
+          setFormError("Online payments are not available: missing Paystack public key.");
           setStatus("idle");
           return;
         }
         await launchPaystack({ email: order.email, amount: summary.total, orderId: createdOrderId || generateOrderId() });
+        order.isOnlinePaid = true;
+      } else if (formState.paymentMethod === "palmpay") {
+        await launchPalmPay({ amount: summary.total, orderId: createdOrderId || generateOrderId() });
+        order.isOnlinePaid = false;
+      } else if (formState.paymentMethod === "opay") {
+        await launchOpay({ amount: summary.total, orderId: createdOrderId || generateOrderId() });
+        order.isOnlinePaid = false;
       }
 
       await finalize(createdOrderId);

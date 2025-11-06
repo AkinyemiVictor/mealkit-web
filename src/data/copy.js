@@ -45,60 +45,32 @@ const copy = {
     },
     paymentMethods: [
       {
-        value: "card",
-        title: "Pay with card",
-        subtitle: "Visa, MasterCard, Verve",
+        value: "paystack",
+        title: "Pay online: Card / Transfer / USSD",
+        subtitle: "Secure online payment via Paystack",
         badges: [
-          {
-            type: "image",
-            src: "/assets/icons/png/thumbnails/bank card thumbnails/visa card.png",
-            label: "Visa",
-          },
-          {
-            type: "image",
-            src: "/assets/icons/png/thumbnails/bank card thumbnails/master card.png",
-            label: "Mastercard",
-          },
-          {
-            type: "image",
-            src: "/assets/icons/png/thumbnails/bank card thumbnails/verve card.png",
-            label: "Verve",
-          },
-        ],
-      },
-      {
-        value: "bank",
-        title: "Bank transfer",
-        subtitle: "Receive account details instantly",
-        badges: [
-          {
-            type: "image",
-            src: "/assets/icons/png/thumbnails/bank logos thumbnails/zenith bank logo.png",
-            label: "Zenith Bank",
-          },
-          {
-            type: "image",
-            src: "/assets/icons/png/thumbnails/bank logos thumbnails/access bank logo.png",
-            label: "Access Bank",
-          },
-          {
-            type: "image",
-            src: "/assets/icons/png/thumbnails/bank logos thumbnails/uba logo.png",
-            label: "UBA",
-          },
-          {
-            type: "image",
-            src: "/assets/icons/png/thumbnails/bank logos thumbnails/opay logo.png",
-            label: "OPay",
-          },
-          {
-            type: "image",
-            src: "/assets/icons/png/thumbnails/bank logos thumbnails/palmpay logo.png",
-            label: "PalmPay",
-          },
+          { type: "image", src: "/assets/icons/png/thumbnails/bank card thumbnails/visa card.png", label: "Visa" },
+          { type: "image", src: "/assets/icons/png/thumbnails/bank card thumbnails/master card.png", label: "Mastercard" },
+          { type: "image", src: "/assets/icons/png/thumbnails/bank card thumbnails/verve card.png", label: "Verve" },
         ],
       },
       { value: "delivery", title: "Pay on delivery", subtitle: "Cash or POS on arrival" },
+      {
+        value: "palmpay",
+        title: "Pay with PalmPay",
+        subtitle: "Use your PalmPay app or wallet",
+        badges: [
+          { type: "image", src: "/assets/icons/png/thumbnails/bank logos thumbnails/palmpay logo.png", label: "PalmPay" },
+        ],
+      },
+      {
+        value: "opay",
+        title: "Pay with OPay",
+        subtitle: "Use OPay wallet or QR",
+        badges: [
+          { type: "image", src: "/assets/icons/png/thumbnails/bank logos thumbnails/opay logo.png", label: "OPay" },
+        ],
+      },
     ],
     labels: {
       fullName: "Full name",
@@ -148,6 +120,9 @@ const copy = {
       bankInstructionsTitle: "Complete your bank transfer",
       bankInstructionsSubtitle: (total) =>
         total ? `Transfer ${total} to the account below and use your order ID as narration.` : null,
+      walletInstructionsTitle: "Complete your wallet payment",
+      walletInstructionsSubtitle:
+        "We opened your wallet in a new tab. Once paid, you'll receive a receipt and we will confirm your order.",
       deliveryInstructionsTitle: "Pay on delivery selected",
       deliveryInstructionsSubtitle:
         "Have your cash or POS-ready when our rider arrives. We'll contact you ahead of delivery.",
