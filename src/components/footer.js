@@ -4,8 +4,8 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="site-footer site-footer--primary">
-      <div className="footer-container">
+    <footer className="site-footer site-footer--primary no-scale-container">
+      <div className="footer-container no-scale-content">
         <div className="footer-hero">
           <div className="footer-brand">
             <span className="footer-logo">

@@ -5,6 +5,7 @@ import "@/styles/checkout.css";
 import "@/styles/notice.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import ViewportScaler from "@/components/viewport-scaler";
 import NoticeProvider from "@/components/notice-provider";
 
 const geistSans = Geist({
@@ -37,11 +38,16 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <NoticeProvider>
-          <Header />
-          <div id="main-content" className="layout-main" tabIndex={-1}>
-            {children}
+          <ViewportScaler baseWidth={1200} />
+          <div id="viewport-wrapper" data-scale-root>
+            <div id="viewport-content" style={{ width: 1200 }}>
+              <Header />
+              <div id="main-content" className="layout-main" tabIndex={-1}>
+                {children}
+              </div>
+              <Footer />
+            </div>
           </div>
-          <Footer />
         </NoticeProvider>
       </body>
     </html>

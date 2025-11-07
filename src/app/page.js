@@ -255,16 +255,15 @@ function ProductSection({ title, products, gridId, variant = "plain", eyebrow, c
   );
 }
 export default function HomePage() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const intervalRef = useRef(null);
   const categoryRef = useRef(null);
   // Ensure client-only personalization (localStorage-driven) does not
   // change the initial HTML that the server rendered. We gate those
   // computations behind a client-ready flag to avoid hydration mismatch.
   const [isClient, setIsClient] = useState(false);
-
+  // Hero slider state
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const intervalRef = useRef(null);
   const heroLength = heroSlides.length;
-
   const restartAutoSlide = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -273,7 +272,6 @@ export default function HomePage() {
       setCurrentSlide((prev) => (prev + 1) % heroLength);
     }, 5000);
   }, [heroLength]);
-
   useEffect(() => {
     restartAutoSlide();
     setIsClient(true);
@@ -283,22 +281,6 @@ export default function HomePage() {
       }
     };
   }, [restartAutoSlide]);
-
-  const goToSlide = useCallback(
-    (index) => {
-      setCurrentSlide(((index % heroLength) + heroLength) % heroLength);
-      restartAutoSlide();
-    },
-    [heroLength, restartAutoSlide]
-  );
-
-  const handlePrev = useCallback(() => {
-    goToSlide(currentSlide - 1);
-  }, [currentSlide, goToSlide]);
-
-  const handleNext = useCallback(() => {
-    goToSlide(currentSlide + 1);
-  }, [currentSlide, goToSlide]);
 
   const scrollCategories = useCallback((offset) => {
     categoryRef.current?.scrollBy({ left: offset, behavior: "smooth" });
@@ -320,10 +302,14 @@ export default function HomePage() {
     const engaged = isClient ? pickTopEngagedProducts(seasonal) : [];
     return engaged.length ? engaged : pickInSeasonProducts(catalogueList);
   }, [catalogueList, isClient]);
-
-  const heroTransform = {
-    transform: `translateX(-${currentSlide * 100}%)`,
-  };
+  
+  const goToSlide = useCallback((index) => {
+    setCurrentSlide(((index % heroLength) + heroLength) % heroLength);
+    restartAutoSlide();
+  }, [heroLength, restartAutoSlide]);
+  const handlePrev = useCallback(() => { goToSlide(currentSlide - 1); }, [currentSlide, goToSlide]);
+  const handleNext = useCallback(() => { goToSlide(currentSlide + 1); }, [currentSlide, goToSlide]);
+  const heroTransform = { transform: `translateX(-${currentSlide * 100}%)` };
 
   return (
     <main>
@@ -337,7 +323,6 @@ export default function HomePage() {
                   "--hero-accent": slide.accent,
                   "--hero-accent-soft": slide.accentSoft,
                 };
-
                 return (
                   <article
                     key={slide.tag}
@@ -346,27 +331,27 @@ export default function HomePage() {
                     aria-hidden={!isActive}
                   >
                     <div className="home-hero__content">
-                      {slide.tag ? <p className="home-hero__tag">{slide.tag}</p> : null}
-                      <h1 className="home-hero__title">
-                        {Array.isArray(slide.heading) ? (
-                          <>
-                            <span>{slide.heading[0]}</span>
-                            <span>{slide.heading[1]}</span>
-                          </>
-                        ) : (
-                          <span>{slide.heading}</span>
-                        )}
-                      </h1>
-                      {slide.description ? (
-                        <p className="home-hero__description">{slide.description}</p>
-                      ) : null}
+                      <h1 className="home-hero__title">Banner</h1>
                     </div>
                   </article>
                 );
               })}
             </div>
           </div>
-
+          {/* Dots navigation */}
+          <div className="home-hero__dots" role="tablist" aria-label="Hero slides">
+            {heroSlides.map((_, i) => (
+              <button
+                key={`dot-${i}`}
+                type="button"
+                role="tab"
+                aria-selected={currentSlide === i}
+                aria-label={`Go to slide ${i + 1}`}
+                className={`home-hero__dot${currentSlide === i ? " is-active" : ""}`}
+                onClick={() => goToSlide(i)}
+              />
+            ))}
+          </div>
           <nav className="home-hero__controls" aria-label="Hero navigation">
             <button
               className="home-hero__arrow home-hero__arrow--prev"
@@ -465,8 +450,8 @@ export default function HomePage() {
         ctaHref="/section/in-season"
       />
 
-      <section className="downloadAppSec">
-        <div className="downloadAppFlex">
+      <section className="downloadAppSec no-scale-container">
+        <div className="downloadAppFlex no-scale-content">
           <div className="downloadAppTB">
             <div className="phoneWrapper">
               <img src="/assets/img/apple.png" alt="Download on App Store" className="phone phone-apple" />
@@ -489,8 +474,4 @@ export default function HomePage() {
     </main>
   );
 }
-
-
-
-
 

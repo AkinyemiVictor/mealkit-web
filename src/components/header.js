@@ -230,29 +230,17 @@ const getFirstName = (user) => {
 
 export default function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartQuantity, setCartQuantity] = useState(0);
   const [user, setUser] = useState(null);
   const dropdownRef = useRef(null);
   const accountMenuId = "site-header-account-menu";
-  const mobilePanelId = "site-header-mobile-panel";
 
   const toggleAccountDropdown = () => {
-    setMobileMenuOpen(false);
     setDropdownOpen((state) => !state);
   };
 
   const closeAccountDropdown = () => {
     setDropdownOpen(false);
-  };
-
-  const toggleMobileMenu = () => {
-    setDropdownOpen(false);
-    setMobileMenuOpen((state) => !state);
-  };
-
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false);
   };
 
   const handleAccountKeyDown = (event) => {
@@ -321,7 +309,6 @@ export default function Header() {
     const handleEscape = (event) => {
       if (event.key === "Escape") {
         closeAccountDropdown();
-        closeMobileMenu();
       }
     };
 
@@ -330,35 +317,6 @@ export default function Header() {
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return undefined;
-    }
-
-    const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setMobileMenuOpen(false);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileMenuOpen]);
 
   const handleNavAction = () => {
     closeAccountDropdown();
@@ -552,84 +510,9 @@ export default function Header() {
           </Link>
         </div>
 
-        <button
-          type="button"
-          className={`site-header__menu-toggle${mobileMenuOpen ? " is-open" : ""}`}
-          aria-expanded={mobileMenuOpen}
-          aria-controls={mobilePanelId}
-          onClick={toggleMobileMenu}
-        >
-          <span className="sr-only">{mobileMenuOpen ? "Close menu" : "Open menu"}</span>
-          <span className="site-header__menu-icon" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </span>
-        </button>
+        {/* mobile hamburger removed */}
       </div>
 
-      <button
-        type="button"
-        className={`site-header__mobile-backdrop${mobileMenuOpen ? " is-visible" : ""}`}
-        onClick={closeMobileMenu}
-        aria-hidden={!mobileMenuOpen}
-        tabIndex={mobileMenuOpen ? 0 : -1}
-      >
-        <span className="sr-only">Close menu</span>
-      </button>
-
-      <div
-        className={`site-header__mobile-panel${mobileMenuOpen ? " is-visible" : ""}`}
-        id={mobilePanelId}
-        aria-hidden={!mobileMenuOpen}
-      >
-        <SearchBar idSuffix="mobile" className="site-header__search--mobile" />
-
-        <div className="site-header__mobile-section">
-          <span className="site-header__mobile-heading">Account</span>
-          <div className="site-header__mobile-links">
-            {user ? (
-              <>
-                {ACCOUNT_MENU.map((item) => (
-                  <Link key={item.href} href={item.href} onClick={handleNavAction}>
-                    {item.label}
-                  </Link>
-                ))}
-                {isAdmin(user) ? (
-                  <Link href="/admin/logs" onClick={handleNavAction}>
-                    Admin Logs
-                  </Link>
-                ) : null}
-                <button type="button" onClick={handleLogout}>
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/sign-in?tab=login#loginForm" onClick={handleNavAction}>
-                  Login
-                </Link>
-                <Link href="/sign-in?tab=signup#signupForm" onClick={handleNavAction}>
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-
-        <Link href="/help-center" className="site-header__mobile-link" onClick={handleNavAction}>
-          Help Center
-        </Link>
-
-        <Link
-          href="/cart"
-          className="site-header__mobile-link site-header__mobile-link--cart"
-          onClick={handleNavAction}
-        >
-          Cart
-          <span className="site-header__mobile-badge">{formatCartCount(cartQuantity)}</span>
-        </Link>
-      </div>
     </header>
   );
 }

@@ -11,11 +11,22 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
   margin: 0;
 }
+
+/* Global scaler wrappers (JS applies transform and height) */
+#viewport-wrapper {
+  position: relative;
+  transform-origin: top left;
+}
+
+#viewport-content {
+  width: 1200px; /* base design width (kept in sync with ViewportScaler) */
+  margin: 0;
+}
 .site-header {
   position: relative;
-  background: var(--mk-surface);
-  border-bottom: 1px solid var(--mk-border);
-  box-shadow: 0 8px 24px rgba(24, 39, 52, 0.08);
+  background: transparent;      /* remove header background */
+  border-bottom: none;          /* remove separator line */
+  box-shadow: none;             /* remove header shadow */
   z-index: 40;
 }
 
@@ -147,12 +158,7 @@ body {
 }
 
 /* Reduce search bar width on medium/large screens */
-@media (max-width: 1120px) {
-  .site-header__search-wrapper {
-    max-width: 360px;
-    flex: 0 1 360px;
-  }
-}
+/* removed header responsiveness at 1120px */
 
 .site-header__search-wrapper-inner {
   position: relative;
@@ -620,47 +626,12 @@ body {
   box-shadow: 0 12px 28px rgba(0, 172, 17, 0.3);
 }
 
-@media (max-width: 1024px) {
-  .site-header__container {
-    padding: 0.9rem 1.25rem;
-    gap: 1rem;
-  }
+/* removed header responsiveness at 1024px */
 
-  .site-header__brand img {
-    width: 48px;
-    height: 48px;
-  }
-}
-
-@media (max-width: 900px) {
-  .site-header__brand-text {
-    letter-spacing: 0.08em;
-  }
-}
+/* removed header responsiveness at 900px */
 
 @media (max-width: 768px) {
-  .site-header__container {
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-  .site-header__search-wrapper {
-    display: none;
-  }
-
-  .site-header__actions {
-    display: none;
-  }
-
-  .site-header__menu-toggle,
-  .site-header__mobile-backdrop,
-  .site-header__mobile-panel {
-    display: block;
-  }
-
-  .site-header__menu-toggle {
-    margin-left: auto;
-  }
+  /* header responsiveness removed here */
 
   .home-section__inner .product-card-grid {
     overflow: visible;
@@ -687,12 +658,12 @@ body {
   position: relative;
   isolation: isolate;
   width: 100%;
-  max-width: none;
-  margin: 0 0 clamp(-3.5rem, -5vw, -2rem);
-  padding: clamp(1.85rem, 4vw, 3rem) clamp(1.6rem, 4.5vw, 2.75rem) clamp(3.2rem, 6vw, 4.6rem);
-  border-radius: 0;
+  max-width: 1200px;       /* constrain hero width */
+  margin: 0 auto 3rem;     /* remove gap under header; center hero */
+  padding: 0;              /* content padding handled inside */
+  border-radius: 12px;     /* board-style rounded shape */
   color: var(--mk-accent-contrast);
-  overflow: visible;
+  overflow: hidden;        /* clip slide visuals to board */
   z-index: 0;
   /* Fixed hero height for design work */
   --hero-height: 420px;
@@ -703,13 +674,14 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 0;
+  border-radius: 12px; /* match board shape */
   background:
     radial-gradient(ellipse at 18% 18%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 60%),
     radial-gradient(ellipse at 82% 24%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 58%),
     linear-gradient(135deg, rgba(0, 172, 17, 0.96) 0%, rgba(6, 88, 47, 0.92) 46%, rgba(2, 48, 27, 0.9) 100%);
   box-shadow: 0 50px 110px rgba(0, 172, 17, 0.28);
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.97) 0%, rgba(0, 0, 0, 0.92) 58%, rgba(0, 0, 0, 0.55) 80%, rgba(0, 0, 0, 0) 100%);
+  /* Remove bottom fade — keep solid background */
+  mask-image: none;
   pointer-events: none;
   z-index: -2;
 }
@@ -745,7 +717,7 @@ main > section:not(.home-hero) {
 .home-hero__viewport {
   position: relative;
   overflow: hidden;
-  border-radius: 0;
+  border-radius: 12px; /* clip slides to board */
   background: transparent;
   min-height: var(--hero-height);
 }
@@ -858,6 +830,29 @@ main > section:not(.home-hero) {
   pointer-events: none;
   z-index: 2;
 }
+/* Dots navigation */
+.home-hero__dots {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: clamp(12px, 2.6vw, 24px);
+  display: flex;
+  gap: 8px;
+  z-index: 3;
+}
+.home-hero__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.home-hero__dot.is-active {
+  background: #ffffff;
+  transform: scale(1.1);
+}
 
 .home-hero__arrow {
   width: 48px;
@@ -889,14 +884,13 @@ main > section:not(.home-hero) {
 
 .category-carousel {
   max-width: 1200px;
-  margin: 0 auto 4rem;
   display: flex;
+  padding: 0 1.5rem;
   flex-direction: column;
   gap: 1.75rem;
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 32px;
-  padding: clamp(2.5rem, 6vw, 3.5rem);
-  box-shadow: 0 12px 30px rgba(15, 31, 21, 0.08);
+  background: transparent;    /* invisible container */
+  border-radius: 0;           /* remove rounded container */
+  box-shadow: none;           /* remove shadow */
 }
 
 /* Make the home ad/hero react at the same breakpoints as sections */
@@ -924,34 +918,21 @@ main > section:not(.home-hero) {
 }
 
 /* Unify ad/hero content: full width with fixed padding; override media rules */
-.home-hero {
-  padding: 1.5rem !important;
-}
-.home-hero__viewport,
-.home-hero__track,
-.home-hero__content {
-  width: 100%;
-}
+/* Keep hero content constrained; remove forced full-width override */
+/* .home-hero { padding: 1.5rem !important; } */
+/* .home-hero__viewport, .home-hero__track, .home-hero__content { width: 100%; } */
 
-/* Switch to hamburger header at and below 1025px */
-@media (max-width: 1025px) {
-  .site-header__search-wrapper,
-  .site-header__actions {
-    display: none;
-  }
-
-  .site-header__menu-toggle,
-  .site-header__mobile-backdrop,
-  .site-header__mobile-panel {
-    display: block;
-  }
-
-  .site-header__menu-toggle { margin-left: auto; }
-}
+/* removed header responsiveness at 1025px */
 
 /* At and below 1200px, make the home category aisle flush (no rounded corners) */
 @media (max-width: 1200px) {
   .category-carousel {
+    border-radius: 0;
+  }
+  /* Flatten hero board radius below 1200px */
+  .home-hero,
+  .home-hero::before,
+  .home-hero__viewport {
     border-radius: 0;
   }
 }
@@ -1305,15 +1286,7 @@ main > section:not(.home-hero) {
   color: var(--mk-accent);
 }
 
-@media (max-width: 500px) {
-  .site-header__container {
-    padding: 0.8rem 1rem;
-  }
-
-  .site-header__brand-text {
-    display: none;
-  }
-}
+/* removed header responsiveness at 500px */
 
 
 .flex {
@@ -1479,7 +1452,7 @@ main > section:not(.home-hero) {
   padding: 6px;
 }
 .home-section {
-  margin-top: 6rem;
+  margin-top: 3rem;
   margin-bottom: 6rem;
   padding: 0 1.5rem;
   width: 100%;
@@ -2670,32 +2643,43 @@ padding-left: 12px;
 .site-footer--primary .footer-links-grid {
   display: grid;
   gap: 2rem;
-  /* Use fixed max column width so the last row can center */
-  grid-template-columns: repeat(auto-fit, minmax(180px, 240px));
-  justify-content: center; /* center the whole grid line */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   width: 100%;
-  justify-items: center; /* center items within their cells */
+  justify-items: start; /* left-align column content */
 }
 
-/* Center text inside each link group */
+/* Left-align link groups for standard UX */
 .site-footer--primary .link-group {
-  text-align: center;
+  text-align: left;
 }
 
-/* Ensure primary footer flex variant also centers columns */
+/* Grid layout fallback on "footer-links" too */
 .site-footer--primary .footer-links {
   display: grid;
   gap: 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 240px));
-  justify-content: center;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  justify-content: stretch;
 }
 
-/* Center the final link group only on wider screens */
-@media (min-width: 940px) {
-  .site-footer--primary .footer-links-grid .link-group:last-child,
-  .site-footer--primary .footer-links .link-group:last-child {
-    grid-column: 1 / -1;
-    justify-self: center;
+/* Four-in-a-row on desktop; progressively collapse on smaller screens */
+@media (min-width: 1024px) {
+  .site-footer--primary .footer-links-grid,
+  .site-footer--primary .footer-links {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 640px) {
+  .site-footer--primary .footer-links-grid,
+  .site-footer--primary .footer-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .site-footer--primary .footer-links-grid,
+  .site-footer--primary .footer-links {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2782,6 +2766,58 @@ padding-left: 12px;
   .site-footer--primary .newsletter-field button {
     width: 100%;
   }
+}
+
+/* -------- Scale compatibility (opt-in) --------
+   When using a top-left anchored transform scaler, place data-scale-root
+   on the scaled container. These rules avoid typical drift/clipping:
+   - convert fixed overlays to absolute within the scaled root
+   - avoid centered scale-wrapper translating the inner canvas
+   - prefer 100% sizing over viewport units inside scaled root
+*/
+[data-scale-root] .site-header__mobile-backdrop {
+  position: absolute; /* avoid fixed-in-transformed-ancestor issues */
+  inset: 0;
+}
+[data-scale-root] .sidebar {
+  position: absolute; /* header/mobile sidebar in scaled root */
+  top: 0;
+  right: 0;
+  height: 100%;
+}
+[data-scale-root] #overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+[data-scale-root] .scale-wrapper {
+  width: 100%;            /* avoid 100vw inside scaled region */
+  margin-left: 0;         /* drop centering hack */
+  overflow: visible;      /* prevent accidental clipping of scaled content */
+}
+[data-scale-root] .scale-inner {
+  left: 0;                /* anchor at top-left instead of centering */
+  transform: scale(var(--s, 1));
+}
+
+/* Sections that should keep a full-width container while scaling only inner content */
+[data-scale-root] .no-scale-container {
+  position: relative;
+  width: 100vw;                       /* full-bleed container */
+  left: calc(-1 * var(--goffset, 0px)); /* cancel wrapper centering offset without affecting flow */
+  margin-left: 0;                      /* avoid double-offsets */
+  transform-origin: top left;
+  transform: scale(calc(1 / var(--gscale, 1))); /* neutralize global scale for the container */
+  will-change: transform;
+}
+
+[data-scale-root] .no-scale-container .no-scale-content {
+  width: 1200px;          /* base content width */
+  margin: 0 auto;         /* center content within the full-width container */
+  transform-origin: top left;
+  transform: scale(var(--gscale, 1)); /* re-apply scale to contents only */
+  will-change: transform;
 }
 .scale-wrapper {
   width: 100vw;

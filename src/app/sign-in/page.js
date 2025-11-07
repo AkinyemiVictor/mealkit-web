@@ -327,7 +327,7 @@ function SignInPageContent() {
           body: JSON.stringify({ first_name: firstName, last_name: lastName }),
         });
       } catch {}
-      window.location.href = "/account";
+      window.location.href = "/";
     } catch (e) {
       console.error("Supabase login error", e);
       await showNotice({ tone: "error", title: "Login error", message: "Unexpected error during login. Please try again." });
@@ -586,7 +586,7 @@ function SignInPageContent() {
         await showNotice({ tone: "success", title: "Account created", message: "Please check your email to confirm your account." });
       }
 
-      window.location.href = "/account";
+      window.location.href = "/";
     } catch (e) {
       console.error("Supabase signup error", e);
       await showNotice({ tone: "error", title: "Signup error", message: "Unexpected error during signup. Please try again." });
@@ -596,7 +596,7 @@ function SignInPageContent() {
   useEffect(() => {
     const existing = readStoredUser();
     if (existing) {
-      window.location.replace("/account");
+      window.location.replace("/");
     }
   }, []);
 
