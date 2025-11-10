@@ -157,6 +157,7 @@ function ProductHighlightCard({ product }) {
   const stockLabel = getStockLabel(product.stock);
   const hasOldPrice = product.oldPrice && product.oldPrice > product.price;
   const href = getProductHref(product);
+  const isUnavailable = stockClass === "is-unavailable";
 
   return (
     <Link
@@ -167,12 +168,17 @@ function ProductHighlightCard({ product }) {
       onClick={() => { recordProductClick(product.id); recordProductView(product.id); }}
     >
       <div>
-        <img
-          src={product.image || "/assets/img/product images/tomato-fruit-isolated-transparent-background.png"}
-          alt={product.name}
-          className="productImg"
-          loading="lazy"
-        />
+        <div className="product-card__imageWrap">
+          <img
+            src={product.image || "/assets/img/product images/tomato-fruit-isolated-transparent-background.png"}
+            alt={product.name}
+            className="productImg"
+            loading="lazy"
+          />
+          {isUnavailable ? (
+            <div className="product-card__overlay" aria-hidden="true">Out of Stock</div>
+          ) : null}
+        </div>
         <div className="product-card-details">
           <h4>{product.name}</h4>
           <span>

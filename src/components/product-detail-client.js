@@ -28,11 +28,15 @@ export default function ProductDetailClient({ product, variations = [], fallback
 
   const stockClass = resolveStockClass(display.stock);
   const stockLabel = getStockLabel(display.stock);
+  const isUnavailable = stockClass === "is-unavailable";
 
   return (
     <>
       <div className="product-detail-media">
         <img src={display.image || fallbackImage} alt={product.name} loading="lazy" />
+        {isUnavailable ? (
+          <div className="product-detail-media__overlay" aria-hidden="true">Out of Stock</div>
+        ) : null}
       </div>
 
       <div className="product-detail-content">

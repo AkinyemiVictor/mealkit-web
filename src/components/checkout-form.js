@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import copy from "@/data/copy";
 import {
@@ -196,6 +196,7 @@ function CheckoutConfirmation({ order }) {
 }
 
 export default function CheckoutForm() {
+  const formRef = useRef(null);
   const [formState, setFormState] = useState(() =>
     createInitialFormState(typeof window !== "undefined" ? readStoredUser() : null)
   );
@@ -416,6 +417,51 @@ export default function CheckoutForm() {
     if (Object.keys(fieldErrors).length) {
       setErrors(fieldErrors);
       setFormError(null);
+
+      // Improve UX: scroll to the first invalid field and focus it
+      try {
+        const order = ["fullName", "email", "phone", "address", "city", ...CARD_FIELDS];
+        const firstInvalid = order.find((key) => fieldErrors[key]);
+        const formEl = formRef.current;
+        if (formEl && firstInvalid) {
+          // Defer to next frame so error styles are applied before scrolling
+          requestAnimationFrame(() => {
+            const inputEl = formEl.querySelector(`[name="${firstInvalid}"]`);
+            const errorEl =
+              formEl.querySelector(`#checkout-${firstInvalid}-error`) ||
+              (firstInvalid === "city" ? formEl.querySelector("#checkout-city-service-alert") : null);
+            const scrollTarget = errorEl || inputEl;
+            if (scrollTarget && typeof scrollTarget.scrollIntoView === "function") {
+              try {
+                scrollTarget.scrollIntoView({ behavior: "smooth", block: "center" });
+              } catch (_) {
+                // no-op if smooth scrolling not supported
+                scrollTarget.scrollIntoView();
+              }
+            }
+            if (inputEl && typeof inputEl.focus === "function") {
+              try { inputEl.focus({ preventScroll: true }); } catch (_) { inputEl.focus(); }
+            }
+          });
+        } else if (formEl) {
+          // Fallback: find any element flagged invalid in DOM order
+          requestAnimationFrame(() => {
+            const fallback = formEl.querySelector(
+              '[aria-invalid="true"], .has-error input, .has-error textarea, .has-error select'
+            );
+            if (fallback && typeof fallback.scrollIntoView === "function") {
+              try {
+                fallback.scrollIntoView({ behavior: "smooth", block: "center" });
+              } catch (_) {
+                fallback.scrollIntoView();
+              }
+              if (typeof fallback.focus === "function") {
+                try { fallback.focus({ preventScroll: true }); } catch (_) { fallback.focus(); }
+              }
+            }
+          });
+        }
+      } catch (_) {}
       return;
     }
 
@@ -587,6 +633,7 @@ export default function CheckoutForm() {
 
   return (
     <form
+      ref={formRef}
       className="checkout-card"
       aria-describedby="checkout-payment-description"
       noValidate

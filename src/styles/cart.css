@@ -1465,10 +1465,10 @@ header {
     justify-content: space-between;
 }
 .product-card-discount {
-    border-radius: 12px;
-    background: rgb(0, 172, 17, 0.1);
-    color: rgb(0, 172, 17);
-    margin: 5px;
+  border-radius: 12px;
+  background: rgb(0, 172, 17, 0.1);
+  color: rgb(0, 172, 17);
+  margin: 5px;
 }
 .product-card-season {
     border-radius: 12px;

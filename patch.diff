@@ -1,0 +1,115 @@
+*** Begin Patch
+*** Update File: src/app/api/payment/opay/route.js
+@@
+-import axios from "axios";
+-import NodeRSA from "node-rsa";
+-import crypto from "crypto";
++// NOTE: Avoid top-level imports of optional deps so the app can build
++// even when OPay integration is not configured. We'll lazy-import below.
++import crypto from "crypto";
+ import { NextResponse } from "next/server";
+ import { createClient } from "@supabase/supabase-js";
+@@
+-const rsaEncrypt = (data) => {
+-  const rsa = new NodeRSA(OPayPublicKey);
+-  rsa.setOptions({ encryptionScheme: "pkcs1" });
+-  return rsa.encrypt(JSON.stringify(data), "base64");
+-};
++const rsaEncrypt = async (data) => {
++  const { default: NodeRSA } = await import("node-rsa").catch(() => ({ default: null }));
++  if (!NodeRSA) throw new Error("OPay encryption not available. Install 'node-rsa'.");
++  const rsa = new NodeRSA(OPayPublicKey);
++  rsa.setOptions({ encryptionScheme: "pkcs1" });
++  return rsa.encrypt(JSON.stringify(data), "base64");
++};
+@@
+ export async function POST(req) {
+   try {
+     const { orderId, amount, currency, userEmail } = await req.json();
+ 
++    // Guard: ensure required env vars are set
++    const missing = [];
++    if (!process.env.OPAY_CLIENT_KEY) missing.push("OPAY_CLIENT_KEY");
++    if (!process.env.OPAY_PUBLIC_KEY) missing.push("OPAY_PUBLIC_KEY");
++    if (!process.env.OPAY_MERCHANT_PRIVATE_KEY) missing.push("OPAY_MERCHANT_PRIVATE_KEY");
++    if (!process.env.OPAY_MERCHANT_ID) missing.push("OPAY_MERCHANT_ID");
++    if (!process.env.OPAY_HEAD_MERCHANT_ID) missing.push("OPAY_HEAD_MERCHANT_ID");
++    if (!process.env.NEXT_PUBLIC_SITE_URL) missing.push("NEXT_PUBLIC_SITE_URL");
++    if (missing.length) {
++      return NextResponse.json({
++        status: "error",
++        message: `OPay not configured. Missing env: ${missing.join(", ")}`,
++      }, { status: 501 });
++    }
++
+     // Save pending order in Supabase
+     await supabase.from("orders").insert([
+       {
+         order_id: orderId,
+         user_email: userEmail,
+         total_amount: amount,
+         status: "pending",
+       },
+     ]);
+ 
+     const orderPayload = {
+       headMerchantId: process.env.OPAY_HEAD_MERCHANT_ID,
+       merchantId: process.env.OPAY_MERCHANT_ID,
+       outOrderNo: orderId,
+       amount: amount,
+       currency: currency || "NGN",
+       orderExpireTime: 300,
+       sceneEnum: "CASH_API",
+       subSceneEnum: "ONLINE",
+       sn: "WEB",
+       productInfo: {
+         productName: "MealKit Order",
+         productDesc: "Farm product purchase",
+       },
+       returnUrl: CallbackURL,
+     };
+ 
+-    const paramContent = rsaEncrypt(orderPayload);
++    const paramContent = await rsaEncrypt(orderPayload);
+     const sign = rsaSign(paramContent + Date.now());
+ 
+-    const headers = {
++    const headers = {
+       clientAuthKey: OPayClientKey,
+       version: "V1.0.1",
+       bodyFormat: "JSON",
+       timestamp: Date.now().toString(),
+     };
+-
+-    const res = await axios.post(
+-      `${OPayBaseURL}/openApi/order/checkout/createOrder`,
+-      { paramContent, sign },
+-      { headers }
+-    );
++
++    // Use native fetch to avoid axios dependency
++    const res = await fetch(`${OPayBaseURL}/openApi/order/checkout/createOrder`, {
++      method: "POST",
++      headers: { "Content-Type": "application/json", ...headers },
++      body: JSON.stringify({ paramContent, sign }),
++    });
++    const data = await res.json().catch(() => ({}));
++    if (!res.ok) {
++      throw new Error(data?.message || `OPay error HTTP ${res.status}`);
++    }
+ 
+     return NextResponse.json({
+       status: "success",
+       message: "Payment initialized",
+-      data: res.data,
++      data,
+     });
+   } catch (err) {
+     console.error("Create Payment Error:", err.message);
+     return NextResponse.json(
+       { status: "error", message: err.message },
+       { status: 500 }
+     );
+   }
+ }
+*** End Patch

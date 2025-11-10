@@ -25,10 +25,34 @@ export const getStockLabel = (stock, { lowThreshold = 5 } = {}) => {
   if (stock == null || stock === "") return "";
   if (typeof stock === "number") {
     if (stock <= 0) return "Out of stock";
-    if (stock <= lowThreshold) return `${stock} unit${stock === 1 ? "" : "s"} left`;
+    if (stock <= lowThreshold) return `Only ${stock} left in stock`;
     return "In stock";
   }
   return String(stock);
+};
+
+const canonicaliseCategorySlug = (raw) => {
+  const withSeparators = String(raw || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+  const lowered = withSeparators.toLowerCase();
+  const connectors = lowered.replace(/\band\b/g, "-n-").replace(/&/g, "-n-");
+  const base = connectors
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  const map = new Map([
+    ["meat-poultry", "meat-n-poultry"],
+    ["fish-seafood", "fish-n-seafood"],
+    ["fish-sea-food", "fish-n-seafood"],
+    ["grains-cereals", "grains-n-cereals"],
+    ["dairy-eggs", "dairy-n-eggs"],
+    ["tubers-legumes", "tubers-n-legumes"],
+    ["spices-condiments", "spices-n-condiments"],
+    ["drinks-beverages", "drinks-n-beverages"],
+    ["snacks-pastries", "snacks-n-pastries"],
+    ["snackes-pasteries", "snacks-n-pastries"],
+    ["oil-cooking-essentials", "oil-n-cooking-essentials"],
+  ]);
+  return map.get(base) || base || "uncategorised";
 };
 
 export const normaliseProductCatalogue = (catalogue) => {
@@ -59,7 +83,7 @@ export const normaliseProductCatalogue = (catalogue) => {
       const oldPrice = variant.oldPrice ?? item.oldPrice ?? price;
       const discount = oldPrice > price ? Math.round(((oldPrice - price) / (oldPrice || 1)) * 100) : 0;
 
-      const toSlug = (value) => { const withSeparators = String(value || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2"); const lowered = withSeparators.toLowerCase(); const connectors = lowered.replace(/\band\b/g, "-n-").replace(/&/g, "-n-"); return connectors.replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, ""); };
+      const toSlug = (value) => canonicaliseCategorySlug(value);
 
       const normalised = {
         id: item.id != null ? String(item.id) : "",
@@ -75,7 +99,7 @@ export const normaliseProductCatalogue = (catalogue) => {
             : variant.inSeason ?? true,
         discount,
         category: item.category || variant.category || "",
-        categorySlug: toSlug(item.category || variant.category || "uncategorised") || "uncategorised",
+        categorySlug: toSlug(item.category || variant.category || "uncategorised"),
       };
 
       if (!normalised.id || index.has(normalised.id)) return;
@@ -133,4 +157,3 @@ export default {
   pickNewestProducts,
   pickInSeasonProducts,
 };
-

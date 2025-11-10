@@ -29,16 +29,24 @@ function CategoryProductCard({ product }) {
   const stockLabel = getStockLabel(product.stock);
   const hasOldPrice = product.oldPrice && product.oldPrice > product.price;
   const href = getProductHref(product);
+  const isUnavailable = stockClass === "is-unavailable";
 
   return (
     <Link href={href} className="product-card" aria-label={`View ${product.name}`} prefetch={false}>
       <div>
-        <img
-          src={product.image || "/assets/img/product images/tomato-fruit-isolated-transparent-background.png"}
-          alt={product.name}
-          className="productImg"
-          loading="lazy"
-        />
+        <div className="product-card__imageWrap">
+          <img
+            src={product.image || "/assets/img/product images/tomato-fruit-isolated-transparent-background.png"}
+            alt={product.name}
+            className="productImg"
+            loading="lazy"
+          />
+          {isUnavailable ? (
+            <div className="product-card__overlay" aria-hidden="true">
+              Out of Stock
+            </div>
+          ) : null}
+        </div>
         <div className="product-card-details">
           <h4>{product.name}</h4>
           <span>
@@ -80,25 +88,7 @@ export default function CategoryPage({ category: incomingCategory, pageSize = DE
     if (!category) return [];
     const target = String(category.slug || "");
     const list = ordered || [];
-    const toSlug = (value) => {
-      const withSeparators = String(value || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2");
-      const lowered = withSeparators.toLowerCase();
-      const connectors = lowered.replace(/\band\b/g, "-n-").replace(/&/g, "-n-");
-      const base = connectors.replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-      const map = new Map([
-        ["meat-poultry", "meat-n-poultry"],
-        ["fish-seafood", "fish-n-seafood"],
-        ["grains-cereals", "grains-n-cereals"],
-        ["dairy-eggs", "dairy-n-eggs"],
-        ["tubers-legumes", "tubers-n-legumes"],
-        ["spices-condiments", "spices-n-condiments"],
-        ["drinks-beverages", "drinks-n-beverages"],
-        ["snacks-pastries", "snacks-n-pastries"],
-        ["oil-cooking-essentials", "oil-n-cooking-essentials"],
-      ]);
-      return map.get(base) || base;
-    };
-    return list.filter((p) => toSlug(p.category) === target);
+    return list.filter((p) => (p.categorySlug || "") === target);
   }, [category, ordered]);
   const totalPages = Math.max(1, Math.ceil(categoryProducts.length / itemsPerPage));
 
@@ -216,8 +206,6 @@ export default function CategoryPage({ category: incomingCategory, pageSize = DE
     </main>
   );
 }
-
-
 
 
 

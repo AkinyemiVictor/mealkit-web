@@ -61,6 +61,7 @@ function ProductCard({ product }) {
   const stockLabel = getStockLabel(product.stock);
   const hasOldPrice = product.oldPrice && product.oldPrice > product.price;
   const href = getProductHref(product);
+  const isUnavailable = stockClass === "is-unavailable";
 
   return (
     <Link
@@ -73,12 +74,17 @@ function ProductCard({ product }) {
     >
       
       <div>
-        <img
-          src={product.image || "/assets/img/product images/tomato-fruit-isolated-transparent-background.png"}
-          alt={product.name}
-          className="productImg"
-          loading="lazy"
-        />
+        <div className="product-card__imageWrap">
+          <img
+            src={product.image || "/assets/img/product images/tomato-fruit-isolated-transparent-background.png"}
+            alt={product.name}
+            className="productImg"
+            loading="lazy"
+          />
+          {isUnavailable ? (
+            <div className="product-card__overlay" aria-hidden="true">Out of Stock</div>
+          ) : null}
+        </div>
         <div className="product-card-details">
           <h4>{product.name}</h4>
           <span>
@@ -450,8 +456,8 @@ export default function HomePage() {
         ctaHref="/section/in-season"
       />
 
-      <section className="downloadAppSec no-scale-container">
-        <div className="downloadAppFlex no-scale-content">
+      <section className="downloadAppSec">
+        <div className="downloadAppFlex">
           <div className="downloadAppTB">
             <div className="phoneWrapper">
               <img src="/assets/img/apple.png" alt="Download on App Store" className="phone phone-apple" />
@@ -474,4 +480,3 @@ export default function HomePage() {
     </main>
   );
 }
-

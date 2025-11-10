@@ -139,19 +139,27 @@ function ProductResultCard({ product, tokens }) {
   const stockLabel = getStockLabel(product.stock);
   const hasOldPrice = product.oldPrice && product.oldPrice > product.price;
   const href = getProductHref(product);
+  const isUnavailable = stockClass === "is-unavailable";
 
   return (
     <Link href={href} className="product-card" aria-label={`View ${product.name}`} prefetch={false}>
       <div>
-        <img
-          src={
-            product.image ||
-            "/assets/img/product images/tomato-fruit-isolated-transparent-background.png"
-          }
-          alt={product.name}
-          className="productImg"
-          loading="lazy"
-        />
+        <div className="product-card__imageWrap">
+          <img
+            src={
+              product.image ||
+              "/assets/img/product images/tomato-fruit-isolated-transparent-background.png"
+            }
+            alt={product.name}
+            className="productImg"
+            loading="lazy"
+          />
+          {isUnavailable ? (
+            <div className="product-card__overlay" aria-hidden="true">
+              Out of Stock
+            </div>
+          ) : null}
+        </div>
         <div className="product-card-details">
           <h4>
             <HighlightedText text={product.name} tokens={tokens} />

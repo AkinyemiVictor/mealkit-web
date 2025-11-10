@@ -1,3 +1,5 @@
+
+
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getSupabaseRouteClient } from "@/lib/supabase/route-client";
@@ -6,6 +8,8 @@ import { products as localProducts } from "@/data/products";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 const toSlug = (value) => {
   // Insert separators for camelCase/PascalCase before lowercasing
@@ -23,6 +27,7 @@ const mapRowToProduct = (row) => {
   const price = Number(row.price) || 0;
   const oldPrice = Number(row.oldPrice ?? row.old_price ?? price) || price;
   const discount = oldPrice > price ? Math.round(((oldPrice - price) / (oldPrice || 1)) * 100) : 0;
+  const stockCount = row.stock_count != null ? Number(row.stock_count) : null;
 
   return {
     id: String(row.id ?? ""),
@@ -31,7 +36,7 @@ const mapRowToProduct = (row) => {
     price,
     oldPrice,
     unit: row.unit || "",
-    stock: row.stock || "",
+    stock: stockCount != null && Number.isFinite(stockCount) ? stockCount : row.stock || "",
     inSeason: typeof row.inSeason === "boolean" ? row.inSeason : Boolean(row.in_season ?? row.inseason ?? true),
     discount,
     category: row.category || "",
@@ -69,10 +74,20 @@ export async function GET() {
             acc[key].push(p);
             return acc;
           }, {});
-          return NextResponse.json({ grouped: groupedFallback, flat: mappedFallback }, {
-            status: 200,
-            headers: { "Cache-Control": "no-store", "X-Source": "local" },
-          });
+          return NextResponse.json(
+            { grouped: groupedFallback, flat: mappedFallback },
+            {
+              status: 200,
+              headers: {
+                "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+                "Surrogate-Control": "no-store",
+                "Vercel-CDN-Cache-Control": "no-store",
+                "X-Source": "local",
+              },
+            }
+          );
         } catch {}
         return NextResponse.json({ error: String(error?.message || error) }, { status: 500 });
       }
@@ -88,14 +103,22 @@ export async function GET() {
       return acc;
     }, {});
 
-    return NextResponse.json({ grouped, flat: mapped }, {
-      status: 200,
-      headers: {
-        "Cache-Control": "no-store",
-      },
-    });
+    return NextResponse.json(
+      { grouped, flat: mapped },
+      {
+        status: 200,
+        headers: {
+          // Prevent CDN and browser caching to ensure live stock
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0",
+          "Surrogate-Control": "no-store",
+          // Vercel-specific override (harmless elsewhere)
+          "Vercel-CDN-Cache-Control": "no-store",
+        },
+      }
+    );
   } catch (err) {
     return NextResponse.json({ error: err?.message || "Failed to fetch products" }, { status: 500 });
   }
 }
-

@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { resolveStockClass } from "@/lib/catalogue";
+import { useNotice } from "@/components/notice-provider";
 
 import { readCartItems, writeCartItems } from "@/lib/cart-storage";
 import { readStoredUser } from "@/lib/auth";
@@ -108,6 +110,29 @@ export default function AddToCartForm({ product, fallbackImage }) {
   const [quantityInput, setQuantityInput] = useState("1");
   const [feedback, setFeedback] = useState({ tone: "idle", message: "" });
   const unitLabel = useMemo(() => formatUnitLabel(product.unit), [product.unit]);
+  const { showNotice } = useNotice();
+
+  const availableCount = useMemo(() => {
+    const stock = product?.stock;
+    if (typeof stock === "number") {
+      const n = Math.max(0, Math.floor(stock));
+      return Number.isFinite(n) ? n : null;
+    }
+    if (typeof stock === "string") {
+      const lowered = stock.toLowerCase();
+      if (lowered.includes("out")) return 0;
+      const m = stock.match(/(\d+)/);
+      if (m) {
+        const n = Math.max(0, parseInt(m[1], 10));
+        return Number.isFinite(n) ? n : null;
+      }
+    }
+    return null; // unknown
+  }, [product?.stock]);
+
+  const isUnavailable = useMemo(() => {
+    return resolveStockClass(product?.stock) === "is-unavailable" || availableCount === 0;
+  }, [product?.stock, availableCount]);
 
   useEffect(() => {
     updateRecentlyViewed(product.id);
@@ -139,7 +164,23 @@ export default function AddToCartForm({ product, fallbackImage }) {
         existing.orderCount ?? Math.round((clampQuantity(existing.quantity) || existingSize) / existingSize)
       );
       const addedOrders = Math.max(1, Math.round(parsedQuantity / existingSize));
-      const nextCount = existingCount + addedOrders;
+      let nextCount = existingCount + addedOrders;
+      if (Number.isFinite(availableCount)) {
+        if (existingCount >= availableCount) {
+          showNotice({ tone: "error", title: "Out of stock", message: "This item is no longer available." });
+          return;
+        }
+        if (nextCount > availableCount) {
+          const allowedToAdd = Math.max(0, availableCount - existingCount);
+          nextCount = availableCount;
+          showNotice({
+            tone: "info",
+            title: "Limited stock",
+            message: `Only ${allowedToAdd} item${allowedToAdd === 1 ? "" : "s"} left. Cart updated to maximum available.`,
+            autoClose: true,
+          });
+        }
+      }
       const updatedItem = buildCartItem(product, existingSize, nextCount, fallbackImage);
       items[index] = {
         ...existing,
@@ -147,6 +188,11 @@ export default function AddToCartForm({ product, fallbackImage }) {
         note: existing.note ?? updatedItem.note,
       };
     } else {
+      // For first add, treat parsedQuantity as a single order of that size
+      if (Number.isFinite(availableCount) && availableCount <= 0) {
+        showNotice({ tone: "error", title: "Out of stock", message: "This item is currently unavailable." });
+        return;
+      }
       items.push(buildCartItem(product, parsedQuantity, 1, fallbackImage));
     }
 
@@ -194,12 +240,14 @@ export default function AddToCartForm({ product, fallbackImage }) {
           onBlur={handleBlur}
           aria-describedby="product-quantity-helper"
         />
-        <button type="button" onClick={handleAddToCart} className="product-detail-actions__submit">
+        <button type="button" onClick={handleAddToCart} className="product-detail-actions__submit" disabled={isUnavailable} aria-disabled={isUnavailable}>
           Add to cart
         </button>
       </div>
       <p id="product-quantity-helper" className="product-detail-actions__helper">
-        Enter decimals like 2.45 for partial {unitLabel.toLowerCase()} orders.
+        {isUnavailable
+          ? "Out of stock"
+          : `Enter decimals like 2.45 for partial ${unitLabel.toLowerCase()} orders.`}
       </p>
       {feedback.message ? (
         <p
